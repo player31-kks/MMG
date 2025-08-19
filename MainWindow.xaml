@@ -253,7 +253,7 @@
                         <TabItem Header="Request Schema"
                                  Style="{StaticResource ModernTabItem}">
                             <TabControl Margin="10"
-                                    Style="{x:Null}">
+                                        Style="{x:Null}">
                                 <!-- Headers Tab -->
                                 <TabItem Header="Headers"
                                          Style="{StaticResource ModernTabItem}">
@@ -263,11 +263,19 @@
                                             <RowDefinition Height="*"/>
                                         </Grid.RowDefinitions>
 
-                                        <Button Grid.Row="0"
-                                                Content="Add Header"
-                                                Command="{Binding AddHeaderCommand}"
-                                                Style="{StaticResource ModernButton}"
-                                                HorizontalAlignment="Left"/>
+                                        <StackPanel Grid.Row="0"
+                                                Orientation="Horizontal"
+                                                Margin="0,0,0,10">
+                                            <Button Content="Add Header"
+                                                    Command="{Binding AddHeaderCommand}"
+                                                    Style="{StaticResource ModernButton}"
+                                                    HorizontalAlignment="Left"/>
+                                            <TextBlock Text="{Binding HeaderBytesText}"
+                                                       VerticalAlignment="Center"
+                                                       Margin="15,0,0,0"
+                                                       Foreground="#007ACC"
+                                                       FontWeight="SemiBold"/>
+                                        </StackPanel>
 
                                         <DataGrid Grid.Row="1"
                                                   ItemsSource="{Binding CurrentRequest.Headers}"
@@ -332,11 +340,19 @@
                                             <RowDefinition Height="*"/>
                                         </Grid.RowDefinitions>
 
-                                        <Button Grid.Row="0"
-                                                Content="Add Field"
-                                                Command="{Binding AddPayloadFieldCommand}"
-                                                Style="{StaticResource ModernButton}"
-                                                HorizontalAlignment="Left"/>
+                                        <StackPanel Grid.Row="0"
+                                                Orientation="Horizontal"
+                                                Margin="0,0,0,10">
+                                            <Button Content="Add Field"
+                                                    Command="{Binding AddPayloadFieldCommand}"
+                                                    Style="{StaticResource ModernButton}"
+                                                    HorizontalAlignment="Left"/>
+                                            <TextBlock Text="{Binding PayloadBytesText}"
+                                                       VerticalAlignment="Center"
+                                                       Margin="15,0,0,0"
+                                                       Foreground="#007ACC"
+                                                       FontWeight="SemiBold"/>
+                                        </StackPanel>
 
                                         <DataGrid Grid.Row="1"
                                                   ItemsSource="{Binding CurrentRequest.Payload}"
@@ -398,7 +414,7 @@
                         <TabItem Header="Response Schema"
                                  Style="{StaticResource ModernTabItem}">
                             <TabControl Margin="10"
-                                    Style="{x:Null}">
+                                        Style="{x:Null}">
                                 <!-- Response Headers Tab -->
                                 <TabItem Header="Headers"
                                          Style="{StaticResource ModernTabItem}">

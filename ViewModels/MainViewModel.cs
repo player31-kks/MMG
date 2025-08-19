@@ -22,8 +22,14 @@ namespace MMG.ViewModels
             _responseSchema = new ResponseSchema();
 
             // Initialize with some default fields
-            _currentRequest.Headers.Add(new DataField { Name = "Header1", Type = DataType.Byte, Value = "0" });
-            _currentRequest.Payload.Add(new DataField { Name = "Field1", Type = DataType.Int, Value = "0" });
+            var defaultHeader = new DataField { Name = "Header1", Type = DataType.Byte, Value = "0" };
+            var defaultPayload = new DataField { Name = "Field1", Type = DataType.Int, Value = "0" };
+
+            defaultHeader.PropertyChanged += OnDataFieldPropertyChanged;
+            defaultPayload.PropertyChanged += OnDataFieldPropertyChanged;
+
+            _currentRequest.Headers.Add(defaultHeader);
+            _currentRequest.Payload.Add(defaultPayload);
             _responseSchema.Headers.Add(new DataField { Name = "ResponseHeader1", Type = DataType.Int });
             _responseSchema.Payload.Add(new DataField { Name = "ResponseField1", Type = DataType.Int });
 
@@ -94,6 +100,19 @@ namespace MMG.ViewModels
             }
         }
 
+        public int HeaderBytes
+        {
+            get => CalculateBytes(CurrentRequest.Headers);
+        }
+
+        public int PayloadBytes
+        {
+            get => CalculateBytes(CurrentRequest.Payload);
+        }
+
+        public string HeaderBytesText => $"Total: {HeaderBytes} bytes";
+        public string PayloadBytesText => $"Total: {PayloadBytes} bytes";
+
         public ICommand SendCommand { get; }
         public ICommand AddHeaderCommand { get; }
         public ICommand RemoveHeaderCommand { get; }
@@ -121,24 +140,38 @@ namespace MMG.ViewModels
 
         private void AddHeader()
         {
-            CurrentRequest.Headers.Add(new DataField { Name = $"Header{CurrentRequest.Headers.Count + 1}", Type = DataType.Byte, Value = "0" });
+            var newHeader = new DataField { Name = $"Header{CurrentRequest.Headers.Count + 1}", Type = DataType.Byte, Value = "0" };
+            newHeader.PropertyChanged += OnDataFieldPropertyChanged;
+            CurrentRequest.Headers.Add(newHeader);
+            NotifyBytesChanged();
         }
 
         private void RemoveHeader(DataField? header)
         {
             if (header != null)
+            {
+                header.PropertyChanged -= OnDataFieldPropertyChanged;
                 CurrentRequest.Headers.Remove(header);
+                NotifyBytesChanged();
+            }
         }
 
         private void AddPayloadField()
         {
-            CurrentRequest.Payload.Add(new DataField { Name = $"Field{CurrentRequest.Payload.Count + 1}", Type = DataType.Int, Value = "0" });
+            var newField = new DataField { Name = $"Field{CurrentRequest.Payload.Count + 1}", Type = DataType.Int, Value = "0" };
+            newField.PropertyChanged += OnDataFieldPropertyChanged;
+            CurrentRequest.Payload.Add(newField);
+            NotifyBytesChanged();
         }
 
         private void RemovePayloadField(DataField? field)
         {
             if (field != null)
+            {
+                field.PropertyChanged -= OnDataFieldPropertyChanged;
                 CurrentRequest.Payload.Remove(field);
+                NotifyBytesChanged();
+            }
         }
 
         private void AddResponseField()
@@ -197,6 +230,39 @@ namespace MMG.ViewModels
             }
 
             ResponseText = text;
+        }
+
+        private int CalculateBytes(ObservableCollection<DataField> fields)
+        {
+            int totalBytes = 0;
+            foreach (var field in fields)
+            {
+                totalBytes += field.Type switch
+                {
+                    DataType.Byte => 1,
+                    DataType.Int => 4,
+                    DataType.UInt => 4,
+                    DataType.Float => 4,
+                    _ => 0
+                };
+            }
+            return totalBytes;
+        }
+
+        private void NotifyBytesChanged()
+        {
+            OnPropertyChanged(nameof(HeaderBytes));
+            OnPropertyChanged(nameof(PayloadBytes));
+            OnPropertyChanged(nameof(HeaderBytesText));
+            OnPropertyChanged(nameof(PayloadBytesText));
+        }
+
+        private void OnDataFieldPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(DataField.Type))
+            {
+                NotifyBytesChanged();
+            }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
