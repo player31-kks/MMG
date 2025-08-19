@@ -24,15 +24,22 @@ namespace MMG.ViewModels
             // Initialize with some default fields
             _currentRequest.Headers.Add(new DataField { Name = "Header1", Type = DataType.Byte, Value = "0" });
             _currentRequest.Payload.Add(new DataField { Name = "Field1", Type = DataType.Int, Value = "0" });
-            _responseSchema.Fields.Add(new DataField { Name = "Response1", Type = DataType.Int });
+            _responseSchema.Headers.Add(new DataField { Name = "ResponseHeader1", Type = DataType.Int });
+            _responseSchema.Payload.Add(new DataField { Name = "ResponseField1", Type = DataType.Int });
 
             SendCommand = new RelayCommand(async () => await SendRequest(), () => !IsSending);
             AddHeaderCommand = new RelayCommand(AddHeader);
             RemoveHeaderCommand = new RelayCommand<DataField>(RemoveHeader);
             AddPayloadFieldCommand = new RelayCommand(AddPayloadField);
             RemovePayloadFieldCommand = new RelayCommand<DataField>(RemovePayloadField);
-            AddResponseFieldCommand = new RelayCommand(AddResponseField);
-            RemoveResponseFieldCommand = new RelayCommand<DataField>(RemoveResponseField);
+            AddResponseHeaderCommand = new RelayCommand(AddResponseHeader);
+            RemoveResponseHeaderCommand = new RelayCommand<DataField>(RemoveResponseHeader);
+            AddResponsePayloadFieldCommand = new RelayCommand(AddResponsePayloadField);
+            RemoveResponsePayloadFieldCommand = new RelayCommand<DataField>(RemoveResponsePayloadField);
+
+            // Keep old commands for backward compatibility
+            AddResponseFieldCommand = new RelayCommand(AddResponsePayloadField);
+            RemoveResponseFieldCommand = new RelayCommand<DataField>(RemoveResponsePayloadField);
         }
 
         public UdpRequest CurrentRequest
@@ -92,6 +99,10 @@ namespace MMG.ViewModels
         public ICommand RemoveHeaderCommand { get; }
         public ICommand AddPayloadFieldCommand { get; }
         public ICommand RemovePayloadFieldCommand { get; }
+        public ICommand AddResponseHeaderCommand { get; }
+        public ICommand RemoveResponseHeaderCommand { get; }
+        public ICommand AddResponsePayloadFieldCommand { get; }
+        public ICommand RemoveResponsePayloadFieldCommand { get; }
         public ICommand AddResponseFieldCommand { get; }
         public ICommand RemoveResponseFieldCommand { get; }
 
@@ -132,13 +143,35 @@ namespace MMG.ViewModels
 
         private void AddResponseField()
         {
-            ResponseSchema.Fields.Add(new DataField { Name = $"Response{ResponseSchema.Fields.Count + 1}", Type = DataType.Int });
+            ResponseSchema.Payload.Add(new DataField { Name = $"Response{ResponseSchema.Payload.Count + 1}", Type = DataType.Int });
         }
 
         private void RemoveResponseField(DataField? field)
         {
             if (field != null)
-                ResponseSchema.Fields.Remove(field);
+                ResponseSchema.Payload.Remove(field);
+        }
+
+        private void AddResponseHeader()
+        {
+            ResponseSchema.Headers.Add(new DataField { Name = $"ResponseHeader{ResponseSchema.Headers.Count + 1}", Type = DataType.Byte });
+        }
+
+        private void RemoveResponseHeader(DataField? header)
+        {
+            if (header != null)
+                ResponseSchema.Headers.Remove(header);
+        }
+
+        private void AddResponsePayloadField()
+        {
+            ResponseSchema.Payload.Add(new DataField { Name = $"ResponseField{ResponseSchema.Payload.Count + 1}", Type = DataType.Int });
+        }
+
+        private void RemoveResponsePayloadField(DataField? field)
+        {
+            if (field != null)
+                ResponseSchema.Payload.Remove(field);
         }
 
         private void UpdateResponseText()

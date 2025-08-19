@@ -14,7 +14,7 @@
     <Window.Resources>
         <!-- Button Style -->
         <Style x:Key="ModernButton"
-                TargetType="Button">
+               TargetType="Button">
             <Setter Property="Background"
                     Value="#007ACC"/>
             <Setter Property="Foreground"
@@ -39,17 +39,17 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver"
-                                    Value="True">
+                                     Value="True">
                                 <Setter Property="Background"
                                         Value="#0086C7"/>
                             </Trigger>
                             <Trigger Property="IsPressed"
-                                    Value="True">
+                                     Value="True">
                                 <Setter Property="Background"
                                         Value="#005A9E"/>
                             </Trigger>
                             <Trigger Property="IsEnabled"
-                                    Value="False">
+                                     Value="False">
                                 <Setter Property="Background"
                                         Value="#CCCCCC"/>
                             </Trigger>
@@ -61,7 +61,7 @@
 
         <!-- TextBox Style -->
         <Style x:Key="ModernTextBox"
-                TargetType="TextBox">
+               TargetType="TextBox">
             <Setter Property="Padding"
                     Value="8"/>
             <Setter Property="BorderBrush"
@@ -82,7 +82,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused"
-                                    Value="True">
+                                     Value="True">
                                 <Setter Property="BorderBrush"
                                         Value="#007ACC"/>
                             </Trigger>
@@ -94,7 +94,7 @@
 
         <!-- ComboBox Style -->
         <Style x:Key="ModernComboBox"
-                TargetType="ComboBox">
+               TargetType="ComboBox">
             <Setter Property="Padding"
                     Value="8"/>
             <Setter Property="BorderBrush"
@@ -107,7 +107,7 @@
 
         <!-- Tab Style -->
         <Style x:Key="ModernTabItem"
-                TargetType="TabItem">
+               TargetType="TabItem">
             <Setter Property="Background"
                     Value="Transparent"/>
             <Setter Property="BorderThickness"
@@ -131,13 +131,13 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected"
-                                    Value="True">
+                                     Value="True">
                                 <Setter TargetName="Border"
                                         Property="BorderBrush"
                                         Value="#007ACC"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver"
-                                    Value="True">
+                                     Value="True">
                                 <Setter TargetName="Border"
                                         Property="Background"
                                         Value="#F0F0F0"/>
@@ -163,22 +163,22 @@
                 Padding="20,15">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="UDP Message Client"
-                        FontSize="20"
-                        FontWeight="Bold"
-                        Foreground="#333"/>
+                           FontSize="20"
+                           FontWeight="Bold"
+                           Foreground="#333"/>
                 <Rectangle Width="1"
-                        Fill="#DDDDDD"
-                        Margin="20,0"/>
+                           Fill="#DDDDDD"
+                           Margin="20,0"/>
                 <TextBlock Text="Send UDP messages and parse responses"
-                        FontSize="14"
-                        Foreground="#666"
-                        VerticalAlignment="Center"/>
+                           FontSize="14"
+                           Foreground="#666"
+                           VerticalAlignment="Center"/>
             </StackPanel>
         </Border>
 
         <!-- Main Content -->
         <Grid Grid.Row="1"
-                Margin="20">
+              Margin="20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*"/>
                 <ColumnDefinition Width="5"/>
@@ -217,245 +217,330 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Grid.Row="0"
-                                    Grid.Column="0"
-                                    Text="UDP Request"
-                                    FontSize="16"
-                                    FontWeight="Bold"
-                                    Margin="0,0,0,10"/>
+                                       Grid.Column="0"
+                                       Text="UDP Request"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       Margin="0,0,0,10"/>
 
                             <Label Grid.Row="1"
-                                    Grid.Column="0"
-                                    Content="IP:"
-                                    VerticalAlignment="Center"
-                                    Margin="0,0,10,0"/>
+                                   Grid.Column="0"
+                                   Content="IP:"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,10,0"/>
                             <TextBox Grid.Row="1"
-                                    Grid.Column="1"
-                                    Text="{Binding CurrentRequest.IpAddress}"
+                                     Grid.Column="1"
+                                     Text="{Binding CurrentRequest.IpAddress}"
                                      Style="{StaticResource ModernTextBox}"
-                                    Margin="0,0,10,0"/>
+                                     Margin="0,0,10,0"/>
                             <Label Grid.Row="1"
-                                    Grid.Column="2"
-                                    Content="Port:"
-                                    VerticalAlignment="Center"
-                                    Margin="0,0,10,0"/>
+                                   Grid.Column="2"
+                                   Content="Port:"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,10,0"/>
                             <TextBox Grid.Row="1"
-                                    Grid.Column="3"
-                                    Text="{Binding CurrentRequest.Port}"
+                                     Grid.Column="3"
+                                     Text="{Binding CurrentRequest.Port}"
                                      Style="{StaticResource ModernTextBox}"/>
                         </Grid>
                     </Border>
 
                     <!-- Request Content -->
                     <TabControl Grid.Row="1"
-                            Margin="20"
-                            Style="{x:Null}">
-                        <!-- Headers Tab -->
-                        <TabItem Header="Headers"
-                                Style="{StaticResource ModernTabItem}">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
+                                Margin="20"
+                                Style="{x:Null}">
+                        <!-- Request Schema Tab -->
+                        <TabItem Header="Request Schema"
+                                 Style="{StaticResource ModernTabItem}">
+                            <TabControl Margin="10"
+                                    Style="{x:Null}">
+                                <!-- Headers Tab -->
+                                <TabItem Header="Headers"
+                                         Style="{StaticResource ModernTabItem}">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
 
-                                <Button Grid.Row="0"
-                                        Content="Add Header"
-                                        Command="{Binding AddHeaderCommand}"
-                                        Style="{StaticResource ModernButton}"
-                                        HorizontalAlignment="Left"/>
+                                        <Button Grid.Row="0"
+                                                Content="Add Header"
+                                                Command="{Binding AddHeaderCommand}"
+                                                Style="{StaticResource ModernButton}"
+                                                HorizontalAlignment="Left"/>
 
-                                <DataGrid Grid.Row="1"
-                                          ItemsSource="{Binding CurrentRequest.Headers}"
-                                          AutoGenerateColumns="False"
-                                          CanUserAddRows="False"
-                                          GridLinesVisibility="Horizontal"
-                                          HeadersVisibility="Column"
-                                          Margin="0,10,0,0">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Name"
-                                                Binding="{Binding Name}"
-                                                Width="*"/>
-                                        <DataGridTemplateColumn Header="Type"
-                                                Width="120">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <ComboBox SelectedItem="{Binding Type}"
-                                                              Style="{StaticResource ModernComboBox}"
-                                                              BorderThickness="0">
-                                                        <ComboBox.ItemsSource>
-                                                            <x:Array Type="models:DataType">
-                                                                <models:DataType>Byte</models:DataType>
-                                                                <models:DataType>Int</models:DataType>
-                                                                <models:DataType>UInt</models:DataType>
-                                                                <models:DataType>Float</models:DataType>
-                                                            </x:Array>
-                                                        </ComboBox.ItemsSource>
-                                                    </ComboBox>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        <DataGridTextColumn Header="Value"
-                                                Binding="{Binding Value}"
-                                                Width="*"/>
-                                        <DataGridTemplateColumn Header=""
-                                                Width="60">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <Button Content="✕"
-                                                            Command="{Binding DataContext.RemoveHeaderCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                            CommandParameter="{Binding}"
-                                                            Background="#FF4444"
-                                                            Foreground="White"
-                                                            BorderThickness="0"
-                                                            Width="25"
-                                                            Height="25"
-                                                            FontSize="12"/>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                            </Grid>
-                        </TabItem>
+                                        <DataGrid Grid.Row="1"
+                                                  ItemsSource="{Binding CurrentRequest.Headers}"
+                                                  AutoGenerateColumns="False"
+                                                  CanUserAddRows="False"
+                                                  GridLinesVisibility="Horizontal"
+                                                  HeadersVisibility="Column"
+                                                  Margin="0,10,0,0">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="Name"
+                                                                    Binding="{Binding Name}"
+                                                                    Width="*"/>
+                                                <DataGridTemplateColumn Header="Type"
+                                                                        Width="120">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <ComboBox SelectedItem="{Binding Type}"
+                                                                      Style="{StaticResource ModernComboBox}"
+                                                                      BorderThickness="0">
+                                                                <ComboBox.ItemsSource>
+                                                                    <x:Array Type="models:DataType">
+                                                                        <models:DataType>Byte</models:DataType>
+                                                                        <models:DataType>Int</models:DataType>
+                                                                        <models:DataType>UInt</models:DataType>
+                                                                        <models:DataType>Float</models:DataType>
+                                                                    </x:Array>
+                                                                </ComboBox.ItemsSource>
+                                                            </ComboBox>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTextColumn Header="Value"
+                                                                    Binding="{Binding Value}"
+                                                                    Width="*"/>
+                                                <DataGridTemplateColumn Header=""
+                                                                        Width="60">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <Button Content="✕"
+                                                                    Command="{Binding DataContext.RemoveHeaderCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Background="#FF4444"
+                                                                    Foreground="White"
+                                                                    BorderThickness="0"
+                                                                    Width="25"
+                                                                    Height="25"
+                                                                    FontSize="12"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </Grid>
+                                </TabItem>
 
-                        <!-- Payload Tab -->
-                        <TabItem Header="Payload"
-                                Style="{StaticResource ModernTabItem}">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
+                                <!-- Payload Tab -->
+                                <TabItem Header="Payload"
+                                         Style="{StaticResource ModernTabItem}">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
 
-                                <Button Grid.Row="0"
-                                        Content="Add Field"
-                                        Command="{Binding AddPayloadFieldCommand}"
-                                        Style="{StaticResource ModernButton}"
-                                        HorizontalAlignment="Left"/>
+                                        <Button Grid.Row="0"
+                                                Content="Add Field"
+                                                Command="{Binding AddPayloadFieldCommand}"
+                                                Style="{StaticResource ModernButton}"
+                                                HorizontalAlignment="Left"/>
 
-                                <DataGrid Grid.Row="1"
-                                          ItemsSource="{Binding CurrentRequest.Payload}"
-                                          AutoGenerateColumns="False"
-                                          CanUserAddRows="False"
-                                          GridLinesVisibility="Horizontal"
-                                          HeadersVisibility="Column"
-                                          Margin="0,10,0,0">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Name"
-                                                Binding="{Binding Name}"
-                                                Width="*"/>
-                                        <DataGridTemplateColumn Header="Type"
-                                                Width="120">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <ComboBox SelectedItem="{Binding Type}"
-                                                              Style="{StaticResource ModernComboBox}"
-                                                              BorderThickness="0">
-                                                        <ComboBox.ItemsSource>
-                                                            <x:Array Type="models:DataType">
-                                                                <models:DataType>Byte</models:DataType>
-                                                                <models:DataType>Int</models:DataType>
-                                                                <models:DataType>UInt</models:DataType>
-                                                                <models:DataType>Float</models:DataType>
-                                                            </x:Array>
-                                                        </ComboBox.ItemsSource>
-                                                    </ComboBox>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        <DataGridTextColumn Header="Value"
-                                                Binding="{Binding Value}"
-                                                Width="*"/>
-                                        <DataGridTemplateColumn Header=""
-                                                Width="60">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <Button Content="✕"
-                                                            Command="{Binding DataContext.RemovePayloadFieldCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                            CommandParameter="{Binding}"
-                                                            Background="#FF4444"
-                                                            Foreground="White"
-                                                            BorderThickness="0"
-                                                            Width="25"
-                                                            Height="25"
-                                                            FontSize="12"/>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                            </Grid>
+                                        <DataGrid Grid.Row="1"
+                                                  ItemsSource="{Binding CurrentRequest.Payload}"
+                                                  AutoGenerateColumns="False"
+                                                  CanUserAddRows="False"
+                                                  GridLinesVisibility="Horizontal"
+                                                  HeadersVisibility="Column"
+                                                  Margin="0,10,0,0">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="Name"
+                                                                    Binding="{Binding Name}"
+                                                                    Width="*"/>
+                                                <DataGridTemplateColumn Header="Type"
+                                                                        Width="120">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <ComboBox SelectedItem="{Binding Type}"
+                                                                      Style="{StaticResource ModernComboBox}"
+                                                                      BorderThickness="0">
+                                                                <ComboBox.ItemsSource>
+                                                                    <x:Array Type="models:DataType">
+                                                                        <models:DataType>Byte</models:DataType>
+                                                                        <models:DataType>Int</models:DataType>
+                                                                        <models:DataType>UInt</models:DataType>
+                                                                        <models:DataType>Float</models:DataType>
+                                                                    </x:Array>
+                                                                </ComboBox.ItemsSource>
+                                                            </ComboBox>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTextColumn Header="Value"
+                                                                    Binding="{Binding Value}"
+                                                                    Width="*"/>
+                                                <DataGridTemplateColumn Header=""
+                                                                        Width="60">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <Button Content="✕"
+                                                                    Command="{Binding DataContext.RemovePayloadFieldCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Background="#FF4444"
+                                                                    Foreground="White"
+                                                                    BorderThickness="0"
+                                                                    Width="25"
+                                                                    Height="25"
+                                                                    FontSize="12"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </Grid>
+                                </TabItem>
+                            </TabControl>
                         </TabItem>
 
                         <!-- Response Schema Tab -->
                         <TabItem Header="Response Schema"
-                                Style="{StaticResource ModernTabItem}">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
+                                 Style="{StaticResource ModernTabItem}">
+                            <TabControl Margin="10"
+                                    Style="{x:Null}">
+                                <!-- Response Headers Tab -->
+                                <TabItem Header="Headers"
+                                         Style="{StaticResource ModernTabItem}">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
 
-                                <StackPanel Grid.Row="0"
-                                        Orientation="Horizontal">
-                                    <Button Content="Add Field"
-                                            Command="{Binding AddResponseFieldCommand}"
-                                            Style="{StaticResource ModernButton}"/>
-                                    <TextBlock Text="Define how to parse the response"
-                                               VerticalAlignment="Center"
-                                               Margin="15,0,0,0"
-                                               Foreground="#666"/>
-                                </StackPanel>
+                                        <StackPanel Grid.Row="0"
+                                                    Orientation="Horizontal">
+                                            <Button Content="Add Header"
+                                                    Command="{Binding AddResponseHeaderCommand}"
+                                                    Style="{StaticResource ModernButton}"/>
+                                            <TextBlock Text="Define response header parsing"
+                                                       VerticalAlignment="Center"
+                                                       Margin="15,0,0,0"
+                                                       Foreground="#666"/>
+                                        </StackPanel>
 
-                                <DataGrid Grid.Row="1"
-                                          ItemsSource="{Binding ResponseSchema.Fields}"
-                                          AutoGenerateColumns="False"
-                                          CanUserAddRows="False"
-                                          GridLinesVisibility="Horizontal"
-                                          HeadersVisibility="Column"
-                                          Margin="0,10,0,0">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Field Name"
-                                                Binding="{Binding Name}"
-                                                Width="*"/>
-                                        <DataGridTemplateColumn Header="Type"
-                                                Width="120">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <ComboBox SelectedItem="{Binding Type}"
-                                                              Style="{StaticResource ModernComboBox}"
-                                                              BorderThickness="0">
-                                                        <ComboBox.ItemsSource>
-                                                            <x:Array Type="models:DataType">
-                                                                <models:DataType>Byte</models:DataType>
-                                                                <models:DataType>Int</models:DataType>
-                                                                <models:DataType>UInt</models:DataType>
-                                                                <models:DataType>Float</models:DataType>
-                                                            </x:Array>
-                                                        </ComboBox.ItemsSource>
-                                                    </ComboBox>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        <DataGridTemplateColumn Header=""
-                                                Width="60">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <Button Content="✕"
-                                                            Command="{Binding DataContext.RemoveResponseFieldCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                            CommandParameter="{Binding}"
-                                                            Background="#FF4444"
-                                                            Foreground="White"
-                                                            BorderThickness="0"
-                                                            Width="25"
-                                                            Height="25"
-                                                            FontSize="12"/>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                            </Grid>
+                                        <DataGrid Grid.Row="1"
+                                                  ItemsSource="{Binding ResponseSchema.Headers}"
+                                                  AutoGenerateColumns="False"
+                                                  CanUserAddRows="False"
+                                                  GridLinesVisibility="Horizontal"
+                                                  HeadersVisibility="Column"
+                                                  Margin="0,10,0,0">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="Field Name"
+                                                                    Binding="{Binding Name}"
+                                                                    Width="*"/>
+                                                <DataGridTemplateColumn Header="Type"
+                                                                        Width="120">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <ComboBox SelectedItem="{Binding Type}"
+                                                                      Style="{StaticResource ModernComboBox}"
+                                                                      BorderThickness="0">
+                                                                <ComboBox.ItemsSource>
+                                                                    <x:Array Type="models:DataType">
+                                                                        <models:DataType>Byte</models:DataType>
+                                                                        <models:DataType>Int</models:DataType>
+                                                                        <models:DataType>UInt</models:DataType>
+                                                                        <models:DataType>Float</models:DataType>
+                                                                    </x:Array>
+                                                                </ComboBox.ItemsSource>
+                                                            </ComboBox>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn Header=""
+                                                                        Width="60">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <Button Content="✕"
+                                                                    Command="{Binding DataContext.RemoveResponseHeaderCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Background="#FF4444"
+                                                                    Foreground="White"
+                                                                    BorderThickness="0"
+                                                                    Width="25"
+                                                                    Height="25"
+                                                                    FontSize="12"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </Grid>
+                                </TabItem>
+
+                                <!-- Response Payload Tab -->
+                                <TabItem Header="Payload"
+                                         Style="{StaticResource ModernTabItem}">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+
+                                        <StackPanel Grid.Row="0"
+                                                    Orientation="Horizontal">
+                                            <Button Content="Add Field"
+                                                    Command="{Binding AddResponsePayloadFieldCommand}"
+                                                    Style="{StaticResource ModernButton}"/>
+                                            <TextBlock Text="Define response payload parsing"
+                                                       VerticalAlignment="Center"
+                                                       Margin="15,0,0,0"
+                                                       Foreground="#666"/>
+                                        </StackPanel>
+
+                                        <DataGrid Grid.Row="1"
+                                                  ItemsSource="{Binding ResponseSchema.Payload}"
+                                                  AutoGenerateColumns="False"
+                                                  CanUserAddRows="False"
+                                                  GridLinesVisibility="Horizontal"
+                                                  HeadersVisibility="Column"
+                                                  Margin="0,10,0,0">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="Field Name"
+                                                                    Binding="{Binding Name}"
+                                                                    Width="*"/>
+                                                <DataGridTemplateColumn Header="Type"
+                                                                        Width="120">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <ComboBox SelectedItem="{Binding Type}"
+                                                                      Style="{StaticResource ModernComboBox}"
+                                                                      BorderThickness="0">
+                                                                <ComboBox.ItemsSource>
+                                                                    <x:Array Type="models:DataType">
+                                                                        <models:DataType>Byte</models:DataType>
+                                                                        <models:DataType>Int</models:DataType>
+                                                                        <models:DataType>UInt</models:DataType>
+                                                                        <models:DataType>Float</models:DataType>
+                                                                    </x:Array>
+                                                                </ComboBox.ItemsSource>
+                                                            </ComboBox>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                                <DataGridTemplateColumn Header=""
+                                                                        Width="60">
+                                                    <DataGridTemplateColumn.CellTemplate>
+                                                        <DataTemplate>
+                                                            <Button Content="✕"
+                                                                    Command="{Binding DataContext.RemoveResponsePayloadFieldCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Background="#FF4444"
+                                                                    Foreground="White"
+                                                                    BorderThickness="0"
+                                                                    Width="25"
+                                                                    Height="25"
+                                                                    FontSize="12"/>
+                                                        </DataTemplate>
+                                                    </DataGridTemplateColumn.CellTemplate>
+                                                </DataGridTemplateColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </Grid>
+                                </TabItem>
+                            </TabControl>
                         </TabItem>
                     </TabControl>
 
@@ -479,8 +564,8 @@
 
             <!-- Splitter -->
             <GridSplitter Grid.Column="1"
-                    HorizontalAlignment="Stretch"
-                    Background="#DDDDDD"/>
+                          HorizontalAlignment="Stretch"
+                          Background="#DDDDDD"/>
 
             <!-- Right Panel - Response -->
             <Border Grid.Column="2"
@@ -501,14 +586,14 @@
                             BorderThickness="0,0,0,1"
                             Padding="20">
                         <TextBlock Text="Response"
-                                FontSize="16"
-                                FontWeight="Bold"/>
+                                   FontSize="16"
+                                   FontWeight="Bold"/>
                     </Border>
 
                     <!-- Response Content -->
                     <ScrollViewer Grid.Row="1"
-                            Margin="20"
-                            VerticalScrollBarVisibility="Auto">
+                                  Margin="20"
+                                  VerticalScrollBarVisibility="Auto">
                         <TextBox Text="{Binding ResponseText, Mode=OneWay}"
                                  IsReadOnly="True"
                                  TextWrapping="Wrap"

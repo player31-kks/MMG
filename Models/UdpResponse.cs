@@ -5,15 +5,40 @@ namespace MMG.Models
 {
     public class ResponseSchema : INotifyPropertyChanged
     {
-        private ObservableCollection<DataField> _fields = new();
+        private ObservableCollection<DataField> _headers = new();
+        private ObservableCollection<DataField> _payload = new();
 
-        public ObservableCollection<DataField> Fields
+        public ObservableCollection<DataField> Headers
         {
-            get => _fields;
+            get => _headers;
             set
             {
-                _fields = value;
-                OnPropertyChanged(nameof(Fields));
+                _headers = value;
+                OnPropertyChanged(nameof(Headers));
+            }
+        }
+
+        public ObservableCollection<DataField> Payload
+        {
+            get => _payload;
+            set
+            {
+                _payload = value;
+                OnPropertyChanged(nameof(Payload));
+            }
+        }
+
+        // Backward compatibility - combines Headers and Payload
+        public ObservableCollection<DataField> Fields
+        {
+            get
+            {
+                var combined = new ObservableCollection<DataField>();
+                foreach (var header in Headers)
+                    combined.Add(header);
+                foreach (var payload in Payload)
+                    combined.Add(payload);
+                return combined;
             }
         }
 
