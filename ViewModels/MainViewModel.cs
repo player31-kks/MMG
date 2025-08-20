@@ -261,7 +261,9 @@ namespace MMG.ViewModels
 
         private void OnDataFieldPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(DataField.Type))
+            if (e.PropertyName == nameof(DataField.Type) ||
+                e.PropertyName == nameof(DataField.Value) ||
+                e.PropertyName == nameof(DataField.PaddingSize))
             {
                 NotifyBytesChanged();
             }
