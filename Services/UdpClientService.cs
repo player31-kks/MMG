@@ -61,28 +61,30 @@ namespace MMG.Services
             // Add headers
             foreach (var header in headers)
             {
-                messageBytes.AddRange(ConvertValueToBytes(header.Value, header.Type));
+                messageBytes.AddRange(ConvertValueToBytes(header));
             }
 
             // Add payload
             foreach (var field in payload)
             {
-                messageBytes.AddRange(ConvertValueToBytes(field.Value, field.Type));
+                messageBytes.AddRange(ConvertValueToBytes(field));
             }
 
             return messageBytes.ToArray();
         }
 
-        private byte[] ConvertValueToBytes(string value, DataType type)
+        private byte[] ConvertValueToBytes(DataField field)
         {
             try
             {
-                return type switch
+                return field.Type switch
                 {
-                    DataType.Byte => new[] { Convert.ToByte(value) },
-                    DataType.Int => BitConverter.GetBytes(Convert.ToInt32(value)),
-                    DataType.UInt => BitConverter.GetBytes(Convert.ToUInt32(value)),
-                    DataType.Float => BitConverter.GetBytes(Convert.ToSingle(value)),
+                    DataType.Byte => new[] { Convert.ToByte(field.Value) },
+                    DataType.UInt16 => BitConverter.GetBytes(Convert.ToUInt16(field.Value)),
+                    DataType.Int => BitConverter.GetBytes(Convert.ToInt32(field.Value)),
+                    DataType.UInt => BitConverter.GetBytes(Convert.ToUInt32(field.Value)),
+                    DataType.Float => BitConverter.GetBytes(Convert.ToSingle(field.Value)),
+                    DataType.Padding => new byte[field.PaddingSize], // Creates array of zeros
                     _ => Array.Empty<byte>()
                 };
             }
@@ -103,12 +105,14 @@ namespace MMG.Services
 
                 try
                 {
-                    var value = field.Type switch
+                    object value = field.Type switch
                     {
                         DataType.Byte => data[offset],
+                        DataType.UInt16 => BitConverter.ToUInt16(data, offset),
                         DataType.Int => BitConverter.ToInt32(data, offset),
                         DataType.UInt => BitConverter.ToUInt32(data, offset),
                         DataType.Float => BitConverter.ToSingle(data, offset),
+                        DataType.Padding => $"Padding({field.PaddingSize} bytes)",
                         _ => 0
                     };
 
@@ -117,9 +121,11 @@ namespace MMG.Services
                     offset += field.Type switch
                     {
                         DataType.Byte => 1,
+                        DataType.UInt16 => 2,
                         DataType.Int => 4,
                         DataType.UInt => 4,
                         DataType.Float => 4,
+                        DataType.Padding => field.PaddingSize,
                         _ => 0
                     };
                 }
