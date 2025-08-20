@@ -240,9 +240,11 @@ namespace MMG.ViewModels
                 totalBytes += field.Type switch
                 {
                     DataType.Byte => 1,
+                    DataType.UInt16 => 2,
                     DataType.Int => 4,
                     DataType.UInt => 4,
                     DataType.Float => 4,
+                    DataType.Padding => field.PaddingSize,
                     _ => 0
                 };
             }

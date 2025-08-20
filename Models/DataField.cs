@@ -5,9 +5,11 @@ namespace MMG.Models
     public enum DataType
     {
         Byte,
+        UInt16,
         Int,
         UInt,
-        Float
+        Float,
+        Padding
     }
 
     public class DataField : INotifyPropertyChanged
@@ -15,6 +17,7 @@ namespace MMG.Models
         private string _name = "";
         private DataType _type = DataType.Byte;
         private string _value = "";
+        private int _paddingSize = 1;
 
         public string Name
         {
@@ -33,18 +36,43 @@ namespace MMG.Models
             {
                 _type = value;
                 OnPropertyChanged(nameof(Type));
+                OnPropertyChanged(nameof(IsPadding));
+                OnPropertyChanged(nameof(Value)); // Type 변경 시 Value도 업데이트
             }
         }
 
         public string Value
         {
-            get => _value;
+            get => _type == DataType.Padding ? _paddingSize.ToString() : _value;
             set
             {
-                _value = value;
+                if (_type == DataType.Padding)
+                {
+                    if (int.TryParse(value, out int paddingValue))
+                    {
+                        _paddingSize = paddingValue;
+                        OnPropertyChanged(nameof(PaddingSize));
+                    }
+                }
+                else
+                {
+                    _value = value;
+                }
                 OnPropertyChanged(nameof(Value));
             }
         }
+
+        public int PaddingSize
+        {
+            get => _paddingSize;
+            set
+            {
+                _paddingSize = value;
+                OnPropertyChanged(nameof(PaddingSize));
+            }
+        }
+
+        public bool IsPadding => Type == DataType.Padding;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 

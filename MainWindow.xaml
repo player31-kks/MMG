@@ -264,8 +264,8 @@
                                         </Grid.RowDefinitions>
 
                                         <StackPanel Grid.Row="0"
-                                                Orientation="Horizontal"
-                                                Margin="0,0,0,10">
+                                                    Orientation="Horizontal"
+                                                    Margin="0,0,0,10">
                                             <Button Content="Add Header"
                                                     Command="{Binding AddHeaderCommand}"
                                                     Style="{StaticResource ModernButton}"
@@ -298,9 +298,11 @@
                                                                 <ComboBox.ItemsSource>
                                                                     <x:Array Type="models:DataType">
                                                                         <models:DataType>Byte</models:DataType>
+                                                                        <models:DataType>UInt16</models:DataType>
                                                                         <models:DataType>Int</models:DataType>
                                                                         <models:DataType>UInt</models:DataType>
                                                                         <models:DataType>Float</models:DataType>
+                                                                        <models:DataType>Padding</models:DataType>
                                                                     </x:Array>
                                                                 </ComboBox.ItemsSource>
                                                             </ComboBox>
@@ -341,8 +343,8 @@
                                         </Grid.RowDefinitions>
 
                                         <StackPanel Grid.Row="0"
-                                                Orientation="Horizontal"
-                                                Margin="0,0,0,10">
+                                                    Orientation="Horizontal"
+                                                    Margin="0,0,0,10">
                                             <Button Content="Add Field"
                                                     Command="{Binding AddPayloadFieldCommand}"
                                                     Style="{StaticResource ModernButton}"
@@ -375,9 +377,11 @@
                                                                 <ComboBox.ItemsSource>
                                                                     <x:Array Type="models:DataType">
                                                                         <models:DataType>Byte</models:DataType>
+                                                                        <models:DataType>UInt16</models:DataType>
                                                                         <models:DataType>Int</models:DataType>
                                                                         <models:DataType>UInt</models:DataType>
                                                                         <models:DataType>Float</models:DataType>
+                                                                        <models:DataType>Padding</models:DataType>
                                                                     </x:Array>
                                                                 </ComboBox.ItemsSource>
                                                             </ComboBox>
@@ -456,9 +460,11 @@
                                                                 <ComboBox.ItemsSource>
                                                                     <x:Array Type="models:DataType">
                                                                         <models:DataType>Byte</models:DataType>
+                                                                        <models:DataType>UInt16</models:DataType>
                                                                         <models:DataType>Int</models:DataType>
                                                                         <models:DataType>UInt</models:DataType>
                                                                         <models:DataType>Float</models:DataType>
+                                                                        <models:DataType>Padding</models:DataType>
                                                                     </x:Array>
                                                                 </ComboBox.ItemsSource>
                                                             </ComboBox>
@@ -527,9 +533,11 @@
                                                                 <ComboBox.ItemsSource>
                                                                     <x:Array Type="models:DataType">
                                                                         <models:DataType>Byte</models:DataType>
+                                                                        <models:DataType>UInt16</models:DataType>
                                                                         <models:DataType>Int</models:DataType>
                                                                         <models:DataType>UInt</models:DataType>
                                                                         <models:DataType>Float</models:DataType>
+                                                                        <models:DataType>Padding</models:DataType>
                                                                     </x:Array>
                                                                 </ComboBox.ItemsSource>
                                                             </ComboBox>
