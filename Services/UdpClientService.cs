@@ -99,44 +99,76 @@ namespace MMG.Services
             var result = new Dictionary<string, object>();
             var offset = 0;
 
-            foreach (var field in schema.Fields)
+            // Parse Headers first
+            foreach (var field in schema.Headers)
             {
                 if (offset >= data.Length) break;
 
                 try
                 {
-                    object value = field.Type switch
-                    {
-                        DataType.Byte => data[offset],
-                        DataType.UInt16 => BitConverter.ToUInt16(data, offset),
-                        DataType.Int => BitConverter.ToInt32(data, offset),
-                        DataType.UInt => BitConverter.ToUInt32(data, offset),
-                        DataType.Float => BitConverter.ToSingle(data, offset),
-                        DataType.Padding => $"Padding({field.PaddingSize} bytes)",
-                        _ => 0
-                    };
-
-                    result[field.Name] = value;
-
-                    offset += field.Type switch
-                    {
-                        DataType.Byte => 1,
-                        DataType.UInt16 => 2,
-                        DataType.Int => 4,
-                        DataType.UInt => 4,
-                        DataType.Float => 4,
-                        DataType.Padding => field.PaddingSize,
-                        _ => 0
-                    };
+                    var (value, fieldSize) = ParseField(data, offset, field);
+                    result[$"Header.{field.Name}"] = value;
+                    offset += fieldSize;
                 }
                 catch
                 {
-                    result[field.Name] = "Parse Error";
+                    result[$"Header.{field.Name}"] = "Parse Error";
+                    break;
+                }
+            }
+
+            // Then parse Payload
+            foreach (var field in schema.Payload)
+            {
+                if (offset >= data.Length) break;
+
+                try
+                {
+                    var (value, fieldSize) = ParseField(data, offset, field);
+                    result[$"Payload.{field.Name}"] = value;
+                    offset += fieldSize;
+                }
+                catch
+                {
+                    result[$"Payload.{field.Name}"] = "Parse Error";
                     break;
                 }
             }
 
             return result;
+        }
+
+        private (object value, int size) ParseField(byte[] data, int offset, DataField field)
+        {
+            int size = field.Type switch
+            {
+                DataType.Byte => 1,
+                DataType.UInt16 => 2,
+                DataType.Int => 4,
+                DataType.UInt => 4,
+                DataType.Float => 4,
+                DataType.Padding => field.PaddingSize,
+                _ => 0
+            };
+
+            // Check if we have enough data to read
+            if (offset + size > data.Length)
+            {
+                throw new ArgumentOutOfRangeException($"Not enough data to read {field.Type} at offset {offset}");
+            }
+
+            object value = field.Type switch
+            {
+                DataType.Byte => data[offset],
+                DataType.UInt16 => BitConverter.ToUInt16(data, offset),
+                DataType.Int => BitConverter.ToInt32(data, offset),
+                DataType.UInt => BitConverter.ToUInt32(data, offset),
+                DataType.Float => BitConverter.ToSingle(data, offset),
+                DataType.Padding => $"Padding({field.PaddingSize} bytes)",
+                _ => 0
+            };
+
+            return (value, size);
         }
     }
 }

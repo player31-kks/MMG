@@ -61,6 +61,9 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Value"
+                                Binding="{Binding Value}"
+                                Width="*"/>
                         <DataGridTemplateColumn Header=""
                                 Width="60">
                             <DataGridTemplateColumn.CellTemplate>
@@ -134,6 +137,9 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Value"
+                                Binding="{Binding Value}"
+                                Width="*"/>
                         <DataGridTemplateColumn Header=""
                                 Width="60">
                             <DataGridTemplateColumn.CellTemplate>
