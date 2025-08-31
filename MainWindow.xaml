@@ -8,8 +8,10 @@
         xmlns:views="clr-namespace:MMG.Views"
         mc:Ignorable="d"
         Title="UDP Message Client"
-        Height="800"
-        Width="1200"
+        Height="900"
+        Width="1400"
+        MinHeight="600"
+        MinWidth="1000"
         Background="#F5F5F5">
 
     <Grid>
@@ -25,9 +27,11 @@
         <Grid Grid.Row="1"
               Margin="20">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="2*"
+                        MinWidth="400"/>
                 <ColumnDefinition Width="5"/>
-                <ColumnDefinition Width="1.5*"/>
+                <ColumnDefinition Width="1.5*"
+                        MinWidth="300"/>
             </Grid.ColumnDefinitions>
 
             <!-- Left Panel - Request -->

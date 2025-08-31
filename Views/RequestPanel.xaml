@@ -17,7 +17,6 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- Connection Info -->
@@ -33,9 +32,14 @@
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"
+                                MinWidth="120"/>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="Auto"
+                                MinWidth="80"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"
+                                MinWidth="100"/>
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Grid.Row="0"
@@ -63,7 +67,18 @@
                     <TextBox Grid.Row="1"
                              Grid.Column="3"
                              Text="{Binding CurrentRequest.Port}"
-                             Style="{StaticResource ModernTextBox}"/>
+                             Style="{StaticResource ModernTextBox}"
+                             Margin="0,0,10,0"/>
+
+                    <Button Grid.Row="1"
+                            Grid.Column="5"
+                            Content="Send Request"
+                            Command="{Binding SendCommand}"
+                            Style="{StaticResource ModernButton}"
+                            FontSize="12"
+                            FontWeight="Bold"
+                            Padding="15,8"
+                            IsEnabled="{Binding IsSending, Converter={x:Static local:BooleanToInverseBooleanConverter.Instance}}"/>
                 </Grid>
             </Border>
 
@@ -83,22 +98,6 @@
                     <views:ResponseSchemaTabs Margin="10"/>
                 </TabItem>
             </TabControl>
-
-            <!-- Send Button -->
-            <Border Grid.Row="2"
-                    Background="#F8F9FA"
-                    BorderBrush="#DDDDDD"
-                    BorderThickness="0,1,0,0"
-                    Padding="20">
-                <Button Content="Send Request"
-                        Command="{Binding SendCommand}"
-                        Style="{StaticResource ModernButton}"
-                        FontSize="14"
-                        FontWeight="Bold"
-                        Padding="20,10"
-                        HorizontalAlignment="Center"
-                        IsEnabled="{Binding IsSending, Converter={x:Static local:BooleanToInverseBooleanConverter.Instance}}"/>
-            </Border>
         </Grid>
     </Border>
 </UserControl>

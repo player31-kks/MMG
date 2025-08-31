@@ -6,23 +6,32 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              d:DesignHeight="60"
-        d:DesignWidth="1200">
+             d:DesignWidth="1200">
     <Border Background="White"
             BorderBrush="#DDDDDD"
             BorderThickness="0,0,0,1"
             Padding="20,15">
-        <StackPanel Orientation="Horizontal">
-            <TextBlock Text="UDP Message Client"
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="UDP Message Client"
                        FontSize="20"
                        FontWeight="Bold"
                        Foreground="#333"/>
-            <Rectangle Width="1"
+            <Rectangle Grid.Column="1"
+                       Width="1"
                        Fill="#DDDDDD"
                        Margin="20,0"/>
-            <TextBlock Text="Send UDP messages and parse responses"
+            <TextBlock Grid.Column="2"
+                       Text="Send UDP messages and parse responses"
                        FontSize="14"
                        Foreground="#666"
                        VerticalAlignment="Center"/>
-        </StackPanel>
+        </Grid>
     </Border>
 </UserControl>
