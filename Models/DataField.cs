@@ -34,10 +34,13 @@ namespace MMG.Models
             get => _type;
             set
             {
-                _type = value;
-                OnPropertyChanged(nameof(Type));
-                OnPropertyChanged(nameof(IsPadding));
-                OnPropertyChanged(nameof(Value)); // Type 변경 시 Value도 업데이트
+                if (_type != value)
+                {
+                    _type = value;
+                    OnPropertyChanged(nameof(Type));
+                    OnPropertyChanged(nameof(IsPadding));
+                    OnPropertyChanged(nameof(Value)); // Type 변경 시 Value도 업데이트
+                }
             }
         }
 

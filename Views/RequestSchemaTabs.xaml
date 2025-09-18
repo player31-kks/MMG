@@ -50,7 +50,7 @@
                                                 MinWidth="100">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ComboBox SelectedItem="{Binding Type}"
+                                    <ComboBox SelectedItem="{Binding Type, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                               Style="{StaticResource ModernComboBox}"
                                               BorderThickness="0">
                                         <ComboBox.ItemsSource>
@@ -134,7 +134,7 @@
                                                 MinWidth="100">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ComboBox SelectedItem="{Binding Type}"
+                                    <ComboBox SelectedItem="{Binding Type, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                               Style="{StaticResource ModernComboBox}"
                                               BorderThickness="0">
                                         <ComboBox.ItemsSource>

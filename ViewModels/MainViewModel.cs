@@ -23,15 +23,15 @@ namespace MMG.ViewModels
 
             // Initialize with some default fields
             var defaultHeader = new DataField { Name = "Header1", Type = DataType.Byte, Value = "0" };
-            var defaultPayload = new DataField { Name = "Field1", Type = DataType.Int, Value = "0" };
+            var defaultPayload = new DataField { Name = "Field1", Type = DataType.Byte, Value = "0" };
 
             defaultHeader.PropertyChanged += OnDataFieldPropertyChanged;
             defaultPayload.PropertyChanged += OnDataFieldPropertyChanged;
 
             _currentRequest.Headers.Add(defaultHeader);
             _currentRequest.Payload.Add(defaultPayload);
-            _responseSchema.Headers.Add(new DataField { Name = "ResponseHeader1", Type = DataType.Int });
-            _responseSchema.Payload.Add(new DataField { Name = "ResponseField1", Type = DataType.Int });
+            _responseSchema.Headers.Add(new DataField { Name = "ResponseHeader1", Type = DataType.Byte });
+            _responseSchema.Payload.Add(new DataField { Name = "ResponseField1", Type = DataType.Byte });
 
             SendCommand = new RelayCommand(async () => await SendRequest(), () => !IsSending);
             AddHeaderCommand = new RelayCommand(AddHeader);
