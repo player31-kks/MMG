@@ -15,8 +15,11 @@ namespace MMG.Services
                 // Build message bytes
                 var messageBytes = BuildMessage(request.Headers, request.Payload);
 
-                // Create UDP client
-                using var udpClient = new UdpClient();
+                // Determine local port
+                var localPort = GetLocalPort(request.IpAddress, request.Port);
+
+                // Create UDP client with specific local port
+                using var udpClient = new UdpClient(localPort);
                 var endpoint = new IPEndPoint(IPAddress.Parse(request.IpAddress), request.Port);
 
                 // Send message
@@ -52,6 +55,50 @@ namespace MMG.Services
 
             response.ReceivedAt = DateTime.Now;
             return response;
+        }
+
+        private int GetLocalPort(string ipAddress, int targetPort)
+        {
+            // Check if the target is loopback address
+            if (IsLoopbackAddress(ipAddress))
+            {
+                // For loopback, use a random available port
+                return GetRandomAvailablePort();
+            }
+            else
+            {
+                // For remote addresses, use the same port as target
+                return targetPort;
+            }
+        }
+
+        private bool IsLoopbackAddress(string ipAddress)
+        {
+            if (string.IsNullOrWhiteSpace(ipAddress))
+                return false;
+
+            // Check for common loopback representations
+            if (ipAddress.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
+                ipAddress.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            // Try to parse as IP and check if it's loopback
+            if (IPAddress.TryParse(ipAddress, out var ip))
+            {
+                return IPAddress.IsLoopback(ip);
+            }
+
+            return false;
+        }
+
+        private int GetRandomAvailablePort()
+        {
+            // Create a temporary UDP client to get an available port
+            using var tempClient = new UdpClient(0); // 0 means system will assign available port
+            var localEndPoint = (IPEndPoint)tempClient.Client.LocalEndPoint!;
+            return localEndPoint.Port;
         }
 
         private byte[] BuildMessage(IEnumerable<DataField> headers, IEnumerable<DataField> payload)
