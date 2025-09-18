@@ -79,11 +79,11 @@ namespace MMG.Services
             {
                 return field.Type switch
                 {
-                    DataType.Byte => new[] { Convert.ToByte(field.Value) },
-                    DataType.UInt16 => BitConverter.GetBytes(Convert.ToUInt16(field.Value)),
-                    DataType.Int => BitConverter.GetBytes(Convert.ToInt32(field.Value)),
-                    DataType.UInt => BitConverter.GetBytes(Convert.ToUInt32(field.Value)),
-                    DataType.Float => BitConverter.GetBytes(Convert.ToSingle(field.Value)),
+                    DataType.Byte => new[] { ParseValue<byte>(field.Value) },
+                    DataType.UInt16 => BitConverter.GetBytes(ParseValue<ushort>(field.Value)),
+                    DataType.Int => BitConverter.GetBytes(ParseValue<int>(field.Value)),
+                    DataType.UInt => BitConverter.GetBytes(ParseValue<uint>(field.Value)),
+                    DataType.Float => BitConverter.GetBytes(ParseValue<float>(field.Value)),
                     DataType.Padding => new byte[field.PaddingSize], // Creates array of zeros
                     _ => Array.Empty<byte>()
                 };
@@ -91,6 +91,95 @@ namespace MMG.Services
             catch
             {
                 return Array.Empty<byte>();
+            }
+        }
+
+        private T ParseValue<T>(string value) where T : struct
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return default(T);
+
+            value = value.Trim();
+
+            // Check for hexadecimal format (0xFF, 0x1A, etc.)
+            if (value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ||
+                value.StartsWith("0X", StringComparison.OrdinalIgnoreCase))
+            {
+                var hexValue = value.Substring(2);
+                return ParseHexValue<T>(hexValue);
+            }
+
+            // Check for binary format (0b1010, 0B1111, etc.)
+            if (value.StartsWith("0b", StringComparison.OrdinalIgnoreCase) ||
+                value.StartsWith("0B", StringComparison.OrdinalIgnoreCase))
+            {
+                var binaryValue = value.Substring(2);
+                return ParseBinaryValue<T>(binaryValue);
+            }
+
+            // Default decimal parsing
+            return (T)Convert.ChangeType(value, typeof(T));
+        }
+
+        private T ParseHexValue<T>(string hexValue) where T : struct
+        {
+            try
+            {
+                // Remove any spaces or underscores for readability
+                hexValue = hexValue.Replace(" ", "").Replace("_", "");
+
+                var type = typeof(T);
+                if (type == typeof(byte))
+                    return (T)(object)Convert.ToByte(hexValue, 16);
+                else if (type == typeof(ushort))
+                    return (T)(object)Convert.ToUInt16(hexValue, 16);
+                else if (type == typeof(int))
+                    return (T)(object)Convert.ToInt32(hexValue, 16);
+                else if (type == typeof(uint))
+                    return (T)(object)Convert.ToUInt32(hexValue, 16);
+                else if (type == typeof(float))
+                {
+                    // For float, parse as uint first then convert to float bytes
+                    var intValue = Convert.ToUInt32(hexValue, 16);
+                    return (T)(object)BitConverter.ToSingle(BitConverter.GetBytes(intValue), 0);
+                }
+                else
+                    return default(T);
+            }
+            catch
+            {
+                return default(T);
+            }
+        }
+
+        private T ParseBinaryValue<T>(string binaryValue) where T : struct
+        {
+            try
+            {
+                // Remove any spaces or underscores for readability
+                binaryValue = binaryValue.Replace(" ", "").Replace("_", "");
+
+                var type = typeof(T);
+                if (type == typeof(byte))
+                    return (T)(object)Convert.ToByte(binaryValue, 2);
+                else if (type == typeof(ushort))
+                    return (T)(object)Convert.ToUInt16(binaryValue, 2);
+                else if (type == typeof(int))
+                    return (T)(object)Convert.ToInt32(binaryValue, 2);
+                else if (type == typeof(uint))
+                    return (T)(object)Convert.ToUInt32(binaryValue, 2);
+                else if (type == typeof(float))
+                {
+                    // For float, parse as uint first then convert to float bytes
+                    var intValue = Convert.ToUInt32(binaryValue, 2);
+                    return (T)(object)BitConverter.ToSingle(BitConverter.GetBytes(intValue), 0);
+                }
+                else
+                    return default(T);
+            }
+            catch
+            {
+                return default(T);
             }
         }
 
