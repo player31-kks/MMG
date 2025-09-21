@@ -33,27 +33,21 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"
-                                MinWidth="80"/>
+                                          MinWidth="80"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"
-                                MinWidth="80"/>
+                                          MinWidth="80"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"
-                                MinWidth="100"/>
+                                          MinWidth="80"/>
+                        <ColumnDefinition Width="Auto"
+                                          MinWidth="80"/>
                     </Grid.ColumnDefinitions>
-
-                    <TextBlock Grid.Row="0"
-                               Grid.Column="0"
-                               Text="UDP Request"
-                               FontSize="16"
-                               FontWeight="Bold"
-                               Margin="0,0,0,10"/>
 
                     <Label Grid.Row="1"
                            Grid.Column="0"
                            Content="IP:"
-                           VerticalAlignment="Center"
-                           />
+                           VerticalAlignment="Center"/>
                     <TextBox Grid.Row="1"
                              Grid.Column="1"
                              Text="{Binding CurrentRequest.IpAddress}"
@@ -77,7 +71,19 @@
                             Style="{StaticResource ModernButton}"
                             FontSize="12"
                             FontWeight="Bold"
-                            IsEnabled="{Binding IsSending, Converter={x:Static local:BooleanToInverseBooleanConverter.Instance}}"/>
+                            IsEnabled="{Binding IsSending, Converter={x:Static local:BooleanToInverseBooleanConverter.Instance}}"
+                            Margin="0,0,10,0"/>
+
+                    <Button Grid.Row="1"
+                            Grid.Column="6"
+                            Content="Save"
+                            Command="{Binding SaveCommand}"
+                            Style="{StaticResource ModernButton}"
+                            Background="#4CAF50"
+                            FontSize="12"
+                            FontWeight="Bold"
+                            IsEnabled="{Binding IsSending, Converter={x:Static local:BooleanToInverseBooleanConverter.Instance}}"
+                            ToolTip="새 요청 저장 또는 기존 요청 업데이트" Margin="0,0,5,0"/>
                 </Grid>
             </Border>
 

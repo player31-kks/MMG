@@ -27,23 +27,36 @@
         <Grid Grid.Row="1"
               Margin="20">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"
+                                  MinWidth="300"/>
+                <ColumnDefinition Width="5"/>
                 <ColumnDefinition Width="2*"
-                        MinWidth="400"/>
+                                  MinWidth="400"/>
                 <ColumnDefinition Width="5"/>
                 <ColumnDefinition Width="1.5*"
-                        MinWidth="300"/>
+                                  MinWidth="300"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Left Panel - Request -->
-            <views:RequestPanel Grid.Column="0"/>
+            <!-- Left Panel - Saved Requests -->
+            <views:SavedRequestsPanel Grid.Column="0"/>
 
-            <!-- Splitter -->
+            <!-- Splitter 1 -->
             <GridSplitter Grid.Column="1"
                           HorizontalAlignment="Stretch"
-                          Background="#DDDDDD"/>
+                          Width="10"
+                          Background="#EEEEEE"/>
+
+            <!-- Middle Panel - Request -->
+            <views:RequestPanel Grid.Column="2"/>
+
+            <!-- Splitter 2 -->
+            <GridSplitter Grid.Column="3"
+                          HorizontalAlignment="Stretch"
+                          Width="10"
+                          Background="#EEEEEE"/>
 
             <!-- Right Panel - Response -->
-            <views:ResponsePanel Grid.Column="2"/>
+            <views:ResponsePanel Grid.Column="4"/>
         </Grid>
     </Grid>
 </Window>

@@ -8,4 +8,21 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Reference Include="System.Data.SQLite">
+      <HintPath>Libraries\System.Data.SQLite.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Libraries\x86\SQLite.Interop.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>x86\SQLite.Interop.dll</TargetPath>
+    </Content>
+    <Content Include="Libraries\x64\SQLite.Interop.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>x64\SQLite.Interop.dll</TargetPath>
+    </Content>
+  </ItemGroup>
+
 </Project>

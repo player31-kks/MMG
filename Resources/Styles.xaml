@@ -1,6 +1,7 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+        
         <!-- Button Style -->
         <Style x:Key="ModernButton"
                TargetType="Button">
@@ -88,6 +89,8 @@
                TargetType="ComboBox">
                 <Setter Property="Padding"
                         Value="8"/>
+                <Setter Property="HorizontalContentAlignment"
+                        Value="Center"/>
                 <Setter Property="BorderBrush"
                         Value="#DDDDDD"/>
                 <Setter Property="BorderThickness"
