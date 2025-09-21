@@ -22,7 +22,10 @@
                             Orientation="Horizontal">
                     <Button Content="Add Header"
                             Command="{Binding AddResponseHeaderCommand}"
-                            Style="{StaticResource ModernButton}"/>
+                            Style="{StaticResource ModernButton}"
+                            Width="80"
+                            Height="30"
+                            />
                     <TextBlock Text="Define response header parsing"
                                VerticalAlignment="Center"
                                Margin="15,0,0,0"
@@ -98,7 +101,10 @@
                             Orientation="Horizontal">
                     <Button Content="Add Field"
                             Command="{Binding AddResponsePayloadFieldCommand}"
-                            Style="{StaticResource ModernButton}"/>
+                            Style="{StaticResource ModernButton}"
+                            Width="80"
+                            Height="30"
+                            />
                     <TextBlock Text="Define response payload parsing"
                                VerticalAlignment="Center"
                                Margin="15,0,0,0"

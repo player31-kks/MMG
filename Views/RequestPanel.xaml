@@ -24,7 +24,7 @@
                     Background="#F8F9FA"
                     BorderBrush="#DDDDDD"
                     BorderThickness="0,0,0,1"
-                    Padding="20">
+                    Padding="10">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -33,7 +33,7 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"
-                                MinWidth="120"/>
+                                MinWidth="80"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"
                                 MinWidth="80"/>
@@ -53,7 +53,7 @@
                            Grid.Column="0"
                            Content="IP:"
                            VerticalAlignment="Center"
-                           Margin="0,0,10,0"/>
+                           />
                     <TextBox Grid.Row="1"
                              Grid.Column="1"
                              Text="{Binding CurrentRequest.IpAddress}"
@@ -72,12 +72,11 @@
 
                     <Button Grid.Row="1"
                             Grid.Column="5"
-                            Content="Send Request"
+                            Content="Send"
                             Command="{Binding SendCommand}"
                             Style="{StaticResource ModernButton}"
                             FontSize="12"
                             FontWeight="Bold"
-                            Padding="15,8"
                             IsEnabled="{Binding IsSending, Converter={x:Static local:BooleanToInverseBooleanConverter.Instance}}"/>
                 </Grid>
             </Border>

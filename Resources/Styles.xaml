@@ -8,6 +8,8 @@
                         Value="#007ACC"/>
                 <Setter Property="Foreground"
                         Value="White"/>
+                <Setter Property="FontSize"
+                        Value="12"/>
                 <Setter Property="BorderThickness"
                         Value="0"/>
                 <Setter Property="Padding"
