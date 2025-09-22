@@ -88,7 +88,7 @@
         <Style x:Key="ModernComboBox"
                TargetType="ComboBox">
                 <Setter Property="Padding"
-                        Value="10,8"/>
+                        Value="12,10"/>
                 <Setter Property="HorizontalContentAlignment"
                         Value="Left"/>
                 <Setter Property="BorderBrush"
@@ -100,7 +100,9 @@
                 <Setter Property="FontSize"
                         Value="13"/>
                 <Setter Property="MinHeight"
-                        Value="35"/>
+                        Value="38"/>
+                <Setter Property="MinWidth"
+                        Value="140"/>
                 <Setter Property="Template">
                         <Setter.Value>
                                 <ControlTemplate TargetType="ComboBox">
@@ -130,14 +132,14 @@
                                                                                   Content="{TemplateBinding SelectionBoxItem}"
                                                                                   ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                                                                   ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
-                                                                                  Margin="{TemplateBinding Padding}"
-                                                                                  VerticalAlignment="Center"
+                                                                                  Margin="12,3,12,15"
+                                                                                  VerticalAlignment="Top"
                                                                                   HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
                                                                 <TextBox x:Name="PART_EditableTextBox"
                                                                          Style="{x:Null}"
                                                                          HorizontalAlignment="Left"
-                                                                         VerticalAlignment="Center"
-                                                                         Margin="{TemplateBinding Padding}"
+                                                                         VerticalAlignment="Top"
+                                                                         Margin="12,3,12,15"
                                                                          Focusable="True"
                                                                          Background="Transparent"
                                                                          BorderThickness="0"
@@ -340,6 +342,237 @@
                                 </ControlTemplate>
                         </Setter.Value>
                 </Setter>
+        </Style>
+
+        <!-- DataGrid Style -->
+        <Style TargetType="DataGrid">
+                <Setter Property="Background"
+                        Value="White"/>
+                <Setter Property="BorderBrush"
+                        Value="#E0E0E0"/>
+                <Setter Property="BorderThickness"
+                        Value="1"/>
+                <Setter Property="GridLinesVisibility"
+                        Value="Horizontal"/>
+                <Setter Property="HorizontalGridLinesBrush"
+                        Value="#F0F0F0"/>
+                <Setter Property="VerticalGridLinesBrush"
+                        Value="#F0F0F0"/>
+                <Setter Property="RowBackground"
+                        Value="White"/>
+                <Setter Property="AlternatingRowBackground"
+                        Value="#FAFAFA"/>
+                <Setter Property="RowHeight"
+                        Value="40"/>
+                <Setter Property="ColumnHeaderHeight"
+                        Value="45"/>
+                <Setter Property="FontSize"
+                        Value="13"/>
+                <Setter Property="CanUserResizeRows"
+                        Value="False"/>
+        </Style>
+
+        <!-- DataGrid Column Header Style -->
+        <Style TargetType="DataGridColumnHeader">
+                <Setter Property="Background"
+                        Value="#F8F9FA"/>
+                <Setter Property="Foreground"
+                        Value="#2C3E50"/>
+                <Setter Property="FontWeight"
+                        Value="SemiBold"/>
+                <Setter Property="FontSize"
+                        Value="13"/>
+                <Setter Property="Padding"
+                        Value="12,8"/>
+                <Setter Property="BorderBrush"
+                        Value="#E0E0E0"/>
+                <Setter Property="BorderThickness"
+                        Value="0,0,1,1"/>
+                <Setter Property="HorizontalContentAlignment"
+                        Value="Left"/>
+                <Setter Property="VerticalContentAlignment"
+                        Value="Center"/>
+                <Setter Property="Template">
+                        <Setter.Value>
+                                <ControlTemplate TargetType="DataGridColumnHeader">
+                                        <Border x:Name="Border"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver"
+                                                         Value="True">
+                                                        <Setter TargetName="Border"
+                                                                Property="Background"
+                                                                Value="#ECF0F1"/>
+                                                </Trigger>
+                                        </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                        </Setter.Value>
+                </Setter>
+        </Style>
+
+        <!-- DataGrid Row Style -->
+        <Style TargetType="DataGridRow">
+                <Setter Property="Background"
+                        Value="Transparent"/>
+                <Setter Property="Foreground"
+                        Value="#2C3E50"/>
+                <Setter Property="BorderThickness"
+                        Value="0"/>
+                <Setter Property="Margin"
+                        Value="0"/>
+                <Setter Property="Template">
+                        <Setter.Value>
+                                <ControlTemplate TargetType="DataGridRow">
+                                        <Border x:Name="DGR_Border"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                SnapsToDevicePixels="True">
+                                                <SelectiveScrollingGrid>
+                                                        <SelectiveScrollingGrid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                        </SelectiveScrollingGrid.ColumnDefinitions>
+                                                        <SelectiveScrollingGrid.RowDefinitions>
+                                                                <RowDefinition Height="*"/>
+                                                                <RowDefinition Height="Auto"/>
+                                                        </SelectiveScrollingGrid.RowDefinitions>
+                                                        <DataGridCellsPresenter Grid.Column="1"
+                                                                                ItemsPanel="{TemplateBinding ItemsPanel}"
+                                                                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                                        <DataGridDetailsPresenter Grid.Column="1"
+                                                                                  Grid.Row="1"
+                                                                                  SelectiveScrollingGrid.SelectiveScrollingOrientation="{Binding AreRowDetailsFrozen, ConverterParameter={x:Static SelectiveScrollingOrientation.Vertical}, Converter={x:Static DataGrid.RowDetailsScrollingConverter}, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}"
+                                                                                  Visibility="{TemplateBinding DetailsVisibility}"/>
+                                                        <DataGridRowHeader Grid.RowSpan="2"
+                                                                           SelectiveScrollingGrid.SelectiveScrollingOrientation="Vertical"
+                                                                           Visibility="{Binding HeadersVisibility, ConverterParameter={x:Static DataGridHeadersVisibility.Row}, Converter={x:Static DataGrid.HeadersVisibilityConverter}, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}}}"/>
+                                                </SelectiveScrollingGrid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver"
+                                                         Value="True">
+                                                        <Setter TargetName="DGR_Border"
+                                                                Property="Background"
+                                                                Value="#F0F8FF"/>
+                                                </Trigger>
+                                                <Trigger Property="IsSelected"
+                                                         Value="True">
+                                                        <Setter TargetName="DGR_Border"
+                                                                Property="Background"
+                                                                Value="#E3F2FD"/>
+                                                </Trigger>
+                                        </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                        </Setter.Value>
+                </Setter>
+        </Style>
+
+        <!-- DataGrid Cell Style -->
+        <Style TargetType="DataGridCell">
+                <Setter Property="Background"
+                        Value="Transparent"/>
+                <Setter Property="Foreground"
+                        Value="#2C3E50"/>
+                <Setter Property="BorderThickness"
+                        Value="0"/>
+                <Setter Property="Padding"
+                        Value="12,8"/>
+                <Setter Property="VerticalContentAlignment"
+                        Value="Center"/>
+                <Setter Property="Template">
+                        <Setter.Value>
+                                <ControlTemplate TargetType="DataGridCell">
+                                        <Border x:Name="CellBorder"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                                <Trigger Property="IsSelected"
+                                                         Value="True">
+                                                        <Setter TargetName="CellBorder"
+                                                                Property="Background"
+                                                                Value="Transparent"/>
+                                                </Trigger>
+                                                <Trigger Property="IsKeyboardFocusWithin"
+                                                         Value="True">
+                                                        <Setter TargetName="CellBorder"
+                                                                Property="BorderBrush"
+                                                                Value="#007ACC"/>
+                                                        <Setter TargetName="CellBorder"
+                                                                Property="BorderThickness"
+                                                                Value="2"/>
+                                                </Trigger>
+                                        </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                        </Setter.Value>
+                </Setter>
+        </Style>
+
+        <!-- DataGrid TextBox Style for inline editing -->
+        <Style x:Key="DataGridTextBoxStyle"
+               TargetType="TextBox">
+                <Setter Property="Background"
+                        Value="White"/>
+                <Setter Property="BorderBrush"
+                        Value="#007ACC"/>
+                <Setter Property="BorderThickness"
+                        Value="1"/>
+                <Setter Property="Padding"
+                        Value="8,6"/>
+                <Setter Property="FontSize"
+                        Value="13"/>
+                <Setter Property="VerticalContentAlignment"
+                        Value="Center"/>
+                <Setter Property="Template">
+                        <Setter.Value>
+                                <ControlTemplate TargetType="TextBox">
+                                        <Border x:Name="border"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="4">
+                                                <ScrollViewer x:Name="PART_ContentHost"
+                                                              Focusable="false"
+                                                              HorizontalScrollBarVisibility="Hidden"
+                                                              VerticalScrollBarVisibility="Hidden"
+                                                              Margin="{TemplateBinding Padding}"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                                <Trigger Property="IsFocused"
+                                                         Value="True">
+                                                        <Setter TargetName="border"
+                                                                Property="BorderBrush"
+                                                                Value="#007ACC"/>
+                                                        <Setter TargetName="border"
+                                                                Property="Background"
+                                                                Value="#F0F8FF"/>
+                                                </Trigger>
+                                        </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                        </Setter.Value>
+                </Setter>
+        </Style>
+
+        <!-- DataGrid TextBlock Style to maintain text color -->
+        <Style x:Key="DataGridTextBlockStyle"
+               TargetType="TextBlock">
+                <Setter Property="Foreground"
+                        Value="#2C3E50"/>
+                <Setter Property="VerticalAlignment"
+                        Value="Center"/>
+                <Setter Property="Padding"
+                        Value="4"/>
         </Style>
 
 </ResourceDictionary>
