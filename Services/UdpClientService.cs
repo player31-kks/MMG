@@ -63,7 +63,7 @@ namespace MMG.Services
             if (IsLoopbackAddress(ipAddress))
             {
                 // For loopback, use a random available port
-                return GetRandomAvailablePort();
+                return targetPort + 10;
             }
             else
             {
