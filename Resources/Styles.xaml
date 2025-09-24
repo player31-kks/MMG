@@ -55,7 +55,7 @@
         <Style x:Key="ModernTextBox"
                TargetType="TextBox">
                 <Setter Property="Padding"
-                        Value="8"/>
+                        Value="4"/>
                 <Setter Property="BorderBrush"
                         Value="#DDDDDD"/>
                 <Setter Property="BorderThickness"
