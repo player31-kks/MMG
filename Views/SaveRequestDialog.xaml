@@ -1,0 +1,57 @@
+<Window x:Class="MMG.Views.SaveRequestDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="요청 저장"
+        Width="420"
+        Height="180"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="White">
+    <Border BorderBrush="#E0E0E0"
+            BorderThickness="1"
+            CornerRadius="8"
+            Margin="5">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Label Grid.Row="0"
+                   Content="요청 이름:"
+                   FontSize="14"
+                   FontWeight="SemiBold"
+                   Foreground="#2C3E50"
+                   Margin="0,0,0,10"/>
+
+            <TextBox x:Name="RequestNameTextBox"
+                     Grid.Row="1"
+                     Height="35"
+                     Margin="0,0,0,15"
+                     Style="{StaticResource ModernTextBox}"/>
+
+            <StackPanel Grid.Row="2"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right">
+                <Button x:Name="SaveButton"
+                        Content="저장"
+                        Width="75"
+                        Height="30"
+                        Margin="0,0,10,0"
+                        IsDefault="True"
+                        Style="{StaticResource ModernButton}"
+                        Click="SaveButton_Click"/>
+
+                <Button x:Name="CancelButton"
+                        Content="취소"
+                        Width="75"
+                        Height="30"
+                        IsCancel="True"
+                        Style="{StaticResource ModernButton}"
+                        Background="#6C757D"
+                        Click="CancelButton_Click"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>
