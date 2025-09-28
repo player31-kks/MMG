@@ -8,6 +8,7 @@ namespace MMG.Models
         private string _name = "";
         private string _ipAddress = "";
         private int _port;
+        private int? _folderId;
         private string _requestSchemaJson = "";
         private string _responseSchemaJson = "";
         private DateTime _createdAt;
@@ -50,6 +51,16 @@ namespace MMG.Models
             {
                 _port = value;
                 OnPropertyChanged(nameof(Port));
+            }
+        }
+
+        public int? FolderId
+        {
+            get => _folderId;
+            set
+            {
+                _folderId = value;
+                OnPropertyChanged(nameof(FolderId));
             }
         }
 

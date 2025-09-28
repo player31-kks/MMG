@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
+using System.Linq;
 using MMG.Models;
 using MMG.Services;
 using MMG.Views;
@@ -20,6 +21,10 @@ namespace MMG.ViewModels
         private ObservableCollection<SavedRequest> _savedRequests = new();
         private SavedRequest? _selectedSavedRequest;
         private SavedRequest? _currentLoadedRequest; // 현재 로드된 요청 추적
+        private ObservableCollection<TreeViewItemModel> _treeItems = new();
+        private TreeViewItemModel? _selectedTreeItem;
+        private ObservableCollection<Folder> _folders = new();
+        private bool _hasSelectedItem;
 
         public MainViewModel()
         {
@@ -44,8 +49,10 @@ namespace MMG.ViewModels
             SaveCommand = new RelayCommand(async () => await SaveRequest(), () => !IsSending);
             RefreshCommand = new RelayCommand(async () => await LoadSavedRequests());
             LoadSelectedCommand = new RelayCommand(() => LoadSelectedRequest(), () => SelectedSavedRequest != null);
-            DeleteSelectedCommand = new RelayCommand(async () => await DeleteSelectedRequest(), () => SelectedSavedRequest != null);
+            LoadSelectedRequestCommand = new RelayCommand(() => LoadSelectedTreeRequest(), () => HasSelectedItem);
+            DeleteSelectedCommand = new RelayCommand(async () => await DeleteSelectedItem(), () => HasSelectedItem);
             NewRequestCommand = new RelayCommand(() => CreateNewRequest());
+            NewFolderCommand = new RelayCommand(async () => await CreateNewFolder());
             AddHeaderCommand = new RelayCommand(AddHeader);
             RemoveHeaderCommand = new RelayCommand<DataField>(RemoveHeader);
             AddPayloadFieldCommand = new RelayCommand(AddPayloadField);
@@ -143,6 +150,57 @@ namespace MMG.ViewModels
             }
         }
 
+        public ObservableCollection<TreeViewItemModel> TreeItems
+        {
+            get => _treeItems;
+            set
+            {
+                _treeItems = value;
+                OnPropertyChanged(nameof(TreeItems));
+            }
+        }
+
+        public TreeViewItemModel? SelectedTreeItem
+        {
+            get => _selectedTreeItem;
+            set
+            {
+                _selectedTreeItem = value;
+                OnPropertyChanged(nameof(SelectedTreeItem));
+                
+                // Update HasSelectedItem and commands
+                HasSelectedItem = _selectedTreeItem != null;
+                
+                // Auto-load request if it's a request type
+                if (_selectedTreeItem?.ItemType == TreeViewItemType.Request && _selectedTreeItem.Tag is SavedRequest request)
+                {
+                    SelectedSavedRequest = request;
+                }
+            }
+        }
+
+        public ObservableCollection<Folder> Folders
+        {
+            get => _folders;
+            set
+            {
+                _folders = value;
+                OnPropertyChanged(nameof(Folders));
+            }
+        }
+
+        public bool HasSelectedItem
+        {
+            get => _hasSelectedItem;
+            set
+            {
+                _hasSelectedItem = value;
+                OnPropertyChanged(nameof(HasSelectedItem));
+                ((RelayCommand)LoadSelectedRequestCommand).RaiseCanExecuteChanged();
+                ((RelayCommand)DeleteSelectedCommand).RaiseCanExecuteChanged();
+            }
+        }
+
         public int HeaderBytes
         {
             get => CalculateBytes(CurrentRequest.Headers);
@@ -172,6 +230,8 @@ namespace MMG.ViewModels
         public ICommand RemoveResponsePayloadFieldCommand { get; }
         public ICommand AddResponseFieldCommand { get; }
         public ICommand RemoveResponseFieldCommand { get; }
+        public ICommand LoadSelectedRequestCommand { get; }
+        public ICommand NewFolderCommand { get; }
 
         private async Task SendRequest()
         {
@@ -210,7 +270,8 @@ namespace MMG.ViewModels
                 else
                 {
                     // 새로운 요청 저장
-                    var dialog = new SaveRequestDialog();
+                    var folders = await _databaseService.GetAllFoldersAsync();
+                    var dialog = new SaveRequestDialog(folders);
                     if (dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(dialog.RequestName))
                     {
                         var savedRequest = new SavedRequest
@@ -218,6 +279,7 @@ namespace MMG.ViewModels
                             Name = dialog.RequestName,
                             IpAddress = CurrentRequest.IpAddress,
                             Port = CurrentRequest.Port,
+                            FolderId = dialog.SelectedFolderId,
                             RequestSchemaJson = _databaseService.SerializeDataFields(CurrentRequest.Headers) +
                                                "|" + _databaseService.SerializeDataFields(CurrentRequest.Payload),
                             ResponseSchemaJson = _databaseService.SerializeDataFields(ResponseSchema.Headers) +
@@ -248,6 +310,7 @@ namespace MMG.ViewModels
             try
             {
                 SavedRequests = await _databaseService.GetAllRequestsAsync();
+                await BuildTreeView(); // TreeView도 함께 업데이트
             }
             catch (Exception ex)
             {
@@ -521,6 +584,155 @@ namespace MMG.ViewModels
             {
                 NotifyBytesChanged();
             }
+        }
+
+        // Tree View Methods
+        private void LoadSelectedTreeRequest()
+        {
+            if (SelectedTreeItem?.ItemType == TreeViewItemType.Request && SelectedTreeItem.Tag is SavedRequest request)
+            {
+                SelectedSavedRequest = request;
+            }
+        }
+
+        private async Task DeleteSelectedItem()
+        {
+            if (SelectedTreeItem == null) return;
+
+            var result = MessageBox.Show(
+                $"'{SelectedTreeItem.Name}'을(를) 삭제하시겠습니까?",
+                "삭제 확인",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes) return;
+
+            try
+            {
+                bool success = false;
+
+                if (SelectedTreeItem.ItemType == TreeViewItemType.Folder && SelectedTreeItem.Tag is Folder folder)
+                {
+                    success = await _databaseService.DeleteFolderAsync(folder.Id);
+                }
+                else if (SelectedTreeItem.ItemType == TreeViewItemType.Request && SelectedTreeItem.Tag is SavedRequest request)
+                {
+                    success = await _databaseService.DeleteRequestAsync(request.Id);
+                }
+
+                if (success)
+                {
+                    await BuildTreeView();
+                }
+                else
+                {
+                    MessageBox.Show("삭제에 실패했습니다.", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"삭제 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task CreateNewFolder()
+        {
+            try
+            {
+                var folders = await _databaseService.GetAllFoldersAsync();
+                var dialog = new CreateFolderDialog(folders);
+
+                if (dialog.ShowDialog() == true)
+                {
+                    var newFolder = new Folder
+                    {
+                        Name = dialog.FolderName,
+                        ParentId = dialog.ParentFolderId
+                    };
+
+                    await _databaseService.SaveFolderAsync(newFolder);
+                    await BuildTreeView();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"폴더 생성 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task BuildTreeView()
+        {
+            try
+            {
+                var folders = await _databaseService.GetAllFoldersAsync();
+                var allRequests = await _databaseService.GetAllRequestsAsync();
+
+                Folders = folders;
+
+                var treeItems = new ObservableCollection<TreeViewItemModel>();
+
+                // Build root folders first
+                var rootFolders = folders.Where(f => f.ParentId == null).OrderBy(f => f.Name);
+                
+                foreach (var folder in rootFolders)
+                {
+                    var treeItem = CreateFolderTreeItem(folder, folders, allRequests);
+                    treeItems.Add(treeItem);
+                }
+
+                // Add root-level requests (requests without folder)
+                var rootRequests = allRequests.Where(r => r.FolderId == null).OrderBy(r => r.Name);
+                foreach (var request in rootRequests)
+                {
+                    var treeItem = new TreeViewItemModel
+                    {
+                        Name = request.Name,
+                        ItemType = TreeViewItemType.Request,
+                        Tag = request
+                    };
+                    treeItems.Add(treeItem);
+                }
+
+                TreeItems = treeItems;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"트리 뷰 구성 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private TreeViewItemModel CreateFolderTreeItem(Folder folder, ObservableCollection<Folder> allFolders, ObservableCollection<SavedRequest> allRequests)
+        {
+            var treeItem = new TreeViewItemModel
+            {
+                Name = folder.Name,
+                ItemType = TreeViewItemType.Folder,
+                Tag = folder,
+                IsExpanded = folder.IsExpanded
+            };
+
+            // Add subfolders
+            var subFolders = allFolders.Where(f => f.ParentId == folder.Id).OrderBy(f => f.Name);
+            foreach (var subFolder in subFolders)
+            {
+                var subTreeItem = CreateFolderTreeItem(subFolder, allFolders, allRequests);
+                treeItem.Children.Add(subTreeItem);
+            }
+
+            // Add requests in this folder
+            var folderRequests = allRequests.Where(r => r.FolderId == folder.Id).OrderBy(r => r.Name);
+            foreach (var request in folderRequests)
+            {
+                var requestTreeItem = new TreeViewItemModel
+                {
+                    Name = request.Name,
+                    ItemType = TreeViewItemType.Request,
+                    Tag = request
+                };
+                treeItem.Children.Add(requestTreeItem);
+            }
+
+            return treeItem;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

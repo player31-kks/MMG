@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="요청 저장"
         Width="420"
-        Height="180"
+        Height="250"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Background="White">
@@ -13,6 +13,8 @@
             Margin="5">
         <Grid Margin="20">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -31,7 +33,26 @@
                      Margin="0,0,0,15"
                      Style="{StaticResource ModernTextBox}"/>
 
-            <StackPanel Grid.Row="2"
+            <Label Grid.Row="2"
+                   Content="저장할 폴더:"
+                   FontSize="14"
+                   FontWeight="SemiBold"
+                   Foreground="#2C3E50"
+                   Margin="0,0,0,10"/>
+
+            <ComboBox x:Name="FolderComboBox"
+                      Grid.Row="3"
+                      Height="35"
+                      Margin="0,0,0,15"
+                      DisplayMemberPath="Name"
+                      SelectedValuePath="Id"
+                      Style="{StaticResource ModernComboBox}">
+                <ComboBox.Items>
+                    <ComboBoxItem Content="없음 (루트)" IsSelected="True" Tag="{x:Null}"/>
+                </ComboBox.Items>
+            </ComboBox>
+
+            <StackPanel Grid.Row="4"
                         Orientation="Horizontal"
                         HorizontalAlignment="Right">
                 <Button x:Name="SaveButton"

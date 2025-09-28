@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:local="clr-namespace:MMG"
+             xmlns:models="clr-namespace:MMG.Models"
              xmlns:converters="clr-namespace:MMG.Converters"
              mc:Ignorable="d"
              d:DesignHeight="600"
@@ -29,6 +30,7 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Grid.Column="0"
@@ -38,6 +40,16 @@
                                VerticalAlignment="Center"/>
 
                     <Button Grid.Column="1"
+                            Content="📁"
+                            Command="{Binding NewFolderCommand}"
+                            Style="{StaticResource ModernButton}"
+                            Width="30"
+                            Height="25"
+                            FontSize="12"
+                            Margin="0,0,5,0"
+                            ToolTip="새 폴더"/>
+
+                    <Button Grid.Column="2"
                             Content="↻"
                             Command="{Binding RefreshCommand}"
                             Style="{StaticResource ModernButton}"
@@ -48,87 +60,96 @@
                 </Grid>
             </Border>
 
-            <!-- Saved Requests List -->
-            <ListBox Grid.Row="1"
-                     ItemsSource="{Binding SavedRequests}"
-                     SelectedItem="{Binding SelectedSavedRequest}"
-                     Margin="10"
-                     BorderThickness="0"
-                     Background="Transparent">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Border Background="White"
-                                BorderBrush="#E0E0E0"
-                                BorderThickness="1"
-                                CornerRadius="4"
-                                Margin="0,2"
-                                Padding="10,8"
-                                Cursor="Hand">
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Style.Triggers>
-                                        <Trigger Property="IsMouseOver"
-                                                Value="True">
-                                            <Setter Property="Background"
-                                                    Value="#F5F5F5"/>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-
-                                <TextBlock Grid.Row="0"
-                                           Text="{Binding Name}"
-                                           FontWeight="Bold"
-                                           FontSize="13"
-                                           Foreground="#333333"
-                                           TextTrimming="CharacterEllipsis"/>
-
-                                <TextBlock Grid.Row="1"
-                                           FontSize="11"
-                                           Foreground="#666666"
-                                           Margin="0,2,0,0">
-                                    <Run Text="{Binding IpAddress}"/>
-                                    <Run Text=":"/>
-                                    <Run Text="{Binding Port}"/>
-                                </TextBlock>
-
-                                <TextBlock Grid.Row="2"
-                                           Text="{Binding LastModified, StringFormat='Modified: {0:MM/dd HH:mm}'}"
-                                           FontSize="10"
-                                           Foreground="#999999"
-                                           Margin="0,2,0,0"/>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-                <ListBox.ItemContainerStyle>
-                    <Style TargetType="ListBoxItem">
-                        <Setter Property="HorizontalContentAlignment"
-                                Value="Stretch"/>
-                        <Setter Property="Padding"
-                                Value="0"/>
-                        <Setter Property="Margin"
-                                Value="0"/>
-                        <Setter Property="Background"
-                                Value="Transparent"/>
-                        <Setter Property="BorderThickness"
-                                Value="0"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsSelected"
-                                     Value="True">
-                                <Setter Property="Background"
-                                        Value="#E3F2FD"/>
-                            </Trigger>
-                        </Style.Triggers>
+            <!-- Tree View -->
+            <TreeView Grid.Row="1"
+                      x:Name="RequestTreeView"
+                      ItemsSource="{Binding TreeItems}"
+                      Margin="10"
+                      BorderThickness="0"
+                      Background="Transparent"
+                      SelectedItemChanged="TreeView_SelectedItemChanged">
+                <TreeView.ContextMenu>
+                    <ContextMenu x:Name="TreeContextMenu">
+                        <MenuItem Header="새 폴더" Command="{Binding NewFolderCommand}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="📁" FontSize="12"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="새 요청" Command="{Binding NewRequestCommand}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="📃" FontSize="12"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator/>
+                        <MenuItem Header="삭제" Command="{Binding DeleteSelectedCommand}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="🗑️" FontSize="12"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </ContextMenu>
+                </TreeView.ContextMenu>
+                
+                <TreeView.Resources>
+                    <!-- TreeView Item Template -->
+                    <HierarchicalDataTemplate DataType="{x:Type models:TreeViewItemModel}" ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal" Background="Transparent">
+                            <!-- 폴더 아이콘 -->
+                            <TextBlock Text="📁" FontSize="14" Margin="0,0,5,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ItemType}" Value="Folder">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            
+                            <!-- 요청 아이콘 (📃으로 변경) -->
+                            <TextBlock Text="📃" FontSize="12" Margin="0,0,5,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ItemType}" Value="Request">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            
+                            <!-- 이름 -->
+                            <TextBlock Text="{Binding Name}" FontSize="13" VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#555555"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ItemType}" Value="Folder">
+                                                <Setter Property="FontWeight" Value="Bold"/>
+                                                <Setter Property="Foreground" Value="#333333"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.Resources>
+                
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="TreeViewItem">
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+                        <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
+                        <Setter Property="FontSize" Value="13"/>
+                        <Setter Property="Padding" Value="2"/>
+                        <EventSetter Event="MouseDoubleClick" Handler="TreeViewItem_MouseDoubleClick"/>
+                        <EventSetter Event="PreviewMouseRightButtonDown" Handler="TreeViewItem_RightClick"/>
                     </Style>
-                </ListBox.ItemContainerStyle>
-            </ListBox>
+                </TreeView.ItemContainerStyle>
+            </TreeView>
 
             <!-- Action Buttons -->
             <Border Grid.Row="2"
@@ -138,10 +159,20 @@
                     Padding="10">
                 <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Right">
-                    <Button Content="New"
+                    <Button Content="New Folder"
+                            Command="{Binding NewFolderCommand}"
+                            Style="{StaticResource ModernButton}"
+                            Width="80"
+                            Height="25"
+                            FontSize="11"
+                            Margin="0,0,5,0"
+                            Background="#FF9800"
+                            ToolTip="새 폴더 만들기"/>
+                    
+                    <Button Content="New Request"
                             Command="{Binding NewRequestCommand}"
                             Style="{StaticResource ModernButton}"
-                            Width="60"
+                            Width="80"
                             Height="25"
                             FontSize="11"
                             Margin="0,0,5,0"
@@ -155,7 +186,7 @@
                             Height="25"
                             FontSize="11"
                             Background="#FF5252"
-                            IsEnabled="{Binding SelectedSavedRequest, Converter={x:Static converters:NullToBooleanConverter.Instance}}"/>
+                            IsEnabled="{Binding HasSelectedItem}"/>
                 </StackPanel>
             </Border>
         </Grid>

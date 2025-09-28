@@ -27,19 +27,58 @@ namespace MMG.Services
             using var connection = new SQLiteConnection(_connectionString);
             connection.Open();
 
-            var createTableCommand = connection.CreateCommand();
-            createTableCommand.CommandText = @"
+            // Folders 테이블 생성
+            var createFoldersTableCommand = connection.CreateCommand();
+            createFoldersTableCommand.CommandText = @"
+                CREATE TABLE IF NOT EXISTS Folders (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Name TEXT NOT NULL,
+                    ParentId INTEGER,
+                    CreatedAt TEXT NOT NULL,
+                    LastModified TEXT NOT NULL,
+                    FOREIGN KEY (ParentId) REFERENCES Folders (Id)
+                )";
+            createFoldersTableCommand.ExecuteNonQuery();
+
+            // SavedRequests 테이블 생성 (FolderId 추가)
+            var createRequestsTableCommand = connection.CreateCommand();
+            createRequestsTableCommand.CommandText = @"
                 CREATE TABLE IF NOT EXISTS SavedRequests (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     Name TEXT NOT NULL,
                     IpAddress TEXT NOT NULL,
                     Port INTEGER NOT NULL,
+                    FolderId INTEGER,
                     RequestSchemaJson TEXT NOT NULL,
                     ResponseSchemaJson TEXT,
                     CreatedAt TEXT NOT NULL,
-                    LastModified TEXT NOT NULL
+                    LastModified TEXT NOT NULL,
+                    FOREIGN KEY (FolderId) REFERENCES Folders (Id)
                 )";
-            createTableCommand.ExecuteNonQuery();
+            createRequestsTableCommand.ExecuteNonQuery();
+
+            // 기존 테이블이 있는 경우 FolderId 컬럼 추가
+            var checkColumnCommand = connection.CreateCommand();
+            checkColumnCommand.CommandText = "PRAGMA table_info(SavedRequests)";
+            var reader = checkColumnCommand.ExecuteReader();
+            
+            bool hasFolderId = false;
+            while (reader.Read())
+            {
+                if (reader["name"].ToString() == "FolderId")
+                {
+                    hasFolderId = true;
+                    break;
+                }
+            }
+            reader.Close();
+
+            if (!hasFolderId)
+            {
+                var alterTableCommand = connection.CreateCommand();
+                alterTableCommand.CommandText = "ALTER TABLE SavedRequests ADD COLUMN FolderId INTEGER";
+                alterTableCommand.ExecuteNonQuery();
+            }
         }
 
         public async Task<int> SaveRequestAsync(SavedRequest request)
@@ -54,15 +93,15 @@ namespace MMG.Services
             if (request.Id == 0) // Insert
             {
                 command.CommandText = @"
-                    INSERT INTO SavedRequests (Name, IpAddress, Port, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified)
-                    VALUES (@name, @ipAddress, @port, @requestSchemaJson, @responseSchemaJson, @createdAt, @lastModified);
+                    INSERT INTO SavedRequests (Name, IpAddress, Port, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified)
+                    VALUES (@name, @ipAddress, @port, @folderId, @requestSchemaJson, @responseSchemaJson, @createdAt, @lastModified);
                     SELECT last_insert_rowid();";
             }
             else // Update
             {
                 command.CommandText = @"
                     UPDATE SavedRequests 
-                    SET Name = @name, IpAddress = @ipAddress, Port = @port, 
+                    SET Name = @name, IpAddress = @ipAddress, Port = @port, FolderId = @folderId,
                         RequestSchemaJson = @requestSchemaJson, ResponseSchemaJson = @responseSchemaJson, 
                         LastModified = @lastModified
                     WHERE Id = @id;
@@ -73,6 +112,7 @@ namespace MMG.Services
             command.Parameters.AddWithValue("@name", request.Name);
             command.Parameters.AddWithValue("@ipAddress", request.IpAddress);
             command.Parameters.AddWithValue("@port", request.Port);
+            command.Parameters.AddWithValue("@folderId", request.FolderId.HasValue ? (object)request.FolderId.Value : DBNull.Value);
             command.Parameters.AddWithValue("@requestSchemaJson", request.RequestSchemaJson);
             command.Parameters.AddWithValue("@responseSchemaJson", request.ResponseSchemaJson ?? "");
             command.Parameters.AddWithValue("@createdAt", request.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -94,7 +134,7 @@ namespace MMG.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT Id, Name, IpAddress, Port, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
+                SELECT Id, Name, IpAddress, Port, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
                 FROM SavedRequests
                 ORDER BY LastModified DESC";
 
@@ -107,10 +147,11 @@ namespace MMG.Services
                     Name = reader.GetString(1),
                     IpAddress = reader.GetString(2),
                     Port = reader.GetInt32(3),
-                    RequestSchemaJson = reader.GetString(4),
-                    ResponseSchemaJson = reader.GetString(5),
-                    CreatedAt = DateTime.Parse(reader.GetString(6)),
-                    LastModified = DateTime.Parse(reader.GetString(7))
+                    FolderId = reader.IsDBNull(4) ? null : reader.GetInt32(4),
+                    RequestSchemaJson = reader.GetString(5),
+                    ResponseSchemaJson = reader.GetString(6),
+                    CreatedAt = DateTime.Parse(reader.GetString(7)),
+                    LastModified = DateTime.Parse(reader.GetString(8))
                 };
                 requests.Add(request);
             }
@@ -125,7 +166,7 @@ namespace MMG.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT Id, Name, IpAddress, Port, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
+                SELECT Id, Name, IpAddress, Port, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
                 FROM SavedRequests
                 WHERE Id = @id";
             command.Parameters.AddWithValue("@id", id);
@@ -139,10 +180,11 @@ namespace MMG.Services
                     Name = reader.GetString(1),
                     IpAddress = reader.GetString(2),
                     Port = reader.GetInt32(3),
-                    RequestSchemaJson = reader.GetString(4),
-                    ResponseSchemaJson = reader.GetString(5),
-                    CreatedAt = DateTime.Parse(reader.GetString(6)),
-                    LastModified = DateTime.Parse(reader.GetString(7))
+                    FolderId = reader.IsDBNull(4) ? null : reader.GetInt32(4),
+                    RequestSchemaJson = reader.GetString(5),
+                    ResponseSchemaJson = reader.GetString(6),
+                    CreatedAt = DateTime.Parse(reader.GetString(7)),
+                    LastModified = DateTime.Parse(reader.GetString(8))
                 };
             }
 
@@ -214,6 +256,161 @@ namespace MMG.Services
             }
 
             return collection;
+        }
+
+        // 폴더 관련 메서드들
+        public async Task<int> SaveFolderAsync(Folder folder)
+        {
+            using var connection = new SQLiteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            folder.LastModified = DateTime.Now;
+
+            var command = connection.CreateCommand();
+
+            if (folder.Id == 0) // Insert
+            {
+                command.CommandText = @"
+                    INSERT INTO Folders (Name, ParentId, CreatedAt, LastModified)
+                    VALUES (@name, @parentId, @createdAt, @lastModified);
+                    SELECT last_insert_rowid();";
+            }
+            else // Update
+            {
+                command.CommandText = @"
+                    UPDATE Folders 
+                    SET Name = @name, ParentId = @parentId, LastModified = @lastModified
+                    WHERE Id = @id;
+                    SELECT @id;";
+                command.Parameters.AddWithValue("@id", folder.Id);
+            }
+
+            command.Parameters.AddWithValue("@name", folder.Name);
+            command.Parameters.AddWithValue("@parentId", folder.ParentId.HasValue ? (object)folder.ParentId.Value : DBNull.Value);
+            command.Parameters.AddWithValue("@createdAt", folder.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
+            command.Parameters.AddWithValue("@lastModified", folder.LastModified.ToString("yyyy-MM-dd HH:mm:ss"));
+
+            var result = await command.ExecuteScalarAsync();
+            var savedId = Convert.ToInt32(result);
+            folder.Id = savedId;
+
+            return savedId;
+        }
+
+        public async Task<ObservableCollection<Folder>> GetAllFoldersAsync()
+        {
+            var folders = new ObservableCollection<Folder>();
+
+            using var connection = new SQLiteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT Id, Name, ParentId, CreatedAt, LastModified
+                FROM Folders
+                ORDER BY Name ASC";
+
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var folder = new Folder
+                {
+                    Id = reader.GetInt32(0),
+                    Name = reader.GetString(1),
+                    ParentId = reader.IsDBNull(2) ? null : reader.GetInt32(2),
+                    CreatedAt = DateTime.Parse(reader.GetString(3)),
+                    LastModified = DateTime.Parse(reader.GetString(4))
+                };
+                folders.Add(folder);
+            }
+
+            return folders;
+        }
+
+        public async Task<bool> DeleteFolderAsync(int id)
+        {
+            using var connection = new SQLiteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            // 하위 폴더와 요청들도 함께 삭제
+            var transaction = connection.BeginTransaction();
+
+            try
+            {
+                // 먼저 이 폴더에 속한 모든 요청들을 삭제
+                var deleteRequestsCommand = connection.CreateCommand();
+                deleteRequestsCommand.CommandText = "UPDATE SavedRequests SET FolderId = NULL WHERE FolderId = @id";
+                deleteRequestsCommand.Parameters.AddWithValue("@id", id);
+                await deleteRequestsCommand.ExecuteNonQueryAsync();
+
+                // 하위 폴더들의 ParentId를 NULL로 설정 (또는 재귀적으로 삭제할 수도 있음)
+                var updateSubFoldersCommand = connection.CreateCommand();
+                updateSubFoldersCommand.CommandText = "UPDATE Folders SET ParentId = NULL WHERE ParentId = @id";
+                updateSubFoldersCommand.Parameters.AddWithValue("@id", id);
+                await updateSubFoldersCommand.ExecuteNonQueryAsync();
+
+                // 폴더 삭제
+                var deleteFolderCommand = connection.CreateCommand();
+                deleteFolderCommand.CommandText = "DELETE FROM Folders WHERE Id = @id";
+                deleteFolderCommand.Parameters.AddWithValue("@id", id);
+                var rowsAffected = await deleteFolderCommand.ExecuteNonQueryAsync();
+
+                transaction.Commit();
+                return rowsAffected > 0;
+            }
+            catch
+            {
+                transaction.Rollback();
+                return false;
+            }
+        }
+
+        public async Task<ObservableCollection<SavedRequest>> GetRequestsByFolderIdAsync(int? folderId)
+        {
+            var requests = new ObservableCollection<SavedRequest>();
+
+            using var connection = new SQLiteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            var command = connection.CreateCommand();
+            
+            if (folderId.HasValue)
+            {
+                command.CommandText = @"
+                    SELECT Id, Name, IpAddress, Port, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
+                    FROM SavedRequests
+                    WHERE FolderId = @folderId
+                    ORDER BY Name ASC";
+                command.Parameters.AddWithValue("@folderId", folderId.Value);
+            }
+            else
+            {
+                command.CommandText = @"
+                    SELECT Id, Name, IpAddress, Port, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
+                    FROM SavedRequests
+                    WHERE FolderId IS NULL
+                    ORDER BY Name ASC";
+            }
+
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var request = new SavedRequest
+                {
+                    Id = reader.GetInt32(0),
+                    Name = reader.GetString(1),
+                    IpAddress = reader.GetString(2),
+                    Port = reader.GetInt32(3),
+                    FolderId = reader.IsDBNull(4) ? null : reader.GetInt32(4),
+                    RequestSchemaJson = reader.GetString(5),
+                    ResponseSchemaJson = reader.GetString(6),
+                    CreatedAt = DateTime.Parse(reader.GetString(7)),
+                    LastModified = DateTime.Parse(reader.GetString(8))
+                };
+                requests.Add(request);
+            }
+
+            return requests;
         }
     }
 }
