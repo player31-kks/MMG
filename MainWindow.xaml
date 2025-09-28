@@ -14,7 +14,8 @@
         Width="1400"
         MinHeight="600"
         MinWidth="1000"
-        Background="#F5F5F5">
+        Background="#F5F5F5"
+        >
 
     <Window.Resources>
         <ResourceDictionary>
