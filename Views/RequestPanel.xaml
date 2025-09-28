@@ -28,6 +28,7 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -47,27 +48,39 @@
                                           MinWidth="80"/>
                     </Grid.ColumnDefinitions>
 
-                    <Label Grid.Row="0"
+                    <!-- Request Name -->
+                    <TextBlock Grid.Row="0" 
+                               Grid.ColumnSpan="6"
+                               Text="{Binding CurrentLoadedRequestName}" 
+                               FontSize="14" 
+                               FontWeight="Bold" 
+                               Foreground="#2196F3"
+                               Margin="8,0,0,8"
+                               HorizontalAlignment="Left"/>
+                    
+                    <!-- Connection Controls -->
+
+                    <Label Grid.Row="1"
                            Grid.Column="0"
                            Content="IP:"
                            VerticalAlignment="Center"/>
-                    <TextBox Grid.Row="0"
+                    <TextBox Grid.Row="1"
                              Grid.Column="1"
                              Text="{Binding CurrentRequest.IpAddress}"
                              Style="{StaticResource ModernTextBox}"
                              Margin="0,0,10,0"/>
-                    <Label Grid.Row="0"
+                    <Label Grid.Row="1"
                            Grid.Column="2"
                            Content="Port:"
                            VerticalAlignment="Center"
                            Margin="0,0,10,0"/>
-                    <TextBox Grid.Row="0"
+                    <TextBox Grid.Row="1"
                              Grid.Column="3"
                              Text="{Binding CurrentRequest.Port}"
                              Style="{StaticResource ModernTextBox}"
                              Margin="0,0,10,0"/>
 
-                    <Button Grid.Row="0"
+                    <Button Grid.Row="1"
                             Grid.Column="4"
                             Content="Send"
                             Command="{Binding SendCommand}"
@@ -77,7 +90,7 @@
                             IsEnabled="{Binding IsSending, Converter={x:Static local:BooleanToInverseBooleanConverter.Instance}}"
                             Margin="0,0,10,0"/>
 
-                    <Button Grid.Row="0"
+                    <Button Grid.Row="1"
                             Grid.Column="5"
                             Content="Save"
                             Command="{Binding SaveCommand}"

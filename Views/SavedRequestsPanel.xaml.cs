@@ -118,5 +118,30 @@ namespace MMG.Views
         {
             AddPopup.IsOpen = false;
         }
+
+        private void EditTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (sender is TextBox textBox && textBox.DataContext is TreeViewItemModel item)
+            {
+                if (e.Key == Key.Enter)
+                {
+                    // Enter 키를 누르면 저장
+                    if (DataContext is MainViewModel viewModel)
+                    {
+                        viewModel.SaveRenameCommand.Execute(item);
+                    }
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.Escape)
+                {
+                    // Escape 키를 누르면 취소
+                    if (DataContext is MainViewModel viewModel)
+                    {
+                        viewModel.CancelRenameCommand.Execute(item);
+                    }
+                    e.Handled = true;
+                }
+            }
+        }
     }
 }

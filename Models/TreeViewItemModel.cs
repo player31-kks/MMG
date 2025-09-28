@@ -15,6 +15,7 @@ namespace MMG.Models
         private TreeViewItemType _itemType;
         private bool _isExpanded = true;
         private bool _isSelected;
+        private bool _isEditing;
         private ObservableCollection<TreeViewItemModel> _children = new();
         private object? _tag; // Folder 또는 SavedRequest 객체 저장
 
@@ -55,6 +56,16 @@ namespace MMG.Models
             {
                 _isSelected = value;
                 OnPropertyChanged(nameof(IsSelected));
+            }
+        }
+
+        public bool IsEditing
+        {
+            get => _isEditing;
+            set
+            {
+                _isEditing = value;
+                OnPropertyChanged(nameof(IsEditing));
             }
         }
 

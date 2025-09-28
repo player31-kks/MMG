@@ -52,6 +52,9 @@ namespace MMG.ViewModels
             LoadSelectedRequestCommand = new RelayCommand(() => LoadSelectedTreeRequest(), () => HasSelectedItem);
             DeleteSelectedCommand = new RelayCommand(async () => await DeleteSelectedItem(), () => HasSelectedItem);
             DeleteItemCommand = new RelayCommand<TreeViewItemModel>(async (item) => await DeleteSpecificItem(item));
+            RenameItemCommand = new RelayCommand<TreeViewItemModel>((item) => StartRenaming(item));
+            SaveRenameCommand = new RelayCommand<TreeViewItemModel>(async (item) => await SaveRename(item));
+            CancelRenameCommand = new RelayCommand<TreeViewItemModel>((item) => CancelRename(item));
             NewRequestCommand = new RelayCommand(() => CreateNewRequest());
             NewFolderCommand = new RelayCommand(async () => await CreateNewFolder());
             AddHeaderCommand = new RelayCommand(AddHeader);
@@ -215,6 +218,8 @@ namespace MMG.ViewModels
         public string HeaderBytesText => $"Total: {HeaderBytes} bytes";
         public string PayloadBytesText => $"Total: {PayloadBytes} bytes";
 
+        public string CurrentLoadedRequestName => _currentLoadedRequest?.Name ?? "새 요청";
+
         public ICommand SendCommand { get; }
         public ICommand SaveCommand { get; }
         public ICommand RefreshCommand { get; }
@@ -234,6 +239,9 @@ namespace MMG.ViewModels
         public ICommand LoadSelectedRequestCommand { get; }
         public ICommand NewFolderCommand { get; }
         public ICommand DeleteItemCommand { get; }
+        public ICommand RenameItemCommand { get; }
+        public ICommand SaveRenameCommand { get; }
+        public ICommand CancelRenameCommand { get; }
 
         private async Task SendRequest()
         {
@@ -290,6 +298,7 @@ namespace MMG.ViewModels
 
                         await _databaseService.SaveRequestAsync(savedRequest);
                         _currentLoadedRequest = savedRequest; // 저장 후 현재 로드된 요청으로 설정
+                        OnPropertyChanged(nameof(CurrentLoadedRequestName));
                         MessageBox.Show($"요청 '{dialog.RequestName}'이 저장되었습니다.", "저장 완료", MessageBoxButton.OK, MessageBoxImage.Information);
 
                         // 저장된 요청 목록 새로고침
@@ -383,6 +392,7 @@ namespace MMG.ViewModels
 
                 // 현재 로드된 요청으로 설정
                 _currentLoadedRequest = SelectedSavedRequest;
+                OnPropertyChanged(nameof(CurrentLoadedRequestName));
 
                 NotifyBytesChanged();
             }
@@ -398,6 +408,7 @@ namespace MMG.ViewModels
             {
                 // 새로운 요청 생성
                 _currentLoadedRequest = null; // 현재 로드된 요청 초기화
+                OnPropertyChanged(nameof(CurrentLoadedRequestName));
                 SelectedSavedRequest = null; // 선택된 요청 초기화
 
                 // IP와 Port 초기화
@@ -775,6 +786,87 @@ namespace MMG.ViewModels
             {
                 MessageBox.Show($"삭제 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void StartRenaming(TreeViewItemModel item)
+        {
+            // 다른 편집 중인 항목들 종료
+            foreach (var treeItem in GetAllTreeItems())
+            {
+                if (treeItem.IsEditing)
+                {
+                    treeItem.IsEditing = false;
+                }
+            }
+            
+            item.IsEditing = true;
+        }
+
+        private async Task SaveRename(TreeViewItemModel item)
+        {
+            if (string.IsNullOrWhiteSpace(item.Name))
+            {
+                MessageBox.Show("이름을 입력해주세요.", "알림", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                if (item.ItemType == TreeViewItemType.Request && item.Tag is SavedRequest request)
+                {
+                    request.Name = item.Name;
+                    await _databaseService.SaveRequestAsync(request);
+                }
+                else if (item.ItemType == TreeViewItemType.Folder && item.Tag is Folder folder)
+                {
+                    folder.Name = item.Name;
+                    await _databaseService.SaveFolderAsync(folder);
+                }
+
+                item.IsEditing = false;
+                await LoadSavedRequests(); // 트리 새로고침
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"이름 변경 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void CancelRename(TreeViewItemModel item)
+        {
+            item.IsEditing = false;
+            
+            // 원래 이름으로 복원
+            if (item.Tag is SavedRequest request)
+            {
+                item.Name = request.Name;
+            }
+            else if (item.Tag is Folder folder)
+            {
+                item.Name = folder.Name;
+            }
+        }
+
+        private IEnumerable<TreeViewItemModel> GetAllTreeItems()
+        {
+            var allItems = new List<TreeViewItemModel>();
+            foreach (var item in TreeItems)
+            {
+                allItems.Add(item);
+                allItems.AddRange(GetChildrenRecursively(item));
+            }
+            return allItems;
+        }
+
+        private IEnumerable<TreeViewItemModel> GetChildrenRecursively(TreeViewItemModel parent)
+        {
+            var children = new List<TreeViewItemModel>();
+            foreach (var child in parent.Children)
+            {
+                children.Add(child);
+                children.AddRange(GetChildrenRecursively(child));
+            }
+            return children;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
