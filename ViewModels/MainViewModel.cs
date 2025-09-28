@@ -51,6 +51,7 @@ namespace MMG.ViewModels
             LoadSelectedCommand = new RelayCommand(() => LoadSelectedRequest(), () => SelectedSavedRequest != null);
             LoadSelectedRequestCommand = new RelayCommand(() => LoadSelectedTreeRequest(), () => HasSelectedItem);
             DeleteSelectedCommand = new RelayCommand(async () => await DeleteSelectedItem(), () => HasSelectedItem);
+            DeleteItemCommand = new RelayCommand<TreeViewItemModel>(async (item) => await DeleteSpecificItem(item));
             NewRequestCommand = new RelayCommand(() => CreateNewRequest());
             NewFolderCommand = new RelayCommand(async () => await CreateNewFolder());
             AddHeaderCommand = new RelayCommand(AddHeader);
@@ -232,6 +233,7 @@ namespace MMG.ViewModels
         public ICommand RemoveResponseFieldCommand { get; }
         public ICommand LoadSelectedRequestCommand { get; }
         public ICommand NewFolderCommand { get; }
+        public ICommand DeleteItemCommand { get; }
 
         private async Task SendRequest()
         {
@@ -733,6 +735,46 @@ namespace MMG.ViewModels
             }
 
             return treeItem;
+        }
+
+        private async Task DeleteSpecificItem(TreeViewItemModel? item)
+        {
+            if (item == null) return;
+
+            var result = MessageBox.Show(
+                $"'{item.Name}'을(를) 삭제하시겠습니까?",
+                "삭제 확인",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes) return;
+
+            try
+            {
+                bool success = false;
+
+                if (item.ItemType == TreeViewItemType.Folder && item.Tag is Folder folder)
+                {
+                    success = await _databaseService.DeleteFolderAsync(folder.Id);
+                }
+                else if (item.ItemType == TreeViewItemType.Request && item.Tag is SavedRequest request)
+                {
+                    success = await _databaseService.DeleteRequestAsync(request.Id);
+                }
+
+                if (success)
+                {
+                    await BuildTreeView();
+                }
+                else
+                {
+                    MessageBox.Show("삭제에 실패했습니다.", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"삭제 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

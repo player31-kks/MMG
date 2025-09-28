@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="새 폴더 만들기"
         Width="350"
-        Height="150"
+        Height="180"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         Background="White">

@@ -22,7 +22,7 @@
                     Background="#F8F9FA"
                     BorderBrush="#DDDDDD"
                     BorderThickness="0,0,0,1"
-                    Padding="20">
+                    Padding="15">
                 <TextBlock Text="Response"
                            FontSize="16"
                            FontWeight="Bold"/>

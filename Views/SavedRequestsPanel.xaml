@@ -9,6 +9,41 @@
              mc:Ignorable="d"
              d:DesignHeight="600"
              d:DesignWidth="300">
+    <UserControl.Resources>
+        <!-- 폴더용 컨텍스트 메뉴 -->
+        <ContextMenu x:Key="FolderContextMenu">
+            <MenuItem Header="새 폴더" Command="{Binding NewFolderCommand}">
+                <MenuItem.Icon>
+                    <TextBlock Text="📁" FontSize="12"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="새 요청" Command="{Binding NewRequestCommand}">
+                <MenuItem.Icon>
+                    <TextBlock Text="📃" FontSize="12"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator/>
+            <MenuItem Header="삭제" 
+                      Command="{Binding DeleteItemCommand}" 
+                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                <MenuItem.Icon>
+                    <TextBlock Text="🗑️" FontSize="12"/>
+                </MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
+        
+        <!-- 요청 파일용 컨텍스트 메뉴 -->
+        <ContextMenu x:Key="RequestContextMenu">
+            <MenuItem Header="삭제" 
+                      Command="{Binding DeleteItemCommand}" 
+                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                <MenuItem.Icon>
+                    <TextBlock Text="🗑️" FontSize="12"/>
+                </MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
+    </UserControl.Resources>
+    
     <Border Background="White"
             BorderBrush="#DDDDDD"
             BorderThickness="1"
@@ -68,8 +103,9 @@
                       BorderThickness="0"
                       Background="Transparent"
                       SelectedItemChanged="TreeView_SelectedItemChanged">
+                <!-- 빈 영역을 위한 기본 컨텍스트 메뉴 -->
                 <TreeView.ContextMenu>
-                    <ContextMenu x:Name="TreeContextMenu">
+                    <ContextMenu x:Name="EmptyAreaContextMenu">
                         <MenuItem Header="새 폴더" Command="{Binding NewFolderCommand}">
                             <MenuItem.Icon>
                                 <TextBlock Text="📁" FontSize="12"/>
@@ -78,12 +114,6 @@
                         <MenuItem Header="새 요청" Command="{Binding NewRequestCommand}">
                             <MenuItem.Icon>
                                 <TextBlock Text="📃" FontSize="12"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <Separator/>
-                        <MenuItem Header="삭제" Command="{Binding DeleteSelectedCommand}">
-                            <MenuItem.Icon>
-                                <TextBlock Text="🗑️" FontSize="12"/>
                             </MenuItem.Icon>
                         </MenuItem>
                     </ContextMenu>
@@ -147,6 +177,7 @@
                         <Setter Property="Padding" Value="2"/>
                         <EventSetter Event="MouseDoubleClick" Handler="TreeViewItem_MouseDoubleClick"/>
                         <EventSetter Event="PreviewMouseRightButtonDown" Handler="TreeViewItem_RightClick"/>
+                        <EventSetter Event="Loaded" Handler="TreeViewItem_Loaded"/>
                     </Style>
                 </TreeView.ItemContainerStyle>
             </TreeView>
@@ -159,16 +190,6 @@
                     Padding="10">
                 <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Right">
-                    <Button Content="New Folder"
-                            Command="{Binding NewFolderCommand}"
-                            Style="{StaticResource ModernButton}"
-                            Width="80"
-                            Height="25"
-                            FontSize="11"
-                            Margin="0,0,5,0"
-                            Background="#FF9800"
-                            ToolTip="새 폴더 만들기"/>
-                    
                     <Button Content="New Request"
                             Command="{Binding NewRequestCommand}"
                             Style="{StaticResource ModernButton}"

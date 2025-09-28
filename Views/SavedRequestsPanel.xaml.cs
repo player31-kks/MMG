@@ -38,10 +38,34 @@ namespace MMG.Views
 
         private void TreeViewItem_RightClick(object sender, MouseButtonEventArgs e)
         {
-            if (sender is TreeViewItem item)
+            // 우클릭 시 시각적 선택을 하지 않도록 수정
+            // 컨텍스트 메뉴는 여전히 정상 작동함
+            e.Handled = true;
+        }
+
+        private void TreeViewItem_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is TreeViewItem item && item.DataContext is TreeViewItemModel treeItem)
             {
-                item.IsSelected = true;
-                e.Handled = true;
+                // 아이템 타입에 따라 다른 컨텍스트 메뉴 설정
+                if (treeItem.ItemType == TreeViewItemType.Folder)
+                {
+                    var contextMenu = FindResource("FolderContextMenu") as ContextMenu;
+                    if (contextMenu != null)
+                    {
+                        contextMenu.DataContext = this.DataContext; // MainViewModel을 DataContext로 설정
+                        item.ContextMenu = contextMenu;
+                    }
+                }
+                else if (treeItem.ItemType == TreeViewItemType.Request)
+                {
+                    var contextMenu = FindResource("RequestContextMenu") as ContextMenu;
+                    if (contextMenu != null)
+                    {
+                        contextMenu.DataContext = this.DataContext; // MainViewModel을 DataContext로 설정
+                        item.ContextMenu = contextMenu;
+                    }
+                }
             }
         }
     }
