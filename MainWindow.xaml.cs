@@ -20,7 +20,7 @@ namespace MMG
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainViewModel();
+            DataContext = new NavigationViewModel();
         }
     }
 }

@@ -6,6 +6,8 @@
         xmlns:local="clr-namespace:MMG"
         xmlns:models="clr-namespace:MMG.Models"
         xmlns:views="clr-namespace:MMG.Views"
+        xmlns:viewModels="clr-namespace:MMG.ViewModels"
+        xmlns:converters="clr-namespace:MMG.Converters"
         mc:Ignorable="d"
         Title="MMG (메시지모의기)"
         Height="900"
@@ -13,6 +15,15 @@
         MinHeight="600"
         MinWidth="1000"
         Background="#F5F5F5">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <converters:StringToBooleanConverter x:Key="StringToBooleanConverter"/>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -23,40 +34,8 @@
         <!-- Header -->
         <views:HeaderPanel Grid.Row="0"/>
 
-        <!-- Main Content -->
-        <Grid Grid.Row="1"
-              Margin="20">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1*"
-                                  MinWidth="300"/>
-                <ColumnDefinition Width="5"/>
-                <ColumnDefinition Width="3*"
-                                  MinWidth="400"/>
-                <ColumnDefinition Width="5"/>
-                <ColumnDefinition Width="1.5*"
-                                  MinWidth="300"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Left Panel - Saved Requests -->
-            <views:SavedRequestsPanel Grid.Column="0"/>
-
-            <!-- Splitter 1 -->
-            <GridSplitter Grid.Column="1"
-                          HorizontalAlignment="Stretch"
-                          Width="10"
-                          Background="#EEEEEE"/>
-
-            <!-- Middle Panel - Request -->
-            <views:RequestPanel Grid.Column="2"/>
-
-            <!-- Splitter 2 -->
-            <GridSplitter Grid.Column="3"
-                          HorizontalAlignment="Stretch"
-                          Width="10"
-                          Background="#EEEEEE"/>
-
-            <!-- Right Panel - Response -->
-            <views:ResponsePanel Grid.Column="4"/>
-        </Grid>
+        <!-- Main Content with Navigation -->
+        <views:NavigationPanel Grid.Row="1" 
+                               Margin="20"/>
     </Grid>
 </Window>

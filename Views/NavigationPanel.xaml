@@ -1,0 +1,68 @@
+<UserControl x:Class="MMG.Views.NavigationPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:views="clr-namespace:MMG.Views"
+             xmlns:viewModels="clr-namespace:MMG.ViewModels"
+             xmlns:converters="clr-namespace:MMG.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <converters:StringToBooleanConverter x:Key="StringToBooleanConverter"/>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../Resources/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid Background="White">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Navigation Tabs -->
+        <StackPanel Grid.Row="0" 
+                    Orientation="Horizontal"
+                    Margin="10,10,10,0">
+            <ToggleButton x:Name="ApiTabButton"
+                          Content="APIs"
+                          Width="80"
+                          Height="40"
+                          Margin="0,0,5,0"
+                          IsChecked="{Binding SelectedTab, Converter={StaticResource StringToBooleanConverter}, ConverterParameter=API}"
+                          Command="{Binding ApiTabCommand}"
+                          Style="{StaticResource NavigationTabStyle}"/>
+            
+            <ToggleButton x:Name="TestsTabButton"
+                          Content="Tests"
+                          Width="80" 
+                          Height="40"
+                          Margin="5,0,0,0"
+                          IsChecked="{Binding SelectedTab, Converter={StaticResource StringToBooleanConverter}, ConverterParameter=Tests}"
+                          Command="{Binding TestsTabCommand}"
+                          Style="{StaticResource NavigationTabStyle}"/>
+        </StackPanel>
+        
+        <!-- Content Area -->
+        <Border Grid.Row="1"
+                Background="#F8F9FA"
+                Margin="10">
+            <ContentPresenter Content="{Binding CurrentContent}">
+                <ContentPresenter.Resources>
+                    <!-- API Content Template -->
+                    <DataTemplate DataType="{x:Type viewModels:MainViewModel}">
+                        <views:ApiContentPanel/>
+                    </DataTemplate>
+                    
+                    <!-- Tests Content Template -->
+                    <DataTemplate DataType="{x:Type viewModels:TestsViewModel}">
+                        <views:TestsContentPanel/>
+                    </DataTemplate>
+                </ContentPresenter.Resources>
+            </ContentPresenter>
+        </Border>
+    </Grid>
+</UserControl>

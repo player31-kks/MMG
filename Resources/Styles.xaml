@@ -51,6 +51,52 @@
                 </Setter>
         </Style>
 
+        <!-- Navigation Tab Style -->
+        <Style x:Key="NavigationTabStyle" TargetType="ToggleButton">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="#6C757D"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Padding" Value="15,8"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="FontWeight" Value="Medium"/>
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                        <Setter.Value>
+                                <ControlTemplate TargetType="ToggleButton">
+                                        <Grid>
+                                                <Border x:Name="Border"
+                                                        Background="{TemplateBinding Background}"
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                                        CornerRadius="6,6,0,0">
+                                                        <ContentPresenter HorizontalAlignment="Center"
+                                                                          VerticalAlignment="Center"
+                                                                          Margin="{TemplateBinding Padding}"/>
+                                                </Border>
+                                                <Rectangle x:Name="ActiveIndicator"
+                                                           Height="3"
+                                                           VerticalAlignment="Bottom"
+                                                           Fill="#007ACC"
+                                                           Visibility="Collapsed"/>
+                                        </Grid>
+                                        <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#F8F9FA"/>
+                                                        <Setter Property="Foreground" Value="#495057"/>
+                                                </Trigger>
+                                                <Trigger Property="IsChecked" Value="True">
+                                                        <Setter Property="Background" Value="White"/>
+                                                        <Setter Property="Foreground" Value="#007ACC"/>
+                                                        <Setter TargetName="ActiveIndicator" Property="Visibility" Value="Visible"/>
+                                                </Trigger>
+                                        </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                        </Setter.Value>
+                </Setter>
+        </Style>
+
         <!-- TextBox Style -->
         <Style x:Key="ModernTextBox"
                TargetType="TextBox">
