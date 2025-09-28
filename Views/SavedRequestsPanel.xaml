@@ -10,6 +10,14 @@
              d:DesignHeight="600"
              d:DesignWidth="300">
     <UserControl.Resources>
+        <!-- Drop Shadow Effect -->
+        <DropShadowEffect x:Key="DropShadow" 
+                          BlurRadius="12" 
+                          ShadowDepth="4" 
+                          Direction="315" 
+                          Color="#80000000" 
+                          Opacity="0.3"/>
+        
         <!-- 폴더용 컨텍스트 메뉴 -->
         <ContextMenu x:Key="FolderContextMenu">
             <MenuItem Header="새 폴더" Command="{Binding NewFolderCommand}">
@@ -52,7 +60,6 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- Header -->
@@ -65,7 +72,6 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Grid.Column="0"
@@ -74,24 +80,86 @@
                                FontWeight="Bold"
                                VerticalAlignment="Center"/>
 
-                    <Button Grid.Column="1"
-                            Content="📁"
-                            Command="{Binding NewFolderCommand}"
-                            Style="{StaticResource ModernButton}"
-                            Width="30"
-                            Height="25"
-                            FontSize="12"
-                            Margin="0,0,5,0"
-                            ToolTip="새 폴더"/>
+                    <!-- + 버튼 with Dropdown -->
+                    <Grid Grid.Column="1" x:Name="AddButtonContainer">
+                        <Button x:Name="AddButton"
+                                Content="+"
+                                Style="{StaticResource ModernButton}"
+                                Width="30"
+                                Height="25"
+                                FontSize="16"
+                                FontWeight="Bold"
+                                Background="#2196F3"
+                                Foreground="White"
+                                BorderBrush="#1976D2"
+                                ToolTip="새로 추가"
+                                MouseEnter="AddButton_MouseEnter"
+                                MouseLeave="AddButton_MouseLeave"/>
 
-                    <Button Grid.Column="2"
-                            Content="↻"
-                            Command="{Binding RefreshCommand}"
-                            Style="{StaticResource ModernButton}"
-                            Width="30"
-                            Height="25"
-                            FontSize="14"
-                            ToolTip="새로고침"/>
+                        <Popup x:Name="AddPopup"
+                               PlacementTarget="{Binding ElementName=AddButton}"
+                               Placement="Bottom"
+                               StaysOpen="False"
+                               AllowsTransparency="True"
+                               MouseEnter="AddPopup_MouseEnter"
+                               MouseLeave="AddPopup_MouseLeave">
+                            <Border Background="White"
+                                    BorderBrush="#DDDDDD"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    Effect="{StaticResource DropShadow}">
+                                <StackPanel Margin="2">
+                                    <Button Content="📁 New Folder"
+                                            Command="{Binding NewFolderCommand}"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="10,8"
+                                            MinWidth="120"
+                                            FontSize="12"
+                                            Foreground="Black"
+                                            Click="PopupButton_Click">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource ModernButton}">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                                <Setter Property="Foreground" Value="Black"/>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#F0F0F0"/>
+                                                        <Setter Property="Foreground" Value="Black"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                    
+                                    <Separator Margin="5,2"/>
+                                    
+                                    <Button Content="📃 New Request"
+                                            Command="{Binding NewRequestCommand}"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="10,8"
+                                            MinWidth="120"
+                                            FontSize="12"
+                                            Foreground="Black"
+                                            Click="PopupButton_Click">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource ModernButton}">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                                <Setter Property="Foreground" Value="Black"/>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#F0F0F0"/>
+                                                        <Setter Property="Foreground" Value="Black"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+                    </Grid>
                 </Grid>
             </Border>
 
@@ -182,34 +250,7 @@
                 </TreeView.ItemContainerStyle>
             </TreeView>
 
-            <!-- Action Buttons -->
-            <Border Grid.Row="2"
-                    Background="#F8F9FA"
-                    BorderBrush="#DDDDDD"
-                    BorderThickness="0,1,0,0"
-                    Padding="10">
-                <StackPanel Orientation="Horizontal"
-                            HorizontalAlignment="Right">
-                    <Button Content="New Request"
-                            Command="{Binding NewRequestCommand}"
-                            Style="{StaticResource ModernButton}"
-                            Width="80"
-                            Height="25"
-                            FontSize="11"
-                            Margin="0,0,5,0"
-                            Background="#4CAF50"
-                            ToolTip="새로운 요청 만들기"/>
 
-                    <Button Content="Delete"
-                            Command="{Binding DeleteSelectedCommand}"
-                            Style="{StaticResource ModernButton}"
-                            Width="60"
-                            Height="25"
-                            FontSize="11"
-                            Background="#FF5252"
-                            IsEnabled="{Binding HasSelectedItem}"/>
-                </StackPanel>
-            </Border>
         </Grid>
     </Border>
 </UserControl>

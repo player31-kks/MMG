@@ -1,6 +1,9 @@
-using System.Windows.Controls;
-using System.Windows.Input;
+using System;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
+using System.Windows.Threading;
 using MMG.Models;
 using MMG.ViewModels;
 
@@ -11,9 +14,18 @@ namespace MMG.Views
     /// </summary>
     public partial class SavedRequestsPanel : UserControl
     {
+        private DispatcherTimer _hoverTimer;
+        private bool _isMouseOverButton = false;
+        private bool _isMouseOverPopup = false;
+
         public SavedRequestsPanel()
         {
             InitializeComponent();
+            _hoverTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(100)
+            };
+            _hoverTimer.Tick += HoverTimer_Tick;
         }
 
         private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -67,6 +79,44 @@ namespace MMG.Views
                     }
                 }
             }
+        }
+
+        private void AddButton_MouseEnter(object sender, MouseEventArgs e)
+        {
+            _isMouseOverButton = true;
+            AddPopup.IsOpen = true;
+        }
+
+        private void AddButton_MouseLeave(object sender, MouseEventArgs e)
+        {
+            _isMouseOverButton = false;
+            _hoverTimer.Start();
+        }
+
+        private void AddPopup_MouseEnter(object sender, MouseEventArgs e)
+        {
+            _isMouseOverPopup = true;
+            _hoverTimer.Stop();
+        }
+
+        private void AddPopup_MouseLeave(object sender, MouseEventArgs e)
+        {
+            _isMouseOverPopup = false;
+            _hoverTimer.Start();
+        }
+
+        private void HoverTimer_Tick(object? sender, EventArgs e)
+        {
+            _hoverTimer.Stop();
+            if (!_isMouseOverButton && !_isMouseOverPopup)
+            {
+                AddPopup.IsOpen = false;
+            }
+        }
+
+        private void PopupButton_Click(object sender, RoutedEventArgs e)
+        {
+            AddPopup.IsOpen = false;
         }
     }
 }
