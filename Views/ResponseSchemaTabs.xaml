@@ -26,10 +26,11 @@
                             Style="{StaticResource ModernButton}"
                             Width="80"
                             Height="30"/>
-                    <TextBlock Text="Define response header parsing"
+                    <TextBlock Text="{Binding ResponseHeaderBytesText}"
                                VerticalAlignment="Center"
                                Margin="15,0,0,0"
-                               Foreground="#666"/>
+                               Foreground="#007ACC"
+                               FontWeight="SemiBold"/>
                 </StackPanel>
 
                 <DataGrid Grid.Row="1"
@@ -130,10 +131,11 @@
                             Style="{StaticResource ModernButton}"
                             Width="80"
                             Height="30"/>
-                    <TextBlock Text="Define response payload parsing"
+                    <TextBlock Text="{Binding ResponsePayloadBytesText}"
                                VerticalAlignment="Center"
                                Margin="15,0,0,0"
-                               Foreground="#666"/>
+                               Foreground="#007ACC"
+                               FontWeight="SemiBold"/>
                 </StackPanel>
 
                 <DataGrid Grid.Row="1"

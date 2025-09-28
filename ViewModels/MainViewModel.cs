@@ -42,8 +42,15 @@ namespace MMG.ViewModels
 
             _currentRequest.Headers.Add(defaultHeader);
             _currentRequest.Payload.Add(defaultPayload);
-            _responseSchema.Headers.Add(new DataField { Name = "ResponseHeader1", Type = DataType.Byte });
-            _responseSchema.Payload.Add(new DataField { Name = "ResponseField1", Type = DataType.Byte });
+            
+            var defaultResponseHeader = new DataField { Name = "ResponseHeader1", Type = DataType.Byte };
+            var defaultResponsePayload = new DataField { Name = "ResponseField1", Type = DataType.Byte };
+            
+            defaultResponseHeader.PropertyChanged += OnResponseDataFieldPropertyChanged;
+            defaultResponsePayload.PropertyChanged += OnResponseDataFieldPropertyChanged;
+            
+            _responseSchema.Headers.Add(defaultResponseHeader);
+            _responseSchema.Payload.Add(defaultResponsePayload);
 
             SendCommand = new RelayCommand(async () => await SendRequest(), () => !IsSending);
             SaveCommand = new RelayCommand(async () => await SaveRequest(), () => !IsSending);
@@ -218,6 +225,19 @@ namespace MMG.ViewModels
         public string HeaderBytesText => $"Total: {HeaderBytes} bytes";
         public string PayloadBytesText => $"Total: {PayloadBytes} bytes";
 
+        public int ResponseHeaderBytes
+        {
+            get => CalculateBytes(ResponseSchema.Headers);
+        }
+
+        public int ResponsePayloadBytes
+        {
+            get => CalculateBytes(ResponseSchema.Payload);
+        }
+
+        public string ResponseHeaderBytesText => $"Total: {ResponseHeaderBytes} bytes";
+        public string ResponsePayloadBytesText => $"Total: {ResponsePayloadBytes} bytes";
+
         public string CurrentLoadedRequestName => _currentLoadedRequest?.Name ?? "새 요청";
 
         public ICommand SendCommand { get; }
@@ -378,6 +398,7 @@ namespace MMG.ViewModels
                         var responseHeaders = _databaseService.DeserializeDataFields(responseHeadersJson);
                         foreach (var header in responseHeaders)
                         {
+                            header.PropertyChanged += OnResponseDataFieldPropertyChanged;
                             ResponseSchema.Headers.Add(header);
                         }
 
@@ -385,6 +406,7 @@ namespace MMG.ViewModels
                         var responsePayload = _databaseService.DeserializeDataFields(responsePayloadJson);
                         foreach (var field in responsePayload)
                         {
+                            field.PropertyChanged += OnResponseDataFieldPropertyChanged;
                             ResponseSchema.Payload.Add(field);
                         }
                     }
@@ -429,10 +451,14 @@ namespace MMG.ViewModels
 
                 // Response Schema 초기화
                 ResponseSchema.Headers.Clear();
-                ResponseSchema.Headers.Add(new DataField { Name = "ResponseHeader1", Type = DataType.Byte });
+                var defaultResponseHeader = new DataField { Name = "ResponseHeader1", Type = DataType.Byte };
+                defaultResponseHeader.PropertyChanged += OnResponseDataFieldPropertyChanged;
+                ResponseSchema.Headers.Add(defaultResponseHeader);
 
                 ResponseSchema.Payload.Clear();
-                ResponseSchema.Payload.Add(new DataField { Name = "ResponseField1", Type = DataType.Byte });
+                var defaultResponsePayload = new DataField { Name = "ResponseField1", Type = DataType.Byte };
+                defaultResponsePayload.PropertyChanged += OnResponseDataFieldPropertyChanged;
+                ResponseSchema.Payload.Add(defaultResponsePayload);
 
                 // Response 초기화
                 LastResponse = null;
@@ -517,24 +543,36 @@ namespace MMG.ViewModels
 
         private void AddResponseHeader()
         {
-            ResponseSchema.Headers.Add(new DataField { Name = $"ResponseHeader{ResponseSchema.Headers.Count + 1}", Type = DataType.Byte });
+            var newHeader = new DataField { Name = $"ResponseHeader{ResponseSchema.Headers.Count + 1}", Type = DataType.Byte };
+            newHeader.PropertyChanged += OnResponseDataFieldPropertyChanged;
+            ResponseSchema.Headers.Add(newHeader);
+            OnPropertyChanged(nameof(ResponseHeaderBytesText));
         }
 
         private void RemoveResponseHeader(DataField? header)
         {
             if (header != null)
+            {
                 ResponseSchema.Headers.Remove(header);
+                OnPropertyChanged(nameof(ResponseHeaderBytesText));
+            }
         }
 
         private void AddResponsePayloadField()
         {
-            ResponseSchema.Payload.Add(new DataField { Name = $"ResponseField{ResponseSchema.Payload.Count + 1}", Type = DataType.Int });
+            var newField = new DataField { Name = $"ResponseField{ResponseSchema.Payload.Count + 1}", Type = DataType.Int };
+            newField.PropertyChanged += OnResponseDataFieldPropertyChanged;
+            ResponseSchema.Payload.Add(newField);
+            OnPropertyChanged(nameof(ResponsePayloadBytesText));
         }
 
         private void RemoveResponsePayloadField(DataField? field)
         {
             if (field != null)
+            {
                 ResponseSchema.Payload.Remove(field);
+                OnPropertyChanged(nameof(ResponsePayloadBytesText));
+            }
         }
 
         private void UpdateResponseText()
@@ -596,6 +634,19 @@ namespace MMG.ViewModels
                 e.PropertyName == nameof(DataField.PaddingSize))
             {
                 NotifyBytesChanged();
+            }
+        }
+
+        private void OnResponseDataFieldPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(DataField.Type) ||
+                e.PropertyName == nameof(DataField.Value) ||
+                e.PropertyName == nameof(DataField.PaddingSize))
+            {
+                OnPropertyChanged(nameof(ResponseHeaderBytes));
+                OnPropertyChanged(nameof(ResponsePayloadBytes));
+                OnPropertyChanged(nameof(ResponseHeaderBytesText));
+                OnPropertyChanged(nameof(ResponsePayloadBytesText));
             }
         }
 
