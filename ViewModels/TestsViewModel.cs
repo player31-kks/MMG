@@ -49,6 +49,9 @@ namespace MMG.ViewModels
             DeleteStepCommand = new RelayCommand(async () => await DeleteStep(), () => SelectedStep != null && !IsTestRunning && !IsStopping);
             SaveStepCommand = new RelayCommand(async () => await SaveStep(), () => SelectedStep != null && !IsTestRunning && !IsStopping);
             RefreshScenariosCommand = new RelayCommand(async () => await RefreshAll());
+            RenameScenarioCommand = new RelayCommand<TestScenario>((scenario) => StartRenaming(scenario));
+            SaveScenarioRenameCommand = new RelayCommand<TestScenario>(async (scenario) => await SaveRename(scenario));
+            CancelScenarioRenameCommand = new RelayCommand<TestScenario>((scenario) => CancelRename(scenario));
 
                         // Initial data loading
             _ = RefreshAll();
@@ -193,6 +196,9 @@ namespace MMG.ViewModels
         public ICommand DeleteStepCommand { get; }
         public ICommand SaveStepCommand { get; }
         public ICommand RefreshScenariosCommand { get; }
+        public ICommand RenameScenarioCommand { get; }
+        public ICommand SaveScenarioRenameCommand { get; }
+        public ICommand CancelScenarioRenameCommand { get; }
 
         #endregion
 
@@ -495,6 +501,74 @@ namespace MMG.ViewModels
 
                 MessageBox.Show(message, "테스트 결과", MessageBoxButton.OK, 
                     e.FailedSteps == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
+            });
+        }
+
+        private void StartRenaming(TestScenario? scenario)
+        {
+            if (scenario == null) return;
+
+            // 다른 편집 중인 시나리오들 종료
+            foreach (var s in Scenarios)
+            {
+                if (s.IsEditing)
+                {
+                    s.IsEditing = false;
+                }
+            }
+            
+            scenario.IsEditing = true;
+        }
+
+        private async Task SaveRename(TestScenario? scenario)
+        {
+            if (scenario == null || string.IsNullOrWhiteSpace(scenario.Name))
+            {
+                if (scenario != null && string.IsNullOrWhiteSpace(scenario.Name))
+                {
+                    MessageBox.Show("시나리오 이름을 입력해주세요.", "알림", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                return;
+            }
+
+            try
+            {
+                await _testDatabaseService.UpdateScenarioAsync(scenario);
+                scenario.IsEditing = false;
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show($"시나리오 이름 변경 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void CancelRename(TestScenario? scenario)
+        {
+            if (scenario == null) return;
+
+            scenario.IsEditing = false;
+            
+            // 원래 이름으로 복원 (데이터베이스에서 다시 로드)
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var originalScenario = await _testDatabaseService.GetScenarioByIdAsync(scenario.Id);
+                    if (originalScenario != null)
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            scenario.Name = originalScenario.Name;
+                        });
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        MessageBox.Show($"원래 이름을 복원하는 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                    });
+                }
             });
         }
 

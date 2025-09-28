@@ -6,6 +6,9 @@
              xmlns:models="clr-namespace:MMG.Models"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1200">
+    
+
+    
     <Grid Background="White">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -105,10 +108,55 @@
                                             <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
                                         
+                                        <!-- 시나리오 이름 (읽기 모드) -->
                                         <TextBlock Grid.Row="0" 
                                                    Text="{Binding Name}" 
                                                    FontWeight="Bold"
-                                                   FontSize="14"/>
+                                                   FontSize="14">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                            <TextBlock.InputBindings>
+                                                <MouseBinding MouseAction="LeftDoubleClick" 
+                                                             Command="{Binding DataContext.RenameScenarioCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                             CommandParameter="{Binding}"/>
+                                            </TextBlock.InputBindings>
+                                        </TextBlock>
+                                        
+                                        <!-- 시나리오 이름 (편집 모드) -->
+                                        <TextBox Grid.Row="0"
+                                                 Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 FontWeight="Bold"
+                                                 FontSize="14"
+                                                 BorderThickness="1"
+                                                 BorderBrush="#007ACC"
+                                                 Padding="2">
+                                            <TextBox.Style>
+                                                <Style TargetType="TextBox">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBox.Style>
+                                            <TextBox.InputBindings>
+                                                <KeyBinding Key="Enter" 
+                                                           Command="{Binding DataContext.SaveScenarioRenameCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                           CommandParameter="{Binding}"/>
+                                                <KeyBinding Key="Escape" 
+                                                           Command="{Binding DataContext.CancelScenarioRenameCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                           CommandParameter="{Binding}"/>
+                                            </TextBox.InputBindings>
+                                        </TextBox>
                                         
                                         <StackPanel Grid.Row="1" 
                                                     Orientation="Horizontal" 
@@ -411,7 +459,7 @@
                                         <TextBlock Text="🕐 지연된 요청 설정" FontWeight="Bold" Margin="0,0,0,10"/>
                                         <TextBlock Text="지연 시간 (초):" Margin="0,0,0,5"/>
                                         <TextBox Text="{Binding DelaySeconds}" 
-                                                 Height="30" 
+                                                 Height="40" 
                                                  Margin="0,0,0,10"
                                                  Style="{StaticResource ModernTextBox}"/>
                                         <TextBlock Text="예: 3초 대기 → A 요청 실행" 

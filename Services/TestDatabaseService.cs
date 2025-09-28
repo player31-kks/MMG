@@ -149,6 +149,52 @@ namespace MMG.Services
             await command.ExecuteNonQueryAsync();
         }
 
+        public async Task UpdateScenarioAsync(TestScenario scenario)
+        {
+            using var connection = new SQLiteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            var query = @"UPDATE TestScenarios 
+                         SET Name = @Name, 
+                             Description = @Description,
+                             IsEnabled = @IsEnabled
+                         WHERE Id = @Id";
+            
+            using var command = new SQLiteCommand(query, connection);
+            command.Parameters.AddWithValue("@Id", scenario.Id);
+            command.Parameters.AddWithValue("@Name", scenario.Name);
+            command.Parameters.AddWithValue("@Description", scenario.Description);
+            command.Parameters.AddWithValue("@IsEnabled", scenario.IsEnabled ? 1 : 0);
+
+            await command.ExecuteNonQueryAsync();
+        }
+
+        public async Task<TestScenario?> GetScenarioByIdAsync(int scenarioId)
+        {
+            using var connection = new SQLiteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            var query = "SELECT * FROM TestScenarios WHERE Id = @Id";
+            using var command = new SQLiteCommand(query, connection);
+            command.Parameters.AddWithValue("@Id", scenarioId);
+
+            using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                return new TestScenario
+                {
+                    Id = reader.GetInt32(0), // Id
+                    Name = reader.GetString(1), // Name
+                    Description = reader.IsDBNull(2) ? string.Empty : reader.GetString(2), // Description
+                    CreatedAt = DateTime.Parse(reader.GetString(3)), // CreatedAt
+                    LastRunAt = reader.IsDBNull(4) ? null : DateTime.Parse(reader.GetString(4)), // LastRunAt
+                    IsEnabled = reader.GetInt32(5) == 1 // IsEnabled
+                };
+            }
+
+            return null;
+        }
+
         // TestStep methods
         public async Task<List<TestStep>> GetStepsForScenarioAsync(int scenarioId)
         {
