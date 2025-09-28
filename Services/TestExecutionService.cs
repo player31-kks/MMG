@@ -17,6 +17,7 @@ namespace MMG.Services
 
         public event EventHandler<TestProgressEventArgs>? ProgressChanged;
         public event EventHandler<TestCompletedEventArgs>? TestCompleted;
+        public event EventHandler<DataReceivedEventArgs>? DataReceived;
 
         public TestExecutionService(
             UdpClientService udpClientService, 
@@ -26,6 +27,9 @@ namespace MMG.Services
             _udpClientService = udpClientService;
             _databaseService = databaseService;
             _testDatabaseService = testDatabaseService;
+            
+            // Subscribe to data received events
+            _udpClientService.DataReceived += (sender, args) => DataReceived?.Invoke(this, args);
         }
 
         public async Task RunScenarioAsync(TestScenario scenario)

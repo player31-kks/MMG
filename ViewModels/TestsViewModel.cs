@@ -21,6 +21,7 @@ namespace MMG.ViewModels
         private ObservableCollection<TestStep> _currentSteps = new();
         private TestStep? _selectedStep;
         private ObservableCollection<SavedRequest> _savedRequests = new();
+        private ObservableCollection<ReceivedDataItem> _receivedDataItems = new();
         
         private bool _isTestRunning = false;
         private string _testProgress = "";
@@ -39,6 +40,7 @@ namespace MMG.ViewModels
             // 이벤트 구독
             _testExecutionService.ProgressChanged += OnTestProgress;
             _testExecutionService.TestCompleted += OnTestCompleted;
+            _testExecutionService.DataReceived += OnDataReceived;
 
             // Commands
             OpenCreateScenarioDialogCommand = new RelayCommand(() => OpenCreateScenarioDialog());
@@ -127,8 +129,18 @@ namespace MMG.ViewModels
             }
         }
 
-
-
+        public ObservableCollection<ReceivedDataItem> ReceivedDataItems
+        {
+            get => _receivedDataItems;
+            set
+            {
+                if (_receivedDataItems != value)
+                {
+                    _receivedDataItems = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         public bool IsTestRunning
         {
@@ -340,6 +352,9 @@ namespace MMG.ViewModels
             SelectedScenario.IsRunning = true;
             TestProgress = "테스트를 시작하는 중...";
             ProgressPercentage = 0;
+
+            // 수신 데이터 클리어
+            ReceivedDataItems.Clear();
 
             try
             {
@@ -568,6 +583,28 @@ namespace MMG.ViewModels
                     {
                         MessageBox.Show($"원래 이름을 복원하는 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
                     });
+                }
+            });
+        }
+
+        private void OnDataReceived(object? sender, DataReceivedEventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var dataItem = new ReceivedDataItem
+                {
+                    Timestamp = e.Timestamp,
+                    IpAddress = e.IpAddress,
+                    Port = e.Port,
+                    Data = Convert.ToHexString(e.Data)
+                };
+
+                ReceivedDataItems.Add(dataItem);
+
+                // Keep only last 1000 items to avoid memory issues
+                if (ReceivedDataItems.Count > 1000)
+                {
+                    ReceivedDataItems.RemoveAt(0);
                 }
             });
         }

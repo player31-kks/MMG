@@ -4,8 +4,17 @@ using MMG.Models;
 
 namespace MMG.Services
 {
+    public class DataReceivedEventArgs : EventArgs
+    {
+        public string IpAddress { get; set; } = string.Empty;
+        public int Port { get; set; }
+        public byte[] Data { get; set; } = Array.Empty<byte>();
+        public DateTime Timestamp { get; set; } = DateTime.Now;
+    }
+
     public class UdpClientService
     {
+        public event EventHandler<DataReceivedEventArgs>? DataReceived;
         public async Task<UdpResponse> SendRequestAsync(UdpRequest request, ResponseSchema? responseSchema = null)
         {
             var response = new UdpResponse();
@@ -36,6 +45,15 @@ namespace MMG.Services
                     var result = await receiveTask;
                     response.RawData = result.Buffer;
                     response.Status = "Success";
+
+                    // Fire data received event
+                    DataReceived?.Invoke(this, new DataReceivedEventArgs
+                    {
+                        IpAddress = result.RemoteEndPoint.Address.ToString(),
+                        Port = result.RemoteEndPoint.Port,
+                        Data = result.Buffer,
+                        Timestamp = DateTime.Now
+                    });
 
                     // Parse response if schema is provided
                     if (responseSchema != null)

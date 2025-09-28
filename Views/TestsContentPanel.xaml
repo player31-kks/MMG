@@ -12,7 +12,9 @@
     <Grid Background="White">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="1*" MinHeight="200"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         
@@ -596,8 +598,104 @@
             </Border>
         </Grid>
         
+        <!-- Separator between main content and received data -->
+        <GridSplitter Grid.Row="2" 
+                      Height="5" 
+                      HorizontalAlignment="Stretch" 
+                      Background="#DEE2E6"/>
+        
+        <!-- Received Data Section -->
+        <Border Grid.Row="3" 
+                Background="#F8F9FA" 
+                BorderBrush="#DEE2E6" 
+                BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Header for received data -->
+                <Border Grid.Row="0" 
+                        Background="#E9ECEF" 
+                        BorderBrush="#DEE2E6" 
+                        BorderThickness="0,0,0,1" 
+                        Padding="15,8">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="수신 데이터" 
+                                   FontSize="14" 
+                                   FontWeight="Bold" 
+                                   Foreground="#495057"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding ReceivedDataItems.Count, StringFormat='({0}개)'}"
+                                   FontSize="12"
+                                   Foreground="#6C757D"
+                                   VerticalAlignment="Center"
+                                   Margin="8,0,0,0"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Data List -->
+                <ListBox Grid.Row="1" 
+                         ItemsSource="{Binding ReceivedDataItems}"
+                         Background="White"
+                         BorderThickness="0"
+                         ScrollViewer.CanContentScroll="False"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         Padding="5">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type models:ReceivedDataItem}">
+                            <Border Background="White" 
+                                    BorderBrush="#DEE2E6" 
+                                    BorderThickness="0,0,0,1" 
+                                    Padding="10,5">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBlock Grid.Column="0" 
+                                               Text="{Binding TimeString}" 
+                                               FontFamily="Consolas"
+                                               FontSize="11"
+                                               Foreground="#6C757D"
+                                               VerticalAlignment="Top"/>
+                                    
+                                    <TextBlock Grid.Column="1" 
+                                               Text="{Binding IpAddress}" 
+                                               FontFamily="Consolas"
+                                               FontSize="11"
+                                               Foreground="#007ACC"
+                                               VerticalAlignment="Top"/>
+                                    
+                                    <TextBlock Grid.Column="2" 
+                                               Text="{Binding Port}" 
+                                               FontFamily="Consolas"
+                                               FontSize="11"
+                                               Foreground="#28A745"
+                                               VerticalAlignment="Top"/>
+                                    
+                                    <TextBlock Grid.Column="3" 
+                                               Text="{Binding Data}" 
+                                               FontFamily="Consolas"
+                                               FontSize="11"
+                                               Foreground="#212529"
+                                               TextWrapping="Wrap"
+                                               VerticalAlignment="Top"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+        
         <!-- Status Bar with Progress -->
-        <Border Grid.Row="2" 
+        <Border Grid.Row="4" 
                 Background="#343A40" 
                 Height="40">
             <Grid Margin="20,5">
