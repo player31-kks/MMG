@@ -19,7 +19,7 @@
             </Grid.ColumnDefinitions>
 
             <TextBlock Grid.Column="0"
-                       Text="UDP Message Client"
+                       Text="MMG"
                        FontSize="20"
                        FontWeight="Bold"
                        Foreground="#333"/>
@@ -28,7 +28,7 @@
                        Fill="#DDDDDD"
                        Margin="20,0"/>
             <TextBlock Grid.Column="2"
-                       Text="Send UDP messages and parse responses"
+                       Text="메시지 송수신 및 응답 파싱"
                        FontSize="14"
                        Foreground="#666"
                        VerticalAlignment="Center"/>
