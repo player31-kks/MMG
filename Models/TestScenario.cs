@@ -12,6 +12,7 @@ namespace MMG.Models
         private DateTime _createdAt;
         private DateTime? _lastRunAt;
         private bool _isEnabled = true;
+        private bool _isRunning = false;
 
         public int Id
         {
@@ -48,6 +49,14 @@ namespace MMG.Models
             get => _isEnabled;
             set { _isEnabled = value; OnPropertyChanged(nameof(IsEnabled)); }
         }
+
+        public bool IsRunning
+        {
+            get => _isRunning;
+            set { _isRunning = value; OnPropertyChanged(nameof(IsRunning)); OnPropertyChanged(nameof(StatusText)); }
+        }
+
+        public string StatusText => IsRunning ? "실행중" : "준비됨";
 
         public ObservableCollection<TestStep> Steps { get; } = new ObservableCollection<TestStep>();
 

@@ -99,7 +99,7 @@
                                         CornerRadius="4" 
                                         Padding="10" 
                                         Margin="0,2">
-                                    <Grid>
+                                    <Grid MinWidth="150">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
@@ -113,13 +113,33 @@
                                         <StackPanel Grid.Row="1" 
                                                     Orientation="Horizontal" 
                                                     Margin="0,5,0,0">
-                                            <TextBlock Text="준비됨"
-                                                       FontSize="10"
-                                                       Foreground="#28A745"/>
+                                            <TextBlock Text="{Binding StatusText}"
+                                                       FontSize="10">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="#28A745"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                                                <Setter Property="Foreground" Value="#FFC107"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
                                             <Rectangle Width="5" Height="5" 
-                                                       Fill="#28A745"
-                                                       Margin="10,0,0,0"
-                                                       VerticalAlignment="Center"/>
+                                                       VerticalAlignment="Center"
+                                                       Margin="10,0,0,0">
+                                                <Rectangle.Style>
+                                                    <Style TargetType="Rectangle">
+                                                        <Setter Property="Fill" Value="#28A745"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                                                <Setter Property="Fill" Value="#FFC107"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Rectangle.Style>
+                                            </Rectangle>
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -148,12 +168,29 @@
                                 </Style>
                             </Button.Style>
                         </Button>
-                        <Button Content="중지" 
-                                Command="{Binding StopTestCommand}"
-                                Style="{StaticResource ModernButton}"
-                                Background="#DC3545"
+                        <Button Command="{Binding StopTestCommand}"
                                 Width="60"
-                                Margin="5,0,5,0"/>
+                                Margin="5,0,5,0">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource ModernButton}">
+                                    <Setter Property="Content" Value="중지"/>
+                                    <Setter Property="Background" Value="#DC3545"/>
+                                    <Setter Property="IsEnabled" Value="True"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsStopping}" Value="True">
+                                            <Setter Property="Content" Value="중지중"/>
+                                            <Setter Property="Background" Value="#6C757D"/>
+                                            <Setter Property="IsEnabled" Value="False"/>
+                                            <Setter Property="Opacity" Value="0.7"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsTestRunning}" Value="False">
+                                            <Setter Property="IsEnabled" Value="False"/>
+                                            <Setter Property="Opacity" Value="0.5"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                         <Button Content="삭제" 
                                 Command="{Binding DeleteScenarioCommand}"
                                 Background="#6C757D"
@@ -407,12 +444,12 @@
                                             </Grid.ColumnDefinitions>
                                             <TextBox Grid.Column="0"
                                                      Text="{Binding FrequencyHz}" 
-                                                     Height="30" 
+                                                     Height="40" 
                                                      Style="{StaticResource ModernTextBox}"/>
                                             <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="5,0,0,0">
-                                                <Button Content="1Hz" Click="SetFrequency_Click" Tag="1" Width="35" Height="30" FontSize="10"/>
-                                                <Button Content="5Hz" Click="SetFrequency_Click" Tag="5" Width="35" Height="30" FontSize="10" Margin="2,0,0,0"/>
-                                                <Button Content="10Hz" Click="SetFrequency_Click" Tag="10" Width="35" Height="30" FontSize="10" Margin="2,0,0,0"/>
+                                                <Button Content="1Hz" Click="SetFrequency_Click" Tag="1" Width="35" Height="40" FontSize="10"/>
+                                                <Button Content="5Hz" Click="SetFrequency_Click" Tag="5" Width="35" Height="40" FontSize="10" Margin="2,0,0,0"/>
+                                                <Button Content="10Hz" Click="SetFrequency_Click" Tag="10" Width="35" Height="40" FontSize="10" Margin="2,0,0,0"/>
                                             </StackPanel>
                                         </Grid>
                                         <TextBlock Text="일반적인 값: 1Hz(느림), 5Hz(보통), 10Hz(빠름), 또는 직접 입력" 
@@ -429,12 +466,12 @@
                                             </Grid.ColumnDefinitions>
                                             <TextBox Grid.Column="0"
                                                      Text="{Binding DurationSeconds}" 
-                                                     Height="30" 
+                                                     Height="40" 
                                                      Style="{StaticResource ModernTextBox}"/>
                                             <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="5,0,0,0">
-                                                <Button Content="5초" Click="SetDuration_Click" Tag="5" Width="35" Height="30" FontSize="10"/>
-                                                <Button Content="10초" Click="SetDuration_Click" Tag="10" Width="35" Height="30" FontSize="10" Margin="2,0,0,0"/>
-                                                <Button Content="30초" Click="SetDuration_Click" Tag="30" Width="35" Height="30" FontSize="10" Margin="2,0,0,0"/>
+                                                <Button Content="5초" Click="SetDuration_Click" Tag="5" Width="35" Height="40" FontSize="10"/>
+                                                <Button Content="10초" Click="SetDuration_Click" Tag="10" Width="35" Height="40" FontSize="10" Margin="2,0,0,0"/>
+                                                <Button Content="30초" Click="SetDuration_Click" Tag="30" Width="35" Height="40" FontSize="10" Margin="2,0,0,0"/>
                                             </StackPanel>
                                         </Grid>
                                         <TextBlock Text="예: 10초 x 5Hz = 50회 실행" 

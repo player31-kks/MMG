@@ -25,6 +25,7 @@ namespace MMG.ViewModels
         private bool _isTestRunning = false;
         private string _testProgress = "";
         private int _progressPercentage = 0;
+        private bool _isStopping = false;
 
         public TestsViewModel()
         {
@@ -41,12 +42,12 @@ namespace MMG.ViewModels
 
             // Commands
             OpenCreateScenarioDialogCommand = new RelayCommand(() => OpenCreateScenarioDialog());
-            DeleteScenarioCommand = new RelayCommand(async () => await DeleteScenario(), () => SelectedScenario != null);
-            RunScenarioCommand = new RelayCommand(async () => await RunScenario(), () => SelectedScenario != null && !IsTestRunning);
-            StopTestCommand = new RelayCommand(() => StopTest(), () => IsTestRunning);
-            AddStepCommand = new RelayCommand(async () => await AddStep(), () => SelectedScenario != null);
-            DeleteStepCommand = new RelayCommand(async () => await DeleteStep(), () => SelectedStep != null);
-            SaveStepCommand = new RelayCommand(async () => await SaveStep(), () => SelectedStep != null);
+            DeleteScenarioCommand = new RelayCommand(async () => await DeleteScenario(), () => SelectedScenario != null && !IsTestRunning && !IsStopping);
+            RunScenarioCommand = new RelayCommand(async () => await RunScenario(), () => SelectedScenario != null && !IsTestRunning && !IsStopping);
+            StopTestCommand = new RelayCommand(async () => await StopTest(), () => IsTestRunning && !IsStopping);
+            AddStepCommand = new RelayCommand(async () => await AddStep(), () => SelectedScenario != null && !IsTestRunning && !IsStopping);
+            DeleteStepCommand = new RelayCommand(async () => await DeleteStep(), () => SelectedStep != null && !IsTestRunning && !IsStopping);
+            SaveStepCommand = new RelayCommand(async () => await SaveStep(), () => SelectedStep != null && !IsTestRunning && !IsStopping);
             RefreshScenariosCommand = new RelayCommand(async () => await RefreshAll());
 
                         // Initial data loading
@@ -162,6 +163,20 @@ namespace MMG.ViewModels
                 {
                     _progressPercentage = value;
                     OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool IsStopping
+        {
+            get => _isStopping;
+            set
+            {
+                if (_isStopping != value)
+                {
+                    _isStopping = value;
+                    OnPropertyChanged();
+                    CommandManager.InvalidateRequerySuggested();
                 }
             }
         }
@@ -315,6 +330,8 @@ namespace MMG.ViewModels
             if (SelectedScenario == null) return;
 
             IsTestRunning = true;
+            IsStopping = false;
+            SelectedScenario.IsRunning = true;
             TestProgress = "테스트를 시작하는 중...";
             ProgressPercentage = 0;
 
@@ -334,13 +351,30 @@ namespace MMG.ViewModels
             {
                 MessageBox.Show($"테스트 실행 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
                 IsTestRunning = false;
+                IsStopping = false;
+                SelectedScenario.IsRunning = false;
             }
         }
 
-        private void StopTest()
+        private async Task StopTest()
         {
-            _testExecutionService.StopTest();
+            if (!IsTestRunning || IsStopping) return;
+
+            IsStopping = true;
             TestProgress = "테스트를 중지하는 중...";
+            
+            _testExecutionService.StopTest();
+            
+            // 1초 대기 후 상태 초기화
+            await Task.Delay(1000);
+            
+            IsTestRunning = false;
+            IsStopping = false;
+            if (SelectedScenario != null)
+            {
+                SelectedScenario.IsRunning = false;
+            }
+            TestProgress = "테스트가 중지되었습니다.";
         }
 
         private async Task AddStep()
@@ -446,6 +480,11 @@ namespace MMG.ViewModels
             Application.Current.Dispatcher.Invoke(() =>
             {
                 IsTestRunning = false;
+                IsStopping = false;
+                if (SelectedScenario != null)
+                {
+                    SelectedScenario.IsRunning = false;
+                }
                 TestProgress = e.Summary;
                 
                 var message = $"테스트가 완료되었습니다.\n\n" +
