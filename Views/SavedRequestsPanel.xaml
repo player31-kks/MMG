@@ -101,7 +101,7 @@
                                 Content="+"
                                 Style="{StaticResource ModernButton}"
                                 Width="30"
-                                Height="25"
+                                Height="30"
                                 FontSize="16"
                                 FontWeight="Bold"
                                 Background="#2196F3"
