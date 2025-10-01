@@ -9,13 +9,12 @@
         xmlns:viewModels="clr-namespace:MMG.ViewModels"
         xmlns:converters="clr-namespace:MMG.Converters"
         mc:Ignorable="d"
-        Title="MMG (메시지모의기)"
-        Height="900"
-        Width="1400"
+        Title="MMG"
+        Height="1000"
+        Width="1600"
         MinHeight="600"
         MinWidth="1000"
-        Background="#F5F5F5"
-        >
+        Background="#FFFFFF">
 
     <Window.Resources>
         <ResourceDictionary>
@@ -27,16 +26,89 @@
     </Window.Resources>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="80"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-        <!-- Header -->
-        <views:HeaderPanel Grid.Row="0"/>
+        <!-- Left Sidebar with Icons -->
+        <Border Grid.Column="0"
+                Background="#F8F9FA"
+                BorderBrush="#E9ECEF"
+                BorderThickness="0,0,1,0"
+                >
+            <StackPanel Orientation="Vertical"
+                        Margin="0,20,0,0">
 
-        <!-- Main Content with Navigation -->
-        <views:NavigationPanel Grid.Row="1" 
-                               Margin="20"/>
+                <!-- APIs Tab -->
+                <ToggleButton x:Name="ApiTabButton"
+                              Width="50"
+                              Height="50"
+                              Margin="5,5,5,15"
+                              IsChecked="{Binding SelectedTab, Converter={StaticResource StringToBooleanConverter}, ConverterParameter=API}"
+                              Command="{Binding ApiTabCommand}"
+                              Style="{StaticResource SidebarTabStyle}"
+                              ToolTip="APIs">
+                    <StackPanel Orientation="Vertical">
+                        <Viewbox Width="20"
+                                Height="20">
+                            <Canvas Width="24"
+                                    Height="24">
+                                <Path Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"
+                                      Fill="{Binding RelativeSource={RelativeSource AncestorType=ToggleButton}, Path=Foreground}"/>
+                            </Canvas>
+                        </Viewbox>
+                        <TextBlock Text="APIs"
+                                   FontSize="10"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,2,0,0"/>
+                    </StackPanel>
+                </ToggleButton>
+
+                <!-- Tests Tab -->
+                <ToggleButton x:Name="TestsTabButton"
+                              Width="50"
+                              Height="50"
+                              Margin="5,0,5,15"
+                              IsChecked="{Binding SelectedTab, Converter={StaticResource StringToBooleanConverter}, ConverterParameter=Tests}"
+                              Command="{Binding TestsTabCommand}"
+                              Style="{StaticResource SidebarTabStyle}"
+                              ToolTip="Tests">
+                    <StackPanel Orientation="Vertical">
+                        <Viewbox Width="20"
+                                Height="20">
+                            <Canvas Width="24"
+                                    Height="24">
+                                <Path Data="M12,2C13.1,2 14,2.9 14,4C14,5.1 13.1,6 12,6C10.9,6 10,5.1 10,4C10,2.9 10.9,2 12,2M21,9V7L15,1H5C3.89,1 3,1.89 3,3V21A2,2 0 0,0 5,23H19A2,2 0 0,0 21,21V9M19,9H14V4H19M12,19L8,14.5L9.5,13L12,15.5L18.5,9L20,10.5L12,19Z"
+                                      Fill="{Binding RelativeSource={RelativeSource AncestorType=ToggleButton}, Path=Foreground}"/>
+                            </Canvas>
+                        </Viewbox>
+                        <TextBlock Text="Tests"
+                                   FontSize="10"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,2,0,0"/>
+                    </StackPanel>
+                </ToggleButton>
+
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Border Grid.Column="1"
+                Background="White">
+            <ContentPresenter Content="{Binding CurrentContent}">
+                <ContentPresenter.Resources>
+                    <!-- API Content Template -->
+                    <DataTemplate DataType="{x:Type viewModels:MainViewModel}">
+                        <views:ApiContentPanel/>
+                    </DataTemplate>
+
+                    <!-- Tests Content Template -->
+                    <DataTemplate DataType="{x:Type viewModels:TestsViewModel}">
+                        <views:TestsContentPanel/>
+                    </DataTemplate>
+                </ContentPresenter.Resources>
+            </ContentPresenter>
+        </Border>
     </Grid>
 </Window>
