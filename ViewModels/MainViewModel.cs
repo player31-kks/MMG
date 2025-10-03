@@ -823,7 +823,16 @@ namespace MMG.ViewModels
                 }
                 else if (item.ItemType == TreeViewItemType.Request && item.Tag is SavedRequest request)
                 {
+                    // 삭제하려는 Request가 현재 로드된 Request인지 확인
+                    bool isCurrentlyLoaded = _currentLoadedRequest?.Id == request.Id;
+
                     success = await _databaseService.DeleteRequestAsync(request.Id);
+
+                    // 삭제 성공 시 현재 로드된 Request였다면 새 Request로 초기화
+                    if (success && isCurrentlyLoaded)
+                    {
+                        CreateNewRequest(); // 새로운 Request로 RequestPanel 초기화
+                    }
                 }
 
                 if (success)
