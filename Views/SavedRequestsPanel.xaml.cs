@@ -14,18 +14,28 @@ namespace MMG.Views
     /// </summary>
     public partial class SavedRequestsPanel : UserControl
     {
-        private DispatcherTimer _hoverTimer;
+        private DispatcherTimer _showTimer;
+        private DispatcherTimer _hideTimer;
         private bool _isMouseOverButton = false;
         private bool _isMouseOverPopup = false;
 
         public SavedRequestsPanel()
         {
             InitializeComponent();
-            _hoverTimer = new DispatcherTimer
+
+            // 0.3초 후에 Popup을 보여주는 타이머
+            _showTimer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromMilliseconds(100)
+                Interval = TimeSpan.FromMilliseconds(300)
             };
-            _hoverTimer.Tick += HoverTimer_Tick;
+            _showTimer.Tick += ShowTimer_Tick;
+
+            // 0.3초 후에 Popup을 숨기는 타이머
+            _hideTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(300)
+            };
+            _hideTimer.Tick += HideTimer_Tick;
         }
 
         private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -84,30 +94,50 @@ namespace MMG.Views
         private void AddButton_MouseEnter(object sender, MouseEventArgs e)
         {
             _isMouseOverButton = true;
-            AddPopup.IsOpen = true;
+            _hideTimer.Stop(); // 숨기기 타이머 중지
+
+            if (!AddPopup.IsOpen)
+            {
+                _showTimer.Start(); // 0.3초 후에 보여주기
+            }
         }
 
         private void AddButton_MouseLeave(object sender, MouseEventArgs e)
         {
             _isMouseOverButton = false;
-            _hoverTimer.Start();
+            _showTimer.Stop(); // 보여주기 타이머 중지
+
+            // 마우스가 Popup으로 이동하지 않았다면 숨기기 타이머 시작
+            if (!_isMouseOverPopup)
+            {
+                _hideTimer.Start(); // 0.3초 후에 숨기기
+            }
         }
 
         private void AddPopup_MouseEnter(object sender, MouseEventArgs e)
         {
             _isMouseOverPopup = true;
-            _hoverTimer.Stop();
+            _hideTimer.Stop(); // 숨기기 타이머 중지
         }
 
         private void AddPopup_MouseLeave(object sender, MouseEventArgs e)
         {
             _isMouseOverPopup = false;
-            _hoverTimer.Start();
+            _hideTimer.Start(); // 0.3초 후에 숨기기
         }
 
-        private void HoverTimer_Tick(object? sender, EventArgs e)
+        private void ShowTimer_Tick(object? sender, EventArgs e)
         {
-            _hoverTimer.Stop();
+            _showTimer.Stop();
+            if (_isMouseOverButton || _isMouseOverPopup)
+            {
+                AddPopup.IsOpen = true;
+            }
+        }
+
+        private void HideTimer_Tick(object? sender, EventArgs e)
+        {
+            _hideTimer.Stop();
             if (!_isMouseOverButton && !_isMouseOverPopup)
             {
                 AddPopup.IsOpen = false;
@@ -117,6 +147,10 @@ namespace MMG.Views
         private void PopupButton_Click(object sender, RoutedEventArgs e)
         {
             AddPopup.IsOpen = false;
+            _showTimer.Stop();
+            _hideTimer.Stop();
+            _isMouseOverButton = false;
+            _isMouseOverPopup = false;
         }
 
         private void EditTextBox_KeyDown(object sender, KeyEventArgs e)
@@ -173,7 +207,7 @@ namespace MMG.Views
             {
                 if (item.IsEditing)
                     return item;
-                
+
                 if (item.Children != null)
                 {
                     var editingChild = FindEditingItem(item.Children);

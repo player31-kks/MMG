@@ -126,7 +126,7 @@
                         <Popup x:Name="AddPopup"
                                PlacementTarget="{Binding ElementName=AddButton}"
                                Placement="Bottom"
-                               StaysOpen="False"
+                               StaysOpen="True"
                                AllowsTransparency="True"
                                MouseEnter="AddPopup_MouseEnter"
                                MouseLeave="AddPopup_MouseLeave">
@@ -134,7 +134,9 @@
                                     BorderBrush="#DDDDDD"
                                     BorderThickness="1"
                                     CornerRadius="4"
-                                    Effect="{StaticResource DropShadow}">
+                                    Effect="{StaticResource DropShadow}"
+                                    MouseEnter="AddPopup_MouseEnter"
+                                    MouseLeave="AddPopup_MouseLeave">
                                 <StackPanel Margin="2">
                                     <Button Content="📁 New Folder"
                                             Command="{Binding NewFolderCommand}"
