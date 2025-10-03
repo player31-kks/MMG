@@ -42,13 +42,13 @@ namespace MMG.ViewModels
 
             _currentRequest.Headers.Add(defaultHeader);
             _currentRequest.Payload.Add(defaultPayload);
-            
+
             var defaultResponseHeader = new DataField { Name = "ResponseHeader1", Type = DataType.Byte };
             var defaultResponsePayload = new DataField { Name = "ResponseField1", Type = DataType.Byte };
-            
+
             defaultResponseHeader.PropertyChanged += OnResponseDataFieldPropertyChanged;
             defaultResponsePayload.PropertyChanged += OnResponseDataFieldPropertyChanged;
-            
+
             _responseSchema.Headers.Add(defaultResponseHeader);
             _responseSchema.Payload.Add(defaultResponsePayload);
 
@@ -62,6 +62,7 @@ namespace MMG.ViewModels
             RenameItemCommand = new RelayCommand<TreeViewItemModel>((item) => StartRenaming(item));
             SaveRenameCommand = new RelayCommand<TreeViewItemModel>(async (item) => await SaveRename(item));
             CancelRenameCommand = new RelayCommand<TreeViewItemModel>((item) => CancelRename(item));
+            CopyItemCommand = new RelayCommand<TreeViewItemModel>(async (item) => await CopyItem(item));
             NewRequestCommand = new RelayCommand(() => CreateNewRequest());
             NewFolderCommand = new RelayCommand(async () => await CreateNewFolder());
             AddHeaderCommand = new RelayCommand(AddHeader);
@@ -178,10 +179,10 @@ namespace MMG.ViewModels
             {
                 _selectedTreeItem = value;
                 OnPropertyChanged(nameof(SelectedTreeItem));
-                
+
                 // Update HasSelectedItem and commands
                 HasSelectedItem = _selectedTreeItem != null;
-                
+
                 // Auto-load request if it's a request type
                 if (_selectedTreeItem?.ItemType == TreeViewItemType.Request && _selectedTreeItem.Tag is SavedRequest request)
                 {
@@ -262,6 +263,7 @@ namespace MMG.ViewModels
         public ICommand RenameItemCommand { get; }
         public ICommand SaveRenameCommand { get; }
         public ICommand CancelRenameCommand { get; }
+        public ICommand CopyItemCommand { get; }
 
         private async Task SendRequest()
         {
@@ -737,7 +739,7 @@ namespace MMG.ViewModels
 
                 // Build root folders first
                 var rootFolders = folders.Where(f => f.ParentId == null).OrderBy(f => f.Name);
-                
+
                 foreach (var folder in rootFolders)
                 {
                     var treeItem = CreateFolderTreeItem(folder, folders, allRequests);
@@ -839,6 +841,54 @@ namespace MMG.ViewModels
             }
         }
 
+        private async Task CopyItem(TreeViewItemModel? item)
+        {
+            if (item == null) return;
+
+            try
+            {
+                if (item.ItemType == TreeViewItemType.Request && item.Tag is SavedRequest originalRequest)
+                {
+                    // 복사된 요청의 이름 생성 (Copy 추가)
+                    string copyName = GenerateCopyName(originalRequest.Name);
+
+                    // 새로운 SavedRequest 객체 생성
+                    var copiedRequest = new SavedRequest
+                    {
+                        Name = copyName,
+                        IpAddress = originalRequest.IpAddress,
+                        Port = originalRequest.Port,
+                        RequestSchemaJson = originalRequest.RequestSchemaJson,
+                        ResponseSchemaJson = originalRequest.ResponseSchemaJson,
+                        FolderId = originalRequest.FolderId
+                    };
+
+                    // 데이터베이스에 저장 (SaveRequestAsync는 int를 반환)
+                    int newId = await _databaseService.SaveRequestAsync(copiedRequest);
+
+                    if (newId > 0)
+                    {
+                        // TreeView 새로고침
+                        await BuildTreeView();
+                    }
+                    else
+                    {
+                        MessageBox.Show("복사에 실패했습니다.", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"복사 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private string GenerateCopyName(string originalName)
+        {
+            // "Copy"를 뒤에 추가하는 로직
+            return originalName + " Copy";
+        }
+
         private void StartRenaming(TreeViewItemModel item)
         {
             // 다른 편집 중인 항목들 종료
@@ -849,7 +899,7 @@ namespace MMG.ViewModels
                     treeItem.IsEditing = false;
                 }
             }
-            
+
             item.IsEditing = true;
         }
 
@@ -886,7 +936,7 @@ namespace MMG.ViewModels
         private void CancelRename(TreeViewItemModel item)
         {
             item.IsEditing = false;
-            
+
             // 원래 이름으로 복원
             if (item.Tag is SavedRequest request)
             {

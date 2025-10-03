@@ -63,6 +63,14 @@
                                FontSize="12"/>
                 </MenuItem.Icon>
             </MenuItem>
+            <MenuItem Header="복사"
+                      Command="{Binding CopyItemCommand}"
+                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                <MenuItem.Icon>
+                    <TextBlock Text="📋"
+                               FontSize="12"/>
+                </MenuItem.Icon>
+            </MenuItem>
             <Separator/>
             <MenuItem Header="삭제"
                       Command="{Binding DeleteItemCommand}"
