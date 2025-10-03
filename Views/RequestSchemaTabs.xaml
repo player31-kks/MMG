@@ -79,12 +79,12 @@
                                     <Button Content="✕"
                                             Command="{Binding ElementName=RequestTabsControl, Path=DataContext.RemoveHeaderCommand}"
                                             CommandParameter="{Binding}"
-                                            Background="#FF4444"
+                                            Background="{StaticResource WarningColor}"
                                             Foreground="White"
                                             BorderThickness="0"
                                             Width="25"
                                             Height="25"
-                                            FontSize="12"/>
+                                            FontSize="{DynamicResource text-xs}"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -163,12 +163,12 @@
                                     <Button Content="✕"
                                             Command="{Binding ElementName=RequestTabsControl, Path=DataContext.RemovePayloadFieldCommand}"
                                             CommandParameter="{Binding}"
-                                            Background="#FF4444"
+                                            Background="{StaticResource WarningColor}"
                                             Foreground="White"
                                             BorderThickness="0"
                                             Width="25"
                                             Height="25"
-                                            FontSize="12"/>
+                                            FontSize="{DynamicResource text-xs}"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>

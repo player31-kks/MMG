@@ -20,7 +20,7 @@
 
             <TextBlock Grid.Column="0"
                        Text="MMG"
-                       FontSize="20"
+                       FontSize="{DynamicResource text-lg}"
                        FontWeight="Bold"
                        Foreground="#333"/>
             <Rectangle Grid.Column="1"
@@ -29,7 +29,7 @@
                        Margin="20,0"/>
             <TextBlock Grid.Column="2"
                        Text="메시지 송수신 및 응답 파싱"
-                       FontSize="14"
+                       FontSize="{DynamicResource text-sm}"
                        Foreground="#666"
                        VerticalAlignment="Center"/>
         </Grid>

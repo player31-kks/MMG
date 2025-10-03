@@ -21,17 +21,17 @@
         <!-- 폴더용 컨텍스트 메뉴 -->
         <ContextMenu x:Key="FolderContextMenu">
             <MenuItem Header="새 폴더"
-                    Command="{Binding NewFolderCommand}">
+                      Command="{Binding NewFolderCommand}">
                 <MenuItem.Icon>
                     <TextBlock Text="📁"
-                            FontSize="12"/>
+                               FontSize="12"/>
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="새 요청"
-                    Command="{Binding NewRequestCommand}">
+                      Command="{Binding NewRequestCommand}">
                 <MenuItem.Icon>
                     <TextBlock Text="📃"
-                            FontSize="12"/>
+                               FontSize="12"/>
                 </MenuItem.Icon>
             </MenuItem>
             <Separator/>
@@ -40,7 +40,7 @@
                       CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
                 <MenuItem.Icon>
                     <TextBlock Text="✏️"
-                            FontSize="12"/>
+                               FontSize="12"/>
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="삭제"
@@ -48,7 +48,7 @@
                       CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
                 <MenuItem.Icon>
                     <TextBlock Text="🗑️"
-                            FontSize="12"/>
+                               FontSize="12"/>
                 </MenuItem.Icon>
             </MenuItem>
         </ContextMenu>
@@ -60,7 +60,7 @@
                       CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
                 <MenuItem.Icon>
                     <TextBlock Text="✏️"
-                            FontSize="12"/>
+                               FontSize="12"/>
                 </MenuItem.Icon>
             </MenuItem>
             <Separator/>
@@ -69,7 +69,7 @@
                       CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
                 <MenuItem.Icon>
                     <TextBlock Text="🗑️"
-                            FontSize="12"/>
+                               FontSize="12"/>
                 </MenuItem.Icon>
             </MenuItem>
         </ContextMenu>
@@ -95,7 +95,7 @@
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Grid.Column="0"
-                               Text="Collections"
+                               Text="APIs"
                                FontSize="14"
                                FontWeight="SemiBold"
                                VerticalAlignment="Center"
@@ -103,17 +103,14 @@
 
                     <!-- + 버튼 with Dropdown -->
                     <Grid Grid.Column="1"
-                            x:Name="AddButtonContainer">
+                          x:Name="AddButtonContainer">
                         <Button x:Name="AddButton"
                                 Content="+"
                                 Style="{StaticResource ModernButton}"
                                 Width="30"
                                 Height="30"
-                                FontSize="16"
+                                FontSize="20"
                                 FontWeight="Bold"
-                                Background="#2196F3"
-                                Foreground="White"
-                                BorderBrush="#1976D2"
                                 ToolTip="새로 추가"
                                 MouseEnter="AddButton_MouseEnter"
                                 MouseLeave="AddButton_MouseLeave"/>
@@ -141,7 +138,7 @@
                                             Click="PopupButton_Click">
                                         <Button.Style>
                                             <Style TargetType="Button"
-                                                    BasedOn="{StaticResource ModernButton}">
+                                                   BasedOn="{StaticResource ModernButton}">
                                                 <Setter Property="Background"
                                                         Value="Transparent"/>
                                                 <Setter Property="BorderThickness"
@@ -150,7 +147,7 @@
                                                         Value="Black"/>
                                                 <Style.Triggers>
                                                     <Trigger Property="IsMouseOver"
-                                                            Value="True">
+                                                             Value="True">
                                                         <Setter Property="Background"
                                                                 Value="#F0F0F0"/>
                                                         <Setter Property="Foreground"
@@ -173,7 +170,7 @@
                                             Click="PopupButton_Click">
                                         <Button.Style>
                                             <Style TargetType="Button"
-                                                    BasedOn="{StaticResource ModernButton}">
+                                                   BasedOn="{StaticResource ModernButton}">
                                                 <Setter Property="Background"
                                                         Value="Transparent"/>
                                                 <Setter Property="BorderThickness"
@@ -182,7 +179,7 @@
                                                         Value="Black"/>
                                                 <Style.Triggers>
                                                     <Trigger Property="IsMouseOver"
-                                                            Value="True">
+                                                             Value="True">
                                                         <Setter Property="Background"
                                                                 Value="#F0F0F0"/>
                                                         <Setter Property="Foreground"
@@ -211,17 +208,17 @@
                 <TreeView.ContextMenu>
                     <ContextMenu x:Name="EmptyAreaContextMenu">
                         <MenuItem Header="새 폴더"
-                                Command="{Binding NewFolderCommand}">
+                                  Command="{Binding NewFolderCommand}">
                             <MenuItem.Icon>
                                 <TextBlock Text="📁"
-                                        FontSize="12"/>
+                                           FontSize="12"/>
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Header="새 요청"
-                                Command="{Binding NewRequestCommand}">
+                                  Command="{Binding NewRequestCommand}">
                             <MenuItem.Icon>
                                 <TextBlock Text="📃"
-                                        FontSize="12"/>
+                                           FontSize="12"/>
                             </MenuItem.Icon>
                         </MenuItem>
                     </ContextMenu>
@@ -230,20 +227,20 @@
                 <TreeView.Resources>
                     <!-- TreeView Item Template -->
                     <HierarchicalDataTemplate DataType="{x:Type models:TreeViewItemModel}"
-                            ItemsSource="{Binding Children}">
+                                              ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal"
-                                Background="Transparent">
+                                    Background="Transparent">
                             <!-- 폴더 아이콘 -->
                             <TextBlock Text="📁"
-                                    FontSize="14"
-                                    Margin="0,0,5,0">
+                                       FontSize="14"
+                                       Margin="0,0,5,0">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Visibility"
                                                 Value="Collapsed"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding ItemType}"
-                                                    Value="Folder">
+                                                         Value="Folder">
                                                 <Setter Property="Visibility"
                                                         Value="Visible"/>
                                             </DataTrigger>
@@ -254,15 +251,15 @@
 
                             <!-- 요청 아이콘 (📃으로 변경) -->
                             <TextBlock Text="📃"
-                                    FontSize="12"
-                                    Margin="0,0,5,0">
+                                       FontSize="12"
+                                       Margin="0,0,5,0">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Visibility"
                                                 Value="Collapsed"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding ItemType}"
-                                                    Value="Request">
+                                                         Value="Request">
                                                 <Setter Property="Visibility"
                                                         Value="Visible"/>
                                             </DataTrigger>
@@ -275,8 +272,8 @@
                             <Grid>
                                 <!-- 일반 텍스트 표시 -->
                                 <TextBlock Text="{Binding Name}"
-                                        FontSize="13"
-                                        VerticalAlignment="Center">
+                                           FontSize="13"
+                                           VerticalAlignment="Center">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Foreground"
@@ -285,14 +282,14 @@
                                                     Value="Visible"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding ItemType}"
-                                                        Value="Folder">
+                                                             Value="Folder">
                                                     <Setter Property="FontWeight"
                                                             Value="Bold"/>
                                                     <Setter Property="Foreground"
                                                             Value="#333333"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding IsEditing}"
-                                                        Value="True">
+                                                             Value="True">
                                                     <Setter Property="Visibility"
                                                             Value="Collapsed"/>
                                                 </DataTrigger>
@@ -303,14 +300,14 @@
 
                                 <!-- 편집용 텍스트박스 -->
                                 <StackPanel Orientation="Horizontal"
-                                        VerticalAlignment="Center">
+                                            VerticalAlignment="Center">
                                     <StackPanel.Style>
                                         <Style TargetType="StackPanel">
                                             <Setter Property="Visibility"
                                                     Value="Collapsed"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsEditing}"
-                                                        Value="True">
+                                                             Value="True">
                                                     <Setter Property="Visibility"
                                                             Value="Visible"/>
                                                 </DataTrigger>
@@ -366,11 +363,11 @@
                         <Setter Property="Padding"
                                 Value="2"/>
                         <EventSetter Event="MouseDoubleClick"
-                                Handler="TreeViewItem_MouseDoubleClick"/>
+                                     Handler="TreeViewItem_MouseDoubleClick"/>
                         <EventSetter Event="PreviewMouseRightButtonDown"
-                                Handler="TreeViewItem_RightClick"/>
+                                     Handler="TreeViewItem_RightClick"/>
                         <EventSetter Event="Loaded"
-                                Handler="TreeViewItem_Loaded"/>
+                                     Handler="TreeViewItem_Loaded"/>
                     </Style>
                 </TreeView.ItemContainerStyle>
             </TreeView>

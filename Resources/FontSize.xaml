@@ -1,0 +1,17 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- Tailwind 스타일처럼 매핑 -->
+    <sys:Double x:Key="text-xs">12</sys:Double>
+    <sys:Double x:Key="text-sm">14</sys:Double>
+    <sys:Double x:Key="text-base">16</sys:Double>
+    <sys:Double x:Key="text-lg">18</sys:Double>
+    <sys:Double x:Key="text-xl">20</sys:Double>
+    <sys:Double x:Key="text-2xl">24</sys:Double>
+    <sys:Double x:Key="text-3xl">30</sys:Double>
+    <sys:Double x:Key="text-4xl">36</sys:Double>
+    <sys:Double x:Key="text-5xl">48</sys:Double>
+    <sys:Double x:Key="text-6xl">60</sys:Double>
+
+</ResourceDictionary>

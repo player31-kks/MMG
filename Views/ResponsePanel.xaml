@@ -6,7 +6,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              d:DesignHeight="600"
-        d:DesignWidth="400">
+             d:DesignWidth="400">
     <Border Background="White"
             BorderBrush="#DDDDDD"
             BorderThickness="1"
@@ -24,7 +24,7 @@
                     BorderThickness="0,0,0,1"
                     Padding="15">
                 <TextBlock Text="Response"
-                           FontSize="16"
+                           FontSize="{DynamicResource text-sm}"
                            FontWeight="Bold"/>
             </Border>
 
@@ -39,7 +39,7 @@
                          Background="Transparent"
                          BorderThickness="0"
                          FontFamily="Consolas"
-                         FontSize="12"/>
+                         FontSize="{DynamicResource text-xs}"/>
             </ScrollViewer>
         </Grid>
     </Border>

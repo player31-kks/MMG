@@ -49,15 +49,15 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Request Name -->
-                    <TextBlock Grid.Row="0" 
+                    <TextBlock Grid.Row="0"
                                Grid.ColumnSpan="6"
-                               Text="{Binding CurrentLoadedRequestName}" 
-                               FontSize="14" 
-                               FontWeight="Bold" 
+                               Text="{Binding CurrentLoadedRequestName}"
+                               FontSize="14"
+                               FontWeight="Bold"
                                Foreground="#2196F3"
                                Margin="8,0,0,8"
                                HorizontalAlignment="Left"/>
-                    
+
                     <!-- Connection Controls -->
 
                     <Label Grid.Row="1"
@@ -85,7 +85,7 @@
                             Content="Send"
                             Command="{Binding SendCommand}"
                             Style="{StaticResource ModernButton}"
-                            FontSize="12"
+                            FontSize="{DynamicResource text-xs}"
                             FontWeight="Bold"
                             IsEnabled="{Binding IsSending, Converter={x:Static local:BooleanToInverseBooleanConverter.Instance}}"
                             Margin="0,0,10,0"/>
@@ -95,8 +95,8 @@
                             Content="Save"
                             Command="{Binding SaveCommand}"
                             Style="{StaticResource ModernButton}"
-                            Background="#4CAF50"
-                            FontSize="12"
+                            Background="{StaticResource SecondaryColor}"
+                            FontSize="{DynamicResource text-xs}"
                             FontWeight="Bold"
                             IsEnabled="{Binding IsSending, Converter={x:Static local:BooleanToInverseBooleanConverter.Instance}}"
                             ToolTip="새 요청 저장 또는 기존 요청 업데이트"
