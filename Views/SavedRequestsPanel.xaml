@@ -211,7 +211,9 @@
                       Margin="10"
                       BorderThickness="0"
                       Background="Transparent"
-                      SelectedItemChanged="TreeView_SelectedItemChanged">
+                      Focusable="True"
+                      SelectedItemChanged="TreeView_SelectedItemChanged"
+                      KeyDown="TreeView_KeyDown">
                 <!-- 빈 영역을 위한 기본 컨텍스트 메뉴 -->
                 <TreeView.ContextMenu>
                     <ContextMenu x:Name="EmptyAreaContextMenu">

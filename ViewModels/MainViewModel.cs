@@ -63,6 +63,7 @@ namespace MMG.ViewModels
             SaveRenameCommand = new RelayCommand<TreeViewItemModel>(async (item) => await SaveRename(item));
             CancelRenameCommand = new RelayCommand<TreeViewItemModel>((item) => CancelRename(item));
             CopyItemCommand = new RelayCommand<TreeViewItemModel>(async (item) => await CopyItem(item));
+            RenameSelectedItemCommand = new RelayCommand(() => RenameSelectedItem(), () => HasSelectedItem && SelectedTreeItem?.ItemType == TreeViewItemType.Request);
             NewRequestCommand = new RelayCommand(() => CreateNewRequest());
             NewFolderCommand = new RelayCommand(async () => await CreateNewFolder());
             AddHeaderCommand = new RelayCommand(AddHeader);
@@ -264,6 +265,7 @@ namespace MMG.ViewModels
         public ICommand SaveRenameCommand { get; }
         public ICommand CancelRenameCommand { get; }
         public ICommand CopyItemCommand { get; }
+        public ICommand RenameSelectedItemCommand { get; }
 
         private async Task SendRequest()
         {
@@ -954,6 +956,14 @@ namespace MMG.ViewModels
             else if (item.Tag is Folder folder)
             {
                 item.Name = folder.Name;
+            }
+        }
+
+        private void RenameSelectedItem()
+        {
+            if (SelectedTreeItem != null && SelectedTreeItem.ItemType == TreeViewItemType.Request)
+            {
+                StartRenaming(SelectedTreeItem);
             }
         }
 

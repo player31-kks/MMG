@@ -143,5 +143,45 @@ namespace MMG.Views
                 }
             }
         }
+
+        private void TreeView_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                if (e.Key == Key.F2)
+                {
+                    // F2 키를 누르면 선택된 항목의 이름 변경 시작
+                    viewModel.RenameSelectedItemCommand?.Execute(null);
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.Escape)
+                {
+                    // ESC 키를 누르면 현재 편집 중인 항목 취소
+                    var editingItem = FindEditingItem(viewModel.TreeItems);
+                    if (editingItem != null)
+                    {
+                        viewModel.CancelRenameCommand?.Execute(editingItem);
+                        e.Handled = true;
+                    }
+                }
+            }
+        }
+
+        private TreeViewItemModel? FindEditingItem(System.Collections.ObjectModel.ObservableCollection<TreeViewItemModel> items)
+        {
+            foreach (var item in items)
+            {
+                if (item.IsEditing)
+                    return item;
+                
+                if (item.Children != null)
+                {
+                    var editingChild = FindEditingItem(item.Children);
+                    if (editingChild != null)
+                        return editingChild;
+                }
+            }
+            return null;
+        }
     }
 }
