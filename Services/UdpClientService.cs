@@ -77,15 +77,17 @@ namespace MMG.Services
 
         private int GetLocalPort(string ipAddress, int targetPort)
         {
-            // Check if the target is loopback address
-            if (IsLoopbackAddress(ipAddress))
+            var settings = SettingsService.Instance;
+
+            // Check if custom port is enabled
+            if (settings.UseCustomPort)
             {
-                // For loopback, use a random available port
-                return targetPort + 10;
+                // Use the custom port for all addresses
+                return settings.CustomPort;
             }
             else
             {
-                // For remote addresses, use the same port as target
+                // Use the same port as target when custom port is disabled
                 return targetPort;
             }
         }

@@ -639,11 +639,11 @@ namespace MMG.ViewModels
         private void ClearAllHeaders()
         {
             var result = MessageBox.Show(
-                "모든 Header 필드를 삭제하시겠습니까?", 
-                "확인", 
-                MessageBoxButton.YesNo, 
+                "모든 Header 필드를 삭제하시겠습니까?",
+                "확인",
+                MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
-                
+
             if (result == MessageBoxResult.Yes)
             {
                 // Unsubscribe from property changed events
@@ -659,11 +659,11 @@ namespace MMG.ViewModels
         private void ClearAllPayloadFields()
         {
             var result = MessageBox.Show(
-                "모든 Payload 필드를 삭제하시겠습니까?", 
-                "확인", 
-                MessageBoxButton.YesNo, 
+                "모든 Payload 필드를 삭제하시겠습니까?",
+                "확인",
+                MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
-                
+
             if (result == MessageBoxResult.Yes)
             {
                 // Unsubscribe from property changed events
@@ -679,11 +679,11 @@ namespace MMG.ViewModels
         private void ClearAllResponseHeaders()
         {
             var result = MessageBox.Show(
-                "모든 Response Header 필드를 삭제하시겠습니까?", 
-                "확인", 
-                MessageBoxButton.YesNo, 
+                "모든 Response Header 필드를 삭제하시겠습니까?",
+                "확인",
+                MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
-                
+
             if (result == MessageBoxResult.Yes)
             {
                 // Unsubscribe from property changed events
@@ -699,11 +699,11 @@ namespace MMG.ViewModels
         private void ClearAllResponsePayloadFields()
         {
             var result = MessageBox.Show(
-                "모든 Response Payload 필드를 삭제하시겠습니까?", 
-                "확인", 
-                MessageBoxButton.YesNo, 
+                "모든 Response Payload 필드를 삭제하시겠습니까?",
+                "확인",
+                MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
-                
+
             if (result == MessageBoxResult.Yes)
             {
                 // Unsubscribe from property changed events
