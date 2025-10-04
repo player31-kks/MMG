@@ -10,7 +10,7 @@
              d:DesignHeight="400"
              d:DesignWidth="400">
     <TabControl Style="{x:Null}"
-            BorderThickness="0,1,0,1">
+                BorderThickness="0,1,0,1">
         <!-- Headers Tab -->
         <TabItem Header="Headers"
                  Style="{StaticResource ModernTabItem}"
@@ -25,6 +25,7 @@
                             Orientation="Horizontal">
                     <Button Content="Add Header"
                             Command="{Binding AddHeaderCommand}"
+                            CommandParameter="{Binding ElementName=HeadersDataGrid, Path=SelectedIndex}"
                             Style="{StaticResource ModernButton}"
                             Width="80"
                             Height="30"/>
@@ -36,11 +37,16 @@
                 </StackPanel>
 
                 <DataGrid Grid.Row="1"
+                          x:Name="HeadersDataGrid"
                           ItemsSource="{Binding CurrentRequest.Headers}"
                           AutoGenerateColumns="False"
                           CanUserAddRows="False"
                           GridLinesVisibility="Horizontal"
                           HeadersVisibility="Column"
+                          SelectionMode="Single"
+                          SelectionUnit="FullRow"
+                          KeyDown="DataGrid_KeyDown"
+                          MouseLeftButtonUp="DataGrid_MouseLeftButtonUp"
                           Margin="0,10,0,0">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Name"
@@ -109,6 +115,7 @@
                             Orientation="Horizontal">
                     <Button Content="Add Field"
                             Command="{Binding AddPayloadFieldCommand}"
+                            CommandParameter="{Binding ElementName=PayloadDataGrid, Path=SelectedIndex}"
                             Style="{StaticResource ModernButton}"
                             Width="80"
                             Height="30"
@@ -121,11 +128,16 @@
                 </StackPanel>
 
                 <DataGrid Grid.Row="1"
+                          x:Name="PayloadDataGrid"
                           ItemsSource="{Binding CurrentRequest.Payload}"
                           AutoGenerateColumns="False"
                           CanUserAddRows="False"
                           GridLinesVisibility="Horizontal"
                           HeadersVisibility="Column"
+                          SelectionMode="Single"
+                          SelectionUnit="FullRow"
+                          KeyDown="DataGrid_KeyDown"
+                          MouseLeftButtonUp="DataGrid_MouseLeftButtonUp"
                           Margin="0,10,0,0">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Name"

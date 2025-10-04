@@ -66,17 +66,17 @@ namespace MMG.ViewModels
             RenameSelectedItemCommand = new RelayCommand(() => RenameSelectedItem(), () => HasSelectedItem && SelectedTreeItem?.ItemType == TreeViewItemType.Request);
             NewRequestCommand = new RelayCommand(() => CreateNewRequest());
             NewFolderCommand = new RelayCommand(async () => await CreateNewFolder());
-            AddHeaderCommand = new RelayCommand(AddHeader);
+            AddHeaderCommand = new RelayCommand<object>(AddHeader);
             RemoveHeaderCommand = new RelayCommand<DataField>(RemoveHeader);
-            AddPayloadFieldCommand = new RelayCommand(AddPayloadField);
+            AddPayloadFieldCommand = new RelayCommand<object>(AddPayloadField);
             RemovePayloadFieldCommand = new RelayCommand<DataField>(RemovePayloadField);
-            AddResponseHeaderCommand = new RelayCommand(AddResponseHeader);
+            AddResponseHeaderCommand = new RelayCommand<object>(AddResponseHeader);
             RemoveResponseHeaderCommand = new RelayCommand<DataField>(RemoveResponseHeader);
-            AddResponsePayloadFieldCommand = new RelayCommand(AddResponsePayloadField);
+            AddResponsePayloadFieldCommand = new RelayCommand<object>(AddResponsePayloadField);
             RemoveResponsePayloadFieldCommand = new RelayCommand<DataField>(RemoveResponsePayloadField);
 
             // Keep old commands for backward compatibility
-            AddResponseFieldCommand = new RelayCommand(AddResponsePayloadField);
+            AddResponseFieldCommand = new RelayCommand(() => AddResponsePayloadField());
             RemoveResponseFieldCommand = new RelayCommand<DataField>(RemoveResponsePayloadField);
 
             // Load saved requests on startup
@@ -498,11 +498,22 @@ namespace MMG.ViewModels
             }
         }
 
-        private void AddHeader()
+        private void AddHeader(object? selectedIndexObj = null)
         {
             var newHeader = new DataField { Name = $"Header{CurrentRequest.Headers.Count + 1}", Type = DataType.Byte, Value = "0" };
             newHeader.PropertyChanged += OnDataFieldPropertyChanged;
-            CurrentRequest.Headers.Add(newHeader);
+
+            // 선택된 인덱스가 있고 유효한 경우 해당 위치 다음에 삽입
+            if (selectedIndexObj is int selectedIndex && selectedIndex >= 0 && selectedIndex < CurrentRequest.Headers.Count)
+            {
+                CurrentRequest.Headers.Insert(selectedIndex + 1, newHeader);
+            }
+            else
+            {
+                // 선택된 항목이 없거나 유효하지 않은 경우 마지막에 추가
+                CurrentRequest.Headers.Add(newHeader);
+            }
+
             NotifyBytesChanged();
         }
 
@@ -516,11 +527,22 @@ namespace MMG.ViewModels
             }
         }
 
-        private void AddPayloadField()
+        private void AddPayloadField(object? selectedIndexObj = null)
         {
             var newField = new DataField { Name = $"Field{CurrentRequest.Payload.Count + 1}", Type = DataType.Int, Value = "0" };
             newField.PropertyChanged += OnDataFieldPropertyChanged;
-            CurrentRequest.Payload.Add(newField);
+
+            // 선택된 인덱스가 있고 유효한 경우 해당 위치 다음에 삽입
+            if (selectedIndexObj is int selectedIndex && selectedIndex >= 0 && selectedIndex < CurrentRequest.Payload.Count)
+            {
+                CurrentRequest.Payload.Insert(selectedIndex + 1, newField);
+            }
+            else
+            {
+                // 선택된 항목이 없거나 유효하지 않은 경우 마지막에 추가
+                CurrentRequest.Payload.Add(newField);
+            }
+
             NotifyBytesChanged();
         }
 
@@ -545,11 +567,22 @@ namespace MMG.ViewModels
                 ResponseSchema.Payload.Remove(field);
         }
 
-        private void AddResponseHeader()
+        private void AddResponseHeader(object? selectedIndexObj = null)
         {
             var newHeader = new DataField { Name = $"ResponseHeader{ResponseSchema.Headers.Count + 1}", Type = DataType.Byte };
             newHeader.PropertyChanged += OnResponseDataFieldPropertyChanged;
-            ResponseSchema.Headers.Add(newHeader);
+
+            // 선택된 인덱스가 있고 유효한 경우 해당 위치 다음에 삽입
+            if (selectedIndexObj is int selectedIndex && selectedIndex >= 0 && selectedIndex < ResponseSchema.Headers.Count)
+            {
+                ResponseSchema.Headers.Insert(selectedIndex + 1, newHeader);
+            }
+            else
+            {
+                // 선택된 항목이 없거나 유효하지 않은 경우 마지막에 추가
+                ResponseSchema.Headers.Add(newHeader);
+            }
+
             OnPropertyChanged(nameof(ResponseHeaderBytesText));
         }
 
@@ -562,11 +595,22 @@ namespace MMG.ViewModels
             }
         }
 
-        private void AddResponsePayloadField()
+        private void AddResponsePayloadField(object? selectedIndexObj = null)
         {
             var newField = new DataField { Name = $"ResponseField{ResponseSchema.Payload.Count + 1}", Type = DataType.Int };
             newField.PropertyChanged += OnResponseDataFieldPropertyChanged;
-            ResponseSchema.Payload.Add(newField);
+
+            // 선택된 인덱스가 있고 유효한 경우 해당 위치 다음에 삽입
+            if (selectedIndexObj is int selectedIndex && selectedIndex >= 0 && selectedIndex < ResponseSchema.Payload.Count)
+            {
+                ResponseSchema.Payload.Insert(selectedIndex + 1, newField);
+            }
+            else
+            {
+                // 선택된 항목이 없거나 유효하지 않은 경우 마지막에 추가
+                ResponseSchema.Payload.Add(newField);
+            }
+
             OnPropertyChanged(nameof(ResponsePayloadBytesText));
         }
 

@@ -660,6 +660,23 @@
                                                                 Property="Background"
                                                                 Value="#E3F2FD"/>
                                                 </Trigger>
+                                                <Trigger Property="IsSelected"
+                                                         Value="False">
+                                                        <Setter TargetName="DGR_Border"
+                                                                Property="Background"
+                                                                Value="Transparent"/>
+                                                </Trigger>
+                                                <MultiTrigger>
+                                                        <MultiTrigger.Conditions>
+                                                                <Condition Property="IsSelected"
+                                                                                Value="True"/>
+                                                                <Condition Property="IsMouseOver"
+                                                                                Value="True"/>
+                                                        </MultiTrigger.Conditions>
+                                                        <Setter TargetName="DGR_Border"
+                                                                Property="Background"
+                                                                Value="#BBDEFB"/>
+                                                </MultiTrigger>
                                         </ControlTemplate.Triggers>
                                 </ControlTemplate>
                         </Setter.Value>
