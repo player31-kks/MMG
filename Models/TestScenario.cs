@@ -14,6 +14,7 @@ namespace MMG.Models
         private bool _isEnabled = true;
         private bool _isRunning = false;
         private bool _isEditing = false;
+        private double _progress = 0;
 
         public int Id
         {
@@ -63,9 +64,18 @@ namespace MMG.Models
             set { _isEditing = value; OnPropertyChanged(nameof(IsEditing)); }
         }
 
+        public double Progress
+        {
+            get => _progress;
+            set { _progress = value; OnPropertyChanged(nameof(Progress)); }
+        }
+
         public string StatusText => IsRunning ? "실행중" : "준비됨";
 
         public ObservableCollection<TestStep> Steps { get; } = new ObservableCollection<TestStep>();
+
+        // 호환성을 위한 별칭
+        public ObservableCollection<TestStep> TestSteps => Steps;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 

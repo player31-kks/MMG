@@ -16,6 +16,8 @@ namespace MMG.Models
         private string _expectedResponse = string.Empty;
         private bool _isEnabled = true;
         private int _order;
+        private bool _isRunning = false;
+        private TestResult? _lastResult;
 
         public int Id
         {
@@ -82,6 +84,22 @@ namespace MMG.Models
             get => _order;
             set { _order = value; OnPropertyChanged(nameof(Order)); }
         }
+
+        public bool IsRunning
+        {
+            get => _isRunning;
+            set { _isRunning = value; OnPropertyChanged(nameof(IsRunning)); }
+        }
+
+        public TestResult? LastResult
+        {
+            get => _lastResult;
+            set { _lastResult = value; OnPropertyChanged(nameof(LastResult)); }
+        }
+
+        public int StepNumber => Order + 1;
+
+        public SavedRequest? Request { get; set; } // 연결된 요청 정보
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
