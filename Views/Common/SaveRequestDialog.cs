@@ -2,7 +2,7 @@ using System.Windows;
 using System.Collections.ObjectModel;
 using MMG.Models;
 
-namespace MMG.Views
+namespace MMG.Views.Common
 {
     public partial class SaveRequestDialog : Window
     {
@@ -12,13 +12,13 @@ namespace MMG.Views
         public SaveRequestDialog(ObservableCollection<Folder> folders)
         {
             InitializeComponent();
-            
+
             // 사용 가능한 폴더들을 ComboBox에 추가
             foreach (var folder in folders)
             {
                 FolderComboBox.Items.Add(folder);
             }
-            
+
             Loaded += (s, e) => RequestNameTextBox.Focus();
         }
 
@@ -31,7 +31,7 @@ namespace MMG.Views
             }
 
             RequestName = RequestNameTextBox.Text.Trim();
-            
+
             if (FolderComboBox.SelectedItem is Folder selectedFolder)
             {
                 SelectedFolderId = selectedFolder.Id;

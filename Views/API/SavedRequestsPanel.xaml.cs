@@ -7,7 +7,7 @@ using System.Windows.Threading;
 using MMG.Models;
 using MMG.ViewModels;
 
-namespace MMG.Views
+namespace MMG.Views.API
 {
     /// <summary>
     /// Interaction logic for SavedRequestsPanel.xaml

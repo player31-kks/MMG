@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace MMG.Views
+namespace MMG.Views.Common
 {
     public partial class CreateScenarioDialog : Window
     {

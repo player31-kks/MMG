@@ -1,6 +1,6 @@
 using System.Windows.Controls;
 
-namespace MMG.Views
+namespace MMG.Views.Common
 {
     public partial class HeaderPanel : UserControl
     {

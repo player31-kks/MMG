@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using MMG.ViewModels;
 using MMG.Models;
 
-namespace MMG.Views
+namespace MMG.Views.Test
 {
     public partial class TestsContentPanel : UserControl
     {
@@ -17,7 +17,7 @@ namespace MMG.Views
             if (sender is Button button && button.Tag != null)
             {
                 var frequency = button.Tag.ToString();
-                
+
                 // DataContext를 통해 TestsViewModel에 접근
                 if (DataContext is TestsViewModel viewModel && viewModel.SelectedStep != null)
                 {
@@ -34,7 +34,7 @@ namespace MMG.Views
             if (sender is Button button && button.Tag != null)
             {
                 var duration = button.Tag.ToString();
-                
+
                 // DataContext를 통해 TestsViewModel에 접근
                 if (DataContext is TestsViewModel viewModel && viewModel.SelectedStep != null)
                 {

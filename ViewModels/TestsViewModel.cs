@@ -6,7 +6,7 @@ using System.Linq;
 using MMG.Models;
 using MMG.Services;
 using System.Windows;
-using MMG.Views;
+using MMG.Views.Common;
 
 namespace MMG.ViewModels
 {
@@ -15,14 +15,14 @@ namespace MMG.ViewModels
         private readonly TestDatabaseService _testDatabaseService;
         private readonly TestExecutionService _testExecutionService;
         private readonly DatabaseService _databaseService;
-        
+
         private ObservableCollection<TestScenario> _scenarios = new();
         private TestScenario? _selectedScenario;
         private ObservableCollection<TestStep> _currentSteps = new();
         private TestStep? _selectedStep;
         private ObservableCollection<SavedRequest> _savedRequests = new();
         private ObservableCollection<ReceivedDataItem> _receivedDataItems = new();
-        
+
         private bool _isTestRunning = false;
         private string _testProgress = "";
         private int _progressPercentage = 0;
@@ -32,7 +32,7 @@ namespace MMG.ViewModels
         {
             _databaseService = new DatabaseService();
             _testDatabaseService = new TestDatabaseService();
-            
+
             // UdpClientService 인스턴스 생성 필요
             var udpClientService = new UdpClientService();
             _testExecutionService = new TestExecutionService(udpClientService, _databaseService, _testDatabaseService);
@@ -55,7 +55,7 @@ namespace MMG.ViewModels
             SaveScenarioRenameCommand = new RelayCommand<TestScenario>(async (scenario) => await SaveRename(scenario));
             CancelScenarioRenameCommand = new RelayCommand<TestScenario>((scenario) => CancelRename(scenario));
 
-                        // Initial data loading
+            // Initial data loading
             _ = RefreshAll();
         }
 
@@ -276,7 +276,7 @@ namespace MMG.ViewModels
                 {
                     CurrentSteps.Add(step);
                 }
-                
+
                 // Command 상태 업데이트
                 CommandManager.InvalidateRequerySuggested();
             }
@@ -302,7 +302,7 @@ namespace MMG.ViewModels
                     try
                     {
                         newScenario.Id = await _testDatabaseService.CreateScenarioAsync(newScenario);
-                        
+
                         // UI 스레드에서 실행
                         Application.Current.Dispatcher.Invoke(() =>
                         {
@@ -325,7 +325,7 @@ namespace MMG.ViewModels
         {
             if (SelectedScenario == null) return;
 
-            var result = MessageBox.Show($"시나리오 '{SelectedScenario.Name}'을(를) 삭제하시겠습니까?", 
+            var result = MessageBox.Show($"시나리오 '{SelectedScenario.Name}'을(를) 삭제하시겠습니까?",
                 "삭제 확인", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             if (result == MessageBoxResult.Yes)
@@ -383,12 +383,12 @@ namespace MMG.ViewModels
 
             IsStopping = true;
             TestProgress = "테스트를 중지하는 중...";
-            
+
             _testExecutionService.StopTest();
-            
+
             // 1초 대기 후 상태 초기화
             await Task.Delay(1000);
-            
+
             IsTestRunning = false;
             IsStopping = false;
             if (SelectedScenario != null)
@@ -414,7 +414,7 @@ namespace MMG.ViewModels
             {
                 newStep.Id = await _testDatabaseService.CreateStepAsync(newStep);
                 CurrentSteps.Add(newStep);
-                
+
                 // 시나리오의 Steps 컬렉션에도 추가
                 SelectedScenario.Steps.Add(newStep);
             }
@@ -432,10 +432,10 @@ namespace MMG.ViewModels
             {
                 await _testDatabaseService.UpdateStepAsync(SelectedStep);
                 MessageBox.Show("스텝이 성공적으로 저장되었습니다.", "저장 완료", MessageBoxButton.OK, MessageBoxImage.Information);
-                
+
                 // 스텝 목록 새로고침으로 UI 업데이트
                 await LoadSteps();
-                
+
                 // 선택된 시나리오의 Steps 컬렉션도 업데이트
                 if (SelectedScenario != null)
                 {
@@ -461,10 +461,10 @@ namespace MMG.ViewModels
             {
                 var stepToDelete = SelectedStep;
                 await _testDatabaseService.DeleteStepAsync(stepToDelete.Id);
-                
+
                 // UI에서 제거
                 CurrentSteps.Remove(stepToDelete);
-                
+
                 // 시나리오의 Steps 컬렉션에서도 제거
                 if (SelectedScenario != null)
                 {
@@ -474,10 +474,10 @@ namespace MMG.ViewModels
                         SelectedScenario.Steps.Remove(stepToRemove);
                     }
                 }
-                
+
                 // 선택 해제
                 SelectedStep = null;
-                
+
                 // Command의 CanExecute 상태 업데이트
                 CommandManager.InvalidateRequerySuggested();
             }
@@ -507,14 +507,14 @@ namespace MMG.ViewModels
                     SelectedScenario.IsRunning = false;
                 }
                 TestProgress = e.Summary;
-                
+
                 var message = $"테스트가 완료되었습니다.\n\n" +
                              $"총 스텝: {e.TotalSteps}\n" +
                              $"성공: {e.SuccessfulSteps}\n" +
                              $"실패: {e.FailedSteps}\n" +
                              $"실행 시간: {e.TotalExecutionTime.TotalSeconds:F1}초";
 
-                MessageBox.Show(message, "테스트 결과", MessageBoxButton.OK, 
+                MessageBox.Show(message, "테스트 결과", MessageBoxButton.OK,
                     e.FailedSteps == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
             });
         }
@@ -531,7 +531,7 @@ namespace MMG.ViewModels
                     s.IsEditing = false;
                 }
             }
-            
+
             scenario.IsEditing = true;
         }
 
@@ -562,7 +562,7 @@ namespace MMG.ViewModels
             if (scenario == null) return;
 
             scenario.IsEditing = false;
-            
+
             // 원래 이름으로 복원 (데이터베이스에서 다시 로드)
             _ = Task.Run(async () =>
             {

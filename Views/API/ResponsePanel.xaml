@@ -1,4 +1,4 @@
-<UserControl x:Class="MMG.Views.ResponsePanel"
+<UserControl x:Class="MMG.Views.API.ResponsePanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:MMG"

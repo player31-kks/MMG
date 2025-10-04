@@ -1,4 +1,4 @@
-<Window x:Class="MMG.Views.CreateFolderDialog"
+<Window x:Class="MMG.Views.Common.CreateFolderDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="새 폴더 만들기"

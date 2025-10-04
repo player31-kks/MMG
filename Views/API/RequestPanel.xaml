@@ -1,9 +1,9 @@
-<UserControl x:Class="MMG.Views.RequestPanel"
+<UserControl x:Class="MMG.Views.API.RequestPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:MMG"
              xmlns:models="clr-namespace:MMG.Models"
-             xmlns:views="clr-namespace:MMG.Views"
+             xmlns:api="clr-namespace:MMG.Views.API"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
@@ -111,13 +111,13 @@
                 <!-- Request Schema Tab -->
                 <TabItem Header="Request Schema"
                          Style="{StaticResource ModernTabItem}">
-                    <views:RequestSchemaTabs Margin="10"/>
+                    <api:RequestSchemaTabs Margin="10"/>
                 </TabItem>
 
                 <!-- Response Schema Tab -->
                 <TabItem Header="Response Schema"
                          Style="{StaticResource ModernTabItem}">
-                    <views:ResponseSchemaTabs Margin="10"/>
+                    <api:ResponseSchemaTabs Margin="10"/>
                 </TabItem>
             </TabControl>
         </Grid>

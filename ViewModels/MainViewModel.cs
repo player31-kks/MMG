@@ -4,7 +4,7 @@ using System.Windows.Input;
 using System.Linq;
 using MMG.Models;
 using MMG.Services;
-using MMG.Views;
+using MMG.Views.Common;
 using System.Windows;
 
 namespace MMG.ViewModels

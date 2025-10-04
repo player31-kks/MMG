@@ -1,4 +1,4 @@
-<Window x:Class="MMG.Views.SaveRequestDialog"
+<Window x:Class="MMG.Views.Common.SaveRequestDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="요청 저장"

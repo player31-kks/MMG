@@ -2,7 +2,7 @@ using System.Windows;
 using System.Collections.ObjectModel;
 using MMG.Models;
 
-namespace MMG.Views
+namespace MMG.Views.Common
 {
     public partial class CreateFolderDialog : Window
     {
