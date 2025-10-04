@@ -10,7 +10,7 @@
              d:DesignHeight="400"
              d:DesignWidth="400">
     <TabControl Style="{x:Null}"
-            BorderThickness="0,1,0,1">
+                BorderThickness="0,1,0,1">
         <!-- Response Headers Tab -->
         <TabItem Header="Headers"
                  Style="{StaticResource ModernTabItem}"
@@ -117,6 +117,16 @@
                                             FontSize="{DynamicResource text-xs}"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <Button Content="X"
+                                            Command="{Binding DataContext.ClearAllResponseHeadersCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            Style="{StaticResource CancelButtonStyle}"
+                                            Width="20"
+                                            Height="20"
+                                            FontSize="{DynamicResource text-xs}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.HeaderTemplate>
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
@@ -229,6 +239,16 @@
                                             FontSize="{DynamicResource text-xs}"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <Button Content="X"
+                                            Command="{Binding DataContext.ClearAllResponsePayloadFieldsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            Style="{StaticResource CancelButtonStyle}"
+                                            Width="20"
+                                            Height="20"
+                                            FontSize="{DynamicResource text-xs}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.HeaderTemplate>
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>

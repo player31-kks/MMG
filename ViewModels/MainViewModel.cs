@@ -75,6 +75,12 @@ namespace MMG.ViewModels
             AddResponsePayloadFieldCommand = new RelayCommand<object>(AddResponsePayloadField);
             RemoveResponsePayloadFieldCommand = new RelayCommand<DataField>(RemoveResponsePayloadField);
 
+            // Clear all commands
+            ClearAllHeadersCommand = new RelayCommand(ClearAllHeaders);
+            ClearAllPayloadFieldsCommand = new RelayCommand(ClearAllPayloadFields);
+            ClearAllResponseHeadersCommand = new RelayCommand(ClearAllResponseHeaders);
+            ClearAllResponsePayloadFieldsCommand = new RelayCommand(ClearAllResponsePayloadFields);
+
             // Keep old commands for backward compatibility
             AddResponseFieldCommand = new RelayCommand(() => AddResponsePayloadField());
             RemoveResponseFieldCommand = new RelayCommand<DataField>(RemoveResponsePayloadField);
@@ -266,6 +272,12 @@ namespace MMG.ViewModels
         public ICommand CancelRenameCommand { get; }
         public ICommand CopyItemCommand { get; }
         public ICommand RenameSelectedItemCommand { get; }
+
+        // Clear all commands
+        public ICommand ClearAllHeadersCommand { get; }
+        public ICommand ClearAllPayloadFieldsCommand { get; }
+        public ICommand ClearAllResponseHeadersCommand { get; }
+        public ICommand ClearAllResponsePayloadFieldsCommand { get; }
 
         private async Task SendRequest()
         {
@@ -619,6 +631,87 @@ namespace MMG.ViewModels
             if (field != null)
             {
                 ResponseSchema.Payload.Remove(field);
+                OnPropertyChanged(nameof(ResponsePayloadBytesText));
+            }
+        }
+
+        // Clear all methods
+        private void ClearAllHeaders()
+        {
+            var result = MessageBox.Show(
+                "모든 Header 필드를 삭제하시겠습니까?", 
+                "확인", 
+                MessageBoxButton.YesNo, 
+                MessageBoxImage.Question);
+                
+            if (result == MessageBoxResult.Yes)
+            {
+                // Unsubscribe from property changed events
+                foreach (var header in CurrentRequest.Headers)
+                {
+                    header.PropertyChanged -= OnDataFieldPropertyChanged;
+                }
+                CurrentRequest.Headers.Clear();
+                NotifyBytesChanged();
+            }
+        }
+
+        private void ClearAllPayloadFields()
+        {
+            var result = MessageBox.Show(
+                "모든 Payload 필드를 삭제하시겠습니까?", 
+                "확인", 
+                MessageBoxButton.YesNo, 
+                MessageBoxImage.Question);
+                
+            if (result == MessageBoxResult.Yes)
+            {
+                // Unsubscribe from property changed events
+                foreach (var field in CurrentRequest.Payload)
+                {
+                    field.PropertyChanged -= OnDataFieldPropertyChanged;
+                }
+                CurrentRequest.Payload.Clear();
+                NotifyBytesChanged();
+            }
+        }
+
+        private void ClearAllResponseHeaders()
+        {
+            var result = MessageBox.Show(
+                "모든 Response Header 필드를 삭제하시겠습니까?", 
+                "확인", 
+                MessageBoxButton.YesNo, 
+                MessageBoxImage.Question);
+                
+            if (result == MessageBoxResult.Yes)
+            {
+                // Unsubscribe from property changed events
+                foreach (var header in ResponseSchema.Headers)
+                {
+                    header.PropertyChanged -= OnResponseDataFieldPropertyChanged;
+                }
+                ResponseSchema.Headers.Clear();
+                OnPropertyChanged(nameof(ResponseHeaderBytesText));
+            }
+        }
+
+        private void ClearAllResponsePayloadFields()
+        {
+            var result = MessageBox.Show(
+                "모든 Response Payload 필드를 삭제하시겠습니까?", 
+                "확인", 
+                MessageBoxButton.YesNo, 
+                MessageBoxImage.Question);
+                
+            if (result == MessageBoxResult.Yes)
+            {
+                // Unsubscribe from property changed events
+                foreach (var field in ResponseSchema.Payload)
+                {
+                    field.PropertyChanged -= OnResponseDataFieldPropertyChanged;
+                }
+                ResponseSchema.Payload.Clear();
                 OnPropertyChanged(nameof(ResponsePayloadBytesText));
             }
         }

@@ -59,7 +59,7 @@
                 <Setter Property="Background"
                         Value="{StaticResource WarningColor}"/>
                 <Setter Property="Foreground"
-                        Value="#333333"/>
+                        Value="White"/>
                 <Setter Property="Template">
                         <Setter.Value>
                                 <ControlTemplate TargetType="Button">
@@ -669,9 +669,9 @@
                                                 <MultiTrigger>
                                                         <MultiTrigger.Conditions>
                                                                 <Condition Property="IsSelected"
-                                                                                Value="True"/>
+                                                                           Value="True"/>
                                                                 <Condition Property="IsMouseOver"
-                                                                                Value="True"/>
+                                                                           Value="True"/>
                                                         </MultiTrigger.Conditions>
                                                         <Setter TargetName="DGR_Border"
                                                                 Property="Background"

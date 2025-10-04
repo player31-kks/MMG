@@ -95,6 +95,16 @@
                                             FontSize="{DynamicResource text-xs}"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <Button Content="X"
+                                            Command="{Binding DataContext.ClearAllHeadersCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            Style="{StaticResource CancelButtonStyle}"
+                                            Width="20"
+                                            Height="20"
+                                            FontSize="{DynamicResource text-xs}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.HeaderTemplate>
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
@@ -186,6 +196,16 @@
                                             FontSize="{DynamicResource text-xs}"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTemplateColumn.HeaderTemplate>
+                                <DataTemplate>
+                                    <Button Content="X"
+                                            Command="{Binding DataContext.ClearAllPayloadFieldsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            Style="{StaticResource CancelButtonStyle}"
+                                            Width="20"
+                                            Height="20"
+                                            FontSize="{DynamicResource text-xs}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.HeaderTemplate>
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
