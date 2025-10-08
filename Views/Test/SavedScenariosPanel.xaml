@@ -49,10 +49,22 @@
                  Background="Transparent"
                  BorderThickness="0"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                 Padding="10">
+                 Padding="10"
+                 x:Name="ScenariosListBox">
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type models:TestScenario}">
                     <Border Style="{StaticResource ScenarioListItem}">
+                        <Border.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="삭제" 
+                                          Command="{Binding DataContext.DeleteScenarioCommand, Source={x:Reference ScenariosListBox}}"
+                                          CommandParameter="{Binding}">
+                                    <MenuItem.Icon>
+                                        <TextBlock Text="🗑️" FontSize="12"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </Border.ContextMenu>
 
                         <Grid>
                             <Grid.RowDefinitions>

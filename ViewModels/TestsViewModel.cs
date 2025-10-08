@@ -44,7 +44,9 @@ namespace MMG.ViewModels
 
             // Commands
             OpenCreateScenarioDialogCommand = new RelayCommand(() => OpenCreateScenarioDialog());
-            DeleteScenarioCommand = new RelayCommand(async () => await DeleteScenario(), () => SelectedScenario != null && !IsTestRunning && !IsStopping);
+            DeleteScenarioCommand = new RelayCommand<TestScenario>(async (scenario) => {
+                if (scenario != null) await DeleteScenario(scenario);
+            }, (scenario) => scenario != null && !IsTestRunning && !IsStopping);
             RunScenarioCommand = new RelayCommand(async () => await RunScenario(), () => SelectedScenario != null && !IsTestRunning && !IsStopping);
             StopTestCommand = new RelayCommand(async () => await StopTest(), () => IsTestRunning && !IsStopping);
             AddStepCommand = new RelayCommand(async () => await AddStep(), () => SelectedScenario != null && !IsTestRunning && !IsStopping);
@@ -350,17 +352,28 @@ namespace MMG.ViewModels
         private async Task DeleteScenario()
         {
             if (SelectedScenario == null) return;
+            await DeleteScenario(SelectedScenario);
+        }
 
-            var result = MessageBox.Show($"시나리오 '{SelectedScenario.Name}'을(를) 삭제하시겠습니까?",
+        private async Task DeleteScenario(TestScenario scenario)
+        {
+            if (scenario == null) return;
+
+            var result = MessageBox.Show($"시나리오 '{scenario.Name}'을(를) 삭제하시겠습니까?",
                 "삭제 확인", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             if (result == MessageBoxResult.Yes)
             {
                 try
                 {
-                    await _testDatabaseService.DeleteScenarioAsync(SelectedScenario.Id);
-                    Scenarios.Remove(SelectedScenario);
-                    SelectedScenario = null;
+                    await _testDatabaseService.DeleteScenarioAsync(scenario.Id);
+                    Scenarios.Remove(scenario);
+                    
+                    // 삭제된 시나리오가 현재 선택된 시나리오라면 선택 해제
+                    if (SelectedScenario == scenario)
+                    {
+                        SelectedScenario = null;
+                    }
                 }
                 catch (System.Exception ex)
                 {
