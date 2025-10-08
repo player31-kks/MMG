@@ -338,43 +338,27 @@
         <!-- Footer -->
         <Border Grid.Row="2"
                 Style="{StaticResource PanelFooter}">
-            <Grid>
+            <Grid HorizontalAlignment="Right">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-
                 <StackPanel Grid.Column="0"
-                            Orientation="Horizontal">
-                    <TextBlock Text="순서:"
-                               FontSize="12"
-                               Foreground="#6C757D"
-                               VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding SelectedStep.Order}"
-                               FontSize="12"
-                               FontWeight="Bold"
-                               Foreground="#495057"
-                               Margin="4,0,0,0"
-                               VerticalAlignment="Center"/>
-                </StackPanel>
-
-                <StackPanel Grid.Column="1"
                             Orientation="Horizontal">
                     <Button Content="테스트"
                             Command="{Binding RunTestStepCommand}"
                             CommandParameter="{Binding SelectedStep}"
                             Style="{StaticResource ModernButton}"
-                            Background="#007BFF"
-                            Padding="12,6"
-                            FontSize="11"
-                            Margin="0,0,8,0"/>
+                            Width="50"
+                            Height="30"
+                            FontSize="{DynamicResource text-sm}"/>
                     <Button Content="삭제"
                             Command="{Binding DeleteTestStepCommand}"
                             CommandParameter="{Binding SelectedStep}"
-                            Style="{StaticResource ModernButton}"
+                            Style="{StaticResource CancelButtonStyle}"
                             Background="#DC3545"
-                            Padding="12,6"
-                            FontSize="11"/>
+                            Width="50"
+                            Height="30"
+                            FontSize="{DynamicResource text-sm}"/>
                 </StackPanel>
             </Grid>
         </Border>

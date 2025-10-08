@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows.Input;
+using System.Threading.Tasks;
 
 namespace MMG.ViewModels
 {
@@ -14,10 +15,10 @@ namespace MMG.ViewModels
         {
             _mainViewModel = new MainViewModel();
             _testsViewModel = new TestsViewModel();
-            
+
             ApiTabCommand = new RelayCommand(() => SelectedTab = "API");
             TestsTabCommand = new RelayCommand(() => SelectedTab = "Tests");
-            
+
             // 기본값으로 API 탭 선택
             CurrentContent = _mainViewModel;
         }
@@ -60,6 +61,29 @@ namespace MMG.ViewModels
                 "Tests" => _testsViewModel,
                 _ => _mainViewModel
             };
+
+            // Tests 탭으로 전환할 때 자동으로 새로고침
+            if (_selectedTab == "Tests")
+            {
+                RefreshTestsData();
+            }
+        }
+
+        private void RefreshTestsData()
+        {
+            try
+            {
+                // TestsViewModel의 RefreshAll 메서드 호출
+                if (_testsViewModel.RefreshScenariosCommand.CanExecute(null))
+                {
+                    _testsViewModel.RefreshScenariosCommand.Execute(null);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                // 오류 처리 (필요시)
+                System.Diagnostics.Debug.WriteLine($"Tests 데이터 새로고침 중 오류: {ex.Message}");
+            }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
