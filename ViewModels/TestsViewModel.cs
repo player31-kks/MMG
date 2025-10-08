@@ -656,14 +656,49 @@ namespace MMG.ViewModels
 
             try
             {
-                // 단일 스텝 실행 로직 - 기존 RunScenario 로직을 참조하여 구현
+                // UI 상태 업데이트
                 step.IsRunning = true;
-                await Task.Delay(1000); // 임시 구현
-                step.IsRunning = false;
+                step.HasFailed = false;
+                step.LastErrorMessage = string.Empty;
+
+                // 단일 스텝 실행
+                var result = await _testExecutionService.RunSingleStepAsync(step);
+
+                // 결과에 따른 UI 상태 업데이트
+                step.LastResult = result;
+
+                if (!result.IsSuccess)
+                {
+                    step.HasFailed = true;
+                    step.LastErrorMessage = result.ErrorMessage ?? "알 수 없는 오류가 발생했습니다.";
+
+                    // 실패 시 사용자에게 알림
+                    MessageBox.Show($"스텝 '{step.Name}' 실행이 실패했습니다.\n\n오류: {step.LastErrorMessage}",
+                        "스텝 실행 실패", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                else
+                {
+                    step.HasFailed = false;
+                    step.LastErrorMessage = string.Empty;
+
+                    // 성공 시 간단한 알림
+                    MessageBox.Show($"스텝 '{step.Name}'이 성공적으로 실행되었습니다.",
+                        "스텝 실행 완료", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"테스트 스텝 실행 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                // 예외 발생 시 UI 상태 업데이트
+                step.HasFailed = true;
+                step.LastErrorMessage = ex.Message;
+
+                MessageBox.Show($"스텝 '{step.Name}' 실행 중 오류가 발생했습니다.\n\n{ex.Message}",
+                    "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                // 실행 완료 후 UI 상태 정리
+                step.IsRunning = false;
             }
         }
 

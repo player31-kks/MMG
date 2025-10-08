@@ -20,14 +20,14 @@ namespace MMG.Services
         public event EventHandler<DataReceivedEventArgs>? DataReceived;
 
         public TestExecutionService(
-            UdpClientService udpClientService, 
-            DatabaseService databaseService, 
+            UdpClientService udpClientService,
+            DatabaseService databaseService,
             TestDatabaseService testDatabaseService)
         {
             _udpClientService = udpClientService;
             _databaseService = databaseService;
             _testDatabaseService = testDatabaseService;
-            
+
             // Subscribe to data received events
             _udpClientService.DataReceived += (sender, args) => DataReceived?.Invoke(this, args);
         }
@@ -50,7 +50,7 @@ namespace MMG.Services
 
                 // 데이터베이스에서 최신 스텝 정보를 가져옴
                 var latestSteps = await _testDatabaseService.GetStepsForScenarioAsync(scenario.Id);
-                
+
                 int totalSteps = latestSteps.Count;
                 int completedSteps = 0;
                 int successfulSteps = 0;
@@ -65,13 +65,13 @@ namespace MMG.Services
                     if (!step.IsEnabled)
                     {
                         completedSteps++;
-                        ReportProgress($"스텝 '{step.Name}' 건너뜀 (비활성화)", 
+                        ReportProgress($"스텝 '{step.Name}' 건너뜀 (비활성화)",
                                        (double)completedSteps / totalSteps * 100);
                         continue;
                     }
 
                     var stepResult = await ExecuteStepAsync(step, token);
-                    
+
                     // Save test result to database
                     await _testDatabaseService.SaveTestResultAsync(stepResult);
 
@@ -85,7 +85,7 @@ namespace MMG.Services
                     }
 
                     completedSteps++;
-                    ReportProgress($"스텝 '{step.Name}' 완료", 
+                    ReportProgress($"스텝 '{step.Name}' 완료",
                                    (double)completedSteps / totalSteps * 100);
                 }
 
@@ -177,7 +177,7 @@ namespace MMG.Services
         private async Task ExecuteSingleRequest(SavedRequest savedRequest, TestResult result, CancellationToken cancellationToken)
         {
             result.RequestSent = $"{savedRequest.IpAddress}:{savedRequest.Port}";
-            
+
             var udpRequest = CreateUdpRequestFromSaved(savedRequest);
 
             var response = await _udpClientService.SendRequestAsync(udpRequest);
@@ -201,7 +201,7 @@ namespace MMG.Services
         {
             var intervalMs = (int)(1000.0 / step.FrequencyHz); // 밀리초 단위 간격
             var totalExecutions = (int)(step.FrequencyHz * step.DurationSeconds); // 총 실행 횟수 계산
-            
+
             var responses = new System.Text.StringBuilder();
             int executionCount = 0;
             var startTime = DateTime.Now;
@@ -210,7 +210,7 @@ namespace MMG.Services
             {
                 // 다음 실행 시간 계산
                 var nextExecutionTime = startTime.AddMilliseconds((i + 1) * intervalMs);
-                
+
                 // 현재 시간이 다음 실행 시간보다 이르면 대기
                 var currentTime = DateTime.Now;
                 if (currentTime < nextExecutionTime)
@@ -228,7 +228,7 @@ namespace MMG.Services
                 executionCount++;
 
                 responses.AppendLine($"실행 #{executionCount} ({DateTime.Now:HH:mm:ss.fff}): {(response != null ? System.Text.Encoding.UTF8.GetString(response.RawData) : "응답 없음")}");
-                
+
                 // 진행 상황 보고 (선택적)
                 if (executionCount % Math.Max(1, totalExecutions / 10) == 0)
                 {
@@ -255,7 +255,7 @@ namespace MMG.Services
                 {
                     // RequestSchemaJson은 "HeadersJson|PayloadJson" 형태로 저장됨
                     var parts = savedRequest.RequestSchemaJson.Split('|');
-                    
+
                     if (parts.Length >= 1 && !string.IsNullOrEmpty(parts[0]))
                     {
                         // Headers 파싱
@@ -291,6 +291,32 @@ namespace MMG.Services
         public void StopTest()
         {
             _cancellationTokenSource?.Cancel();
+        }
+
+        public async Task<TestResult> RunSingleStepAsync(TestStep step)
+        {
+            var cancellationToken = new CancellationTokenSource(TimeSpan.FromMinutes(5)).Token; // 5분 타임아웃
+            ReportProgress($"단일 스텝 '{step.Name}' 실행 중...", 0);
+            try
+            {
+                var result = await ExecuteStepAsync(step, cancellationToken);
+                ReportProgress($"단일 스텝 '{step.Name}' 완료", 100);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                var errorResult = new TestResult
+                {
+                    ScenarioId = step.ScenarioId,
+                    StepId = step.Id,
+                    ExecutedAt = DateTime.Now,
+                    IsSuccess = false,
+                    ErrorMessage = ex.Message,
+                    ExecutionTimeMs = 0
+                };
+                ReportProgress($"단일 스텝 '{step.Name}' 실패: {ex.Message}", 100);
+                return errorResult;
+            }
         }
 
         private void ReportProgress(string message, double percentage)
