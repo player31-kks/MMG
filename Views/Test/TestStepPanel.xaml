@@ -40,12 +40,12 @@
                                         Value="Collapsed"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding SelectedScenario}"
-                                            Value="{x:Null}">
+                                                 Value="{x:Null}">
                                         <Setter Property="Visibility"
                                                 Value="Collapsed"/>
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding SelectedScenario}"
-                                            Value="{x:Null}">
+                                                 Value="{x:Null}">
                                         <Setter Property="Visibility"
                                                 Value="Collapsed"/>
                                     </DataTrigger>
@@ -56,7 +56,7 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="1"
-                        Orientation="Horizontal">
+                            Orientation="Horizontal">
                     <Button Content="+"
                             Command="{Binding AddTestStepCommand}"
                             Width="32"
@@ -86,7 +86,9 @@
             <ItemsControl ItemsSource="{Binding SelectedScenario.TestSteps}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:TestStep}">
-                        <Border Style="{StaticResource TestStepBorder}">
+                        <Button Command="{Binding DataContext.SelectStepCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"
+                                Style="{StaticResource ClickableTestStep}">
 
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -98,7 +100,7 @@
 
                                 <!-- Step Header -->
                                 <Grid Grid.Row="0"
-                                        Margin="0,0,0,8">
+                                      Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
@@ -121,93 +123,11 @@
                                                Foreground="#2C3E50"
                                                VerticalAlignment="Center"/>
 
-                                    <StackPanel Grid.Column="2"
-                                            Orientation="Horizontal">
-                                        <Button Content="▶"
-                                                Command="{Binding DataContext.RunTestStepCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}"
-                                                Width="24"
-                                                Height="24"
-                                                FontSize="10"
-                                                Style="{StaticResource ModernButton}"
-                                                Background="#28A745"
-                                                Margin="0,0,4,0"
-                                                ToolTip="이 단계만 실행"/>
-                                        <Button Content="🗑"
-                                                Command="{Binding DataContext.DeleteTestStepCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}"
-                                                Width="24"
-                                                Height="24"
-                                                FontSize="10"
-                                                Style="{StaticResource ModernButton}"
-                                                Background="#DC3545"
-                                                ToolTip="단계 삭제"/>
-                                    </StackPanel>
-                                </Grid>
-
-                                <!-- Request Details -->
-                                <Grid Grid.Row="1"
-                                        Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-
-                                    <TextBlock Grid.Row="0"
-                                            Grid.Column="0"
-                                               Text="요청:"
-                                               FontSize="12"
-                                               FontWeight="SemiBold"
-                                               Foreground="#495057"
-                                               Margin="0,0,8,4"/>
-                                    <TextBlock Grid.Row="0"
-                                            Grid.Column="1"
-                                               Text="{Binding Request.RequestData}"
-                                               FontSize="12"
+                                    <TextBlock Grid.Column="2"
+                                               Text="클릭하여 설정"
+                                               FontSize="11"
                                                Foreground="#6C757D"
-                                               TextWrapping="Wrap"
-                                               MaxHeight="60"
-                                               Margin="0,0,0,4"/>
-
-                                    <TextBlock Grid.Row="1"
-                                            Grid.Column="0"
-                                               Text="대상:"
-                                               FontSize="12"
-                                               FontWeight="SemiBold"
-                                               Foreground="#495057"
-                                               Margin="0,0,8,4"/>
-                                    <TextBlock Grid.Row="1"
-                                            Grid.Column="1"
-                                               FontSize="12"
-                                               Foreground="#6C757D"
-                                               Margin="0,0,0,4">
-                                        <TextBlock.Text>
-                                            <MultiBinding StringFormat="{}{0}:{1}">
-                                                <Binding Path="Request.IPAddress"/>
-                                                <Binding Path="Request.Port"/>
-                                            </MultiBinding>
-                                        </TextBlock.Text>
-                                    </TextBlock>
-
-                                    <TextBlock Grid.Row="2"
-                                            Grid.Column="0"
-                                               Text="예상:"
-                                               FontSize="12"
-                                               FontWeight="SemiBold"
-                                               Foreground="#495057"
-                                               Margin="0,0,8,0"/>
-                                    <TextBlock Grid.Row="2"
-                                            Grid.Column="1"
-                                               Text="{Binding ExpectedResponse}"
-                                               FontSize="12"
-                                               Foreground="#6C757D"
-                                               TextWrapping="Wrap"
-                                               MaxHeight="40"/>
+                                               VerticalAlignment="Center"/>
                                 </Grid>
 
                                 <!-- Last Result -->
@@ -224,7 +144,7 @@
                                                     Value="Collapsed"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding LastResult}"
-                                                        Value="{x:Null}">
+                                                             Value="{x:Null}">
                                                     <Setter Property="Visibility"
                                                             Value="Collapsed"/>
                                                 </DataTrigger>
@@ -238,15 +158,15 @@
                                         </Grid.RowDefinitions>
 
                                         <StackPanel Grid.Row="0"
-                                                Orientation="Horizontal"
-                                                Margin="0,0,0,4">
+                                                    Orientation="Horizontal"
+                                                    Margin="0,0,0,4">
                                             <TextBlock Text="결과:"
                                                        FontSize="11"
                                                        FontWeight="SemiBold"
                                                        Foreground="#495057"
                                                        Margin="0,0,8,0"/>
                                             <TextBlock FontSize="11"
-                                                    FontWeight="SemiBold">
+                                                       FontWeight="SemiBold">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Text"
@@ -255,7 +175,7 @@
                                                                 Value="#28A745"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding LastResult.IsSuccess}"
-                                                                    Value="False">
+                                                                         Value="False">
                                                                 <Setter Property="Text"
                                                                         Value="실패"/>
                                                                 <Setter Property="Foreground"
@@ -293,7 +213,7 @@
                                                     Value="Collapsed"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsRunning}"
-                                                        Value="True">
+                                                             Value="True">
                                                     <Setter Property="Visibility"
                                                             Value="Visible"/>
                                                 </DataTrigger>
@@ -302,7 +222,7 @@
                                     </ProgressBar.Style>
                                 </ProgressBar>
                             </Grid>
-                        </Border>
+                        </Button>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
@@ -318,12 +238,12 @@
                             Value="Collapsed"/>
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding SelectedScenario.TestSteps.Count}"
-                                Value="0">
+                                     Value="0">
                             <Setter Property="Visibility"
                                     Value="Visible"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding SelectedScenario}"
-                                Value="{x:Null}">
+                                     Value="{x:Null}">
                             <Setter Property="Visibility"
                                     Value="Visible"/>
                         </DataTrigger>
@@ -352,11 +272,10 @@
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0"
-                        Orientation="Horizontal">
+                            Orientation="Horizontal">
                     <TextBlock Text="총"
                                FontSize="12"
                                Foreground="#6C757D"
@@ -371,15 +290,6 @@
                                Foreground="#6C757D"
                                VerticalAlignment="Center"/>
                 </StackPanel>
-
-                <Button Grid.Column="1"
-                        Content="전체 실행"
-                        Command="{Binding RunSelectedScenarioCommand}"
-                        Style="{StaticResource ModernButton}"
-                        Background="#007BFF"
-                        Padding="16,8"
-                        FontSize="12"
-                        FontWeight="SemiBold"/>
             </Grid>
         </Border>
     </Grid>

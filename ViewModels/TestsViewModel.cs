@@ -62,6 +62,7 @@ namespace MMG.ViewModels
             DeleteTestStepCommand = new RelayCommand<TestStep>(async (step) => { if (step != null) await DeleteSingleStep(step); }, (step) => step != null && !IsTestRunning && !IsStopping);
             OpenDetailedResultsCommand = new RelayCommand(() => OpenDetailedResults());
             RefreshResultsCommand = new RelayCommand(async () => await RefreshResults());
+            SelectStepCommand = new RelayCommand<TestStep>((step) => { if (step != null) SelectedStep = step; });
 
             // Initial data loading
             _ = RefreshAll();
@@ -235,6 +236,7 @@ namespace MMG.ViewModels
         public ICommand DeleteTestStepCommand { get; }
         public ICommand OpenDetailedResultsCommand { get; }
         public ICommand RefreshResultsCommand { get; }
+        public ICommand SelectStepCommand { get; }
 
         #endregion
 
