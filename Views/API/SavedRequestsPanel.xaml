@@ -104,7 +104,7 @@
 
                     <TextBlock Grid.Column="0"
                                Text="APIs"
-                               FontSize="14"
+                               FontSize="{DynamicResource text-sm}"
                                FontWeight="SemiBold"
                                VerticalAlignment="Center"
                                Foreground="#374151"/>

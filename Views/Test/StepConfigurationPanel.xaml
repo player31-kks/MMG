@@ -1,0 +1,366 @@
+<UserControl x:Class="MMG.Views.Test.StepConfigurationPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:models="clr-namespace:MMG.Models"
+             mc:Ignorable="d"
+             d:DesignHeight="600"
+             d:DesignWidth="350"
+             Background="#F8F9FA">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0"
+                Style="{StaticResource PanelHeader}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="스텝 설정"
+                               FontSize="16"
+                               FontWeight="Bold"
+                               Foreground="#2C3E50"/>
+                    <TextBlock Text="선택된 테스트 스텝 구성"
+                               FontSize="12"
+                               Foreground="#6C757D"
+                               Margin="0,2,0,0"/>
+                </StackPanel>
+
+                <Button Grid.Column="1"
+                        Content="💾"
+                        Command="{Binding SaveStepCommand}"
+                        Width="32"
+                        Height="32"
+                        FontSize="16"
+                        Style="{StaticResource ModernButton}"
+                        Background="#28A745"
+                        ToolTip="스텝 저장"/>
+            </Grid>
+        </Border>
+
+        <!-- Configuration Content -->
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      Padding="20">
+            <StackPanel>
+                <!-- Step Basic Info -->
+                <Border Style="{StaticResource TestCard}"
+                        Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="기본 정보"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="#2C3E50"
+                                   Margin="0,0,0,12"/>
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="0"
+                                       Text="이름:"
+                                       FontSize="12"
+                                       Foreground="#495057"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,0,8"/>
+                            <TextBox Grid.Row="0"
+                                     Grid.Column="1"
+                                     Text="{Binding SelectedStep.Name, Mode=TwoWay}"
+                                     FontSize="12"
+                                     Padding="8,4"
+                                     Margin="0,0,0,8"
+                                     BorderBrush="#DEE2E6"
+                                     BorderThickness="1"/>
+
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="0"
+                                       Text="타입:"
+                                       FontSize="12"
+                                       Foreground="#495057"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,0,8"/>
+                            <ComboBox Grid.Row="1"
+                                      Grid.Column="1"
+                                      SelectedValue="{Binding SelectedStep.StepType, Mode=TwoWay}"
+                                      SelectedValuePath="Tag"
+                                      IsEditable="False"
+                                      FontSize="12"
+                                      Padding="8,4"
+                                      Margin="0,0,0,8"
+                                      BorderBrush="#DEE2E6"
+                                      BorderThickness="1">
+                                <ComboBoxItem Tag="SingleRequest">단일요청</ComboBoxItem>
+                                <ComboBoxItem Tag="ContinuousRequest">지속적 요청</ComboBoxItem>
+                                <ComboBoxItem Tag="DelayedRequest">지연요청</ComboBoxItem>
+                            </ComboBox>
+
+                            <CheckBox Grid.Row="2"
+                                      Grid.Column="1"
+                                      Content="활성화"
+                                      IsChecked="{Binding SelectedStep.IsEnabled, Mode=TwoWay}"
+                                      FontSize="12"
+                                      Foreground="#495057"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Request Configuration -->
+                <Border Style="{StaticResource TestCard}"
+                        Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="요청 설정"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="#2C3E50"
+                                   Margin="0,0,0,12"/>
+
+                        <!-- Single Request 설정 -->
+                        <Grid>
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Setter Property="Visibility"
+                                            Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedStep.StepType}"
+                                                     Value="SingleRequest">
+                                            <Setter Property="Visibility"
+                                                    Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="0"
+                                       Text="저장된 요청:"
+                                       FontSize="12"
+                                       Foreground="#495057"
+                                       VerticalAlignment="Top"
+                                       Margin="0,8,0,8"/>
+                            <ComboBox Grid.Row="0"
+                                      Grid.Column="1"
+                                      ItemsSource="{Binding SavedRequests}"
+                                      SelectedValue="{Binding SelectedStep.SavedRequestId, Mode=TwoWay}"
+                                      SelectedValuePath="Id"
+                                      DisplayMemberPath="Name"
+                                      FontSize="12"
+                                      Padding="8,4"
+                                      Margin="0,4,0,8"
+                                      BorderBrush="#DEE2E6"
+                                      BorderThickness="1"/>
+                        </Grid>
+
+                        <!-- Continuous Request 설정 -->
+                        <Grid>
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Setter Property="Visibility"
+                                            Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedStep.StepType}"
+                                                     Value="ContinuousRequest">
+                                            <Setter Property="Visibility"
+                                                    Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="0"
+                                       Text="저장된 요청:"
+                                       FontSize="12"
+                                       Foreground="#495057"
+                                       VerticalAlignment="Top"
+                                       Margin="0,8,0,8"/>
+                            <ComboBox Grid.Row="0"
+                                      Grid.Column="1"
+                                      ItemsSource="{Binding SavedRequests}"
+                                      SelectedValue="{Binding SelectedStep.SavedRequestId, Mode=TwoWay}"
+                                      SelectedValuePath="Id"
+                                      DisplayMemberPath="Name"
+                                      FontSize="12"
+                                      Padding="8,4"
+                                      Margin="0,4,0,8"
+                                      BorderBrush="#DEE2E6"
+                                      BorderThickness="1"/>
+
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="0"
+                                       Text="빈도(Hz):"
+                                       FontSize="12"
+                                       Foreground="#495057"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,0,8"/>
+                            <TextBox Grid.Row="1"
+                                     Grid.Column="1"
+                                     Text="{Binding SelectedStep.FrequencyHz, Mode=TwoWay}"
+                                     FontSize="12"
+                                     Padding="8,4"
+                                     Margin="0,0,0,8"
+                                     BorderBrush="#DEE2E6"
+                                     BorderThickness="1"/>
+                        </Grid>
+
+                        <!-- 지연요청 설정 -->
+                        <Grid>
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Setter Property="Visibility"
+                                            Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedStep.StepType}"
+                                                     Value="DelayedRequest">
+                                            <Setter Property="Visibility"
+                                                    Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="0"
+                                       Text="저장된 요청:"
+                                       FontSize="12"
+                                       Foreground="#495057"
+                                       VerticalAlignment="Top"
+                                       Margin="0,8,0,8"/>
+                            <ComboBox Grid.Row="0"
+                                      Grid.Column="1"
+                                      ItemsSource="{Binding SavedRequests}"
+                                      SelectedValue="{Binding SelectedStep.SavedRequestId, Mode=TwoWay}"
+                                      SelectedValuePath="Id"
+                                      DisplayMemberPath="Name"
+                                      FontSize="12"
+                                      Padding="8,4"
+                                      Margin="0,4,0,8"
+                                      BorderBrush="#DEE2E6"
+                                      BorderThickness="1"/>
+
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="0"
+                                       Text="지연(초):"
+                                       FontSize="12"
+                                       Foreground="#495057"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,0,8"/>
+                            <TextBox Grid.Row="1"
+                                     Grid.Column="1"
+                                     Text="{Binding SelectedStep.DelaySeconds, Mode=TwoWay}"
+                                     FontSize="12"
+                                     Padding="8,4"
+                                     Margin="0,0,0,8"
+                                     BorderBrush="#DEE2E6"
+                                     BorderThickness="1"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Empty State -->
+        <StackPanel Grid.Row="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+            <StackPanel.Style>
+                <Style TargetType="StackPanel">
+                    <Setter Property="Visibility"
+                            Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedStep}"
+                                     Value="{x:Null}">
+                            <Setter Property="Visibility"
+                                    Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+
+            <TextBlock Text="⚙️"
+                       FontSize="48"
+                       HorizontalAlignment="Center"
+                       Opacity="0.3"
+                       Margin="0,0,0,16"/>
+            <TextBlock Text="스텝을 선택하세요"
+                       FontSize="16"
+                       Foreground="#6C757D"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,8"/>
+            <TextBlock Text="테스트 스텝을 클릭하여 설정을 편집하세요"
+                       FontSize="12"
+                       Foreground="#ADB5BD"
+                       HorizontalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Footer -->
+        <Border Grid.Row="2"
+                Style="{StaticResource PanelFooter}">
+            <Grid HorizontalAlignment="Right">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0"
+                            Orientation="Horizontal">
+                    <Button Content="테스트"
+                            Command="{Binding RunTestStepCommand}"
+                            CommandParameter="{Binding SelectedStep}"
+                            Style="{StaticResource ModernButton}"
+                            Width="50"
+                            Height="30"
+                            FontSize="{DynamicResource text-sm}"/>
+                    <Button Content="삭제"
+                            Command="{Binding DeleteTestStepCommand}"
+                            CommandParameter="{Binding SelectedStep}"
+                            Style="{StaticResource CancelButtonStyle}"
+                            Background="#DC3545"
+                            Width="50"
+                            Height="30"
+                            FontSize="{DynamicResource text-sm}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

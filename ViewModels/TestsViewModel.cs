@@ -44,7 +44,10 @@ namespace MMG.ViewModels
 
             // Commands
             OpenCreateScenarioDialogCommand = new RelayCommand(() => OpenCreateScenarioDialog());
-            DeleteScenarioCommand = new RelayCommand(async () => await DeleteScenario(), () => SelectedScenario != null && !IsTestRunning && !IsStopping);
+            DeleteScenarioCommand = new RelayCommand<TestScenario>(async (scenario) =>
+            {
+                if (scenario != null) await DeleteScenario(scenario);
+            }, (scenario) => scenario != null && !IsTestRunning && !IsStopping);
             RunScenarioCommand = new RelayCommand(async () => await RunScenario(), () => SelectedScenario != null && !IsTestRunning && !IsStopping);
             StopTestCommand = new RelayCommand(async () => await StopTest(), () => IsTestRunning && !IsStopping);
             AddStepCommand = new RelayCommand(async () => await AddStep(), () => SelectedScenario != null && !IsTestRunning && !IsStopping);
@@ -54,6 +57,15 @@ namespace MMG.ViewModels
             RenameScenarioCommand = new RelayCommand<TestScenario>((scenario) => StartRenaming(scenario));
             SaveScenarioRenameCommand = new RelayCommand<TestScenario>(async (scenario) => await SaveRename(scenario));
             CancelScenarioRenameCommand = new RelayCommand<TestScenario>((scenario) => CancelRename(scenario));
+
+            // 새로 추가된 Command들
+            AddTestStepCommand = new RelayCommand(async () => await AddStep(), () => SelectedScenario != null && !IsTestRunning && !IsStopping);
+            RunSelectedScenarioCommand = new RelayCommand(async () => await RunScenario(), () => SelectedScenario != null && !IsTestRunning && !IsStopping);
+            RunTestStepCommand = new RelayCommand<TestStep>(async (step) => { if (step != null) await RunSingleStep(step); }, (step) => step != null && !IsTestRunning && !IsStopping);
+            DeleteTestStepCommand = new RelayCommand<TestStep>(async (step) => { if (step != null) await DeleteSingleStep(step); }, (step) => step != null && !IsTestRunning && !IsStopping);
+            OpenDetailedResultsCommand = new RelayCommand(() => OpenDetailedResults());
+            RefreshResultsCommand = new RelayCommand(async () => await RefreshResults());
+            SelectStepCommand = new RelayCommand<TestStep>((step) => { if (step != null) SelectedStep = step; });
 
             // Initial data loading
             _ = RefreshAll();
@@ -196,6 +208,14 @@ namespace MMG.ViewModels
             }
         }
 
+        // 테스트 결과 관련 속성들
+        public int TotalScenarios => Scenarios?.Count ?? 0;
+        public int SuccessfulTests { get; private set; }
+        public int FailedTests { get; private set; }
+        public double SuccessRate => TotalScenarios > 0 ? (double)SuccessfulTests / TotalScenarios * 100 : 0;
+        public ObservableCollection<TestResult> RecentResults { get; } = new ObservableCollection<TestResult>();
+        public DateTime LastUpdateTime { get; private set; } = DateTime.Now;
+
         #endregion
 
         #region Commands
@@ -211,6 +231,15 @@ namespace MMG.ViewModels
         public ICommand RenameScenarioCommand { get; }
         public ICommand SaveScenarioRenameCommand { get; }
         public ICommand CancelScenarioRenameCommand { get; }
+
+        // 새로 추가된 Command들
+        public ICommand AddTestStepCommand { get; }
+        public ICommand RunSelectedScenarioCommand { get; }
+        public ICommand RunTestStepCommand { get; }
+        public ICommand DeleteTestStepCommand { get; }
+        public ICommand OpenDetailedResultsCommand { get; }
+        public ICommand RefreshResultsCommand { get; }
+        public ICommand SelectStepCommand { get; }
 
         #endregion
 
@@ -324,17 +353,28 @@ namespace MMG.ViewModels
         private async Task DeleteScenario()
         {
             if (SelectedScenario == null) return;
+            await DeleteScenario(SelectedScenario);
+        }
 
-            var result = MessageBox.Show($"시나리오 '{SelectedScenario.Name}'을(를) 삭제하시겠습니까?",
+        private async Task DeleteScenario(TestScenario scenario)
+        {
+            if (scenario == null) return;
+
+            var result = MessageBox.Show($"시나리오 '{scenario.Name}'을(를) 삭제하시겠습니까?",
                 "삭제 확인", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             if (result == MessageBoxResult.Yes)
             {
                 try
                 {
-                    await _testDatabaseService.DeleteScenarioAsync(SelectedScenario.Id);
-                    Scenarios.Remove(SelectedScenario);
-                    SelectedScenario = null;
+                    await _testDatabaseService.DeleteScenarioAsync(scenario.Id);
+                    Scenarios.Remove(scenario);
+
+                    // 삭제된 시나리오가 현재 선택된 시나리오라면 선택 해제
+                    if (SelectedScenario == scenario)
+                    {
+                        SelectedScenario = null;
+                    }
                 }
                 catch (System.Exception ex)
                 {
@@ -607,6 +647,111 @@ namespace MMG.ViewModels
                     ReceivedDataItems.RemoveAt(0);
                 }
             });
+        }
+
+        // 새로 추가된 메서드들
+        private async Task RunSingleStep(TestStep step)
+        {
+            if (step == null) return;
+
+            try
+            {
+                // UI 상태 업데이트
+                step.IsRunning = true;
+                step.HasFailed = false;
+                step.LastErrorMessage = string.Empty;
+
+                // 단일 스텝 실행
+                var result = await _testExecutionService.RunSingleStepAsync(step);
+
+                // 결과에 따른 UI 상태 업데이트
+                step.LastResult = result;
+
+                if (!result.IsSuccess)
+                {
+                    step.HasFailed = true;
+                    step.LastErrorMessage = result.ErrorMessage ?? "알 수 없는 오류가 발생했습니다.";
+
+                    // 실패 시 사용자에게 알림
+                    MessageBox.Show($"스텝 '{step.Name}' 실행이 실패했습니다.\n\n오류: {step.LastErrorMessage}",
+                        "스텝 실행 실패", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                else
+                {
+                    step.HasFailed = false;
+                    step.LastErrorMessage = string.Empty;
+
+                    // 성공 시 간단한 알림
+                    MessageBox.Show($"스텝 '{step.Name}'이 성공적으로 실행되었습니다.",
+                        "스텝 실행 완료", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 예외 발생 시 UI 상태 업데이트
+                step.HasFailed = true;
+                step.LastErrorMessage = ex.Message;
+
+                MessageBox.Show($"스텝 '{step.Name}' 실행 중 오류가 발생했습니다.\n\n{ex.Message}",
+                    "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                // 실행 완료 후 UI 상태 정리
+                step.IsRunning = false;
+            }
+        }
+
+        private async Task DeleteSingleStep(TestStep step)
+        {
+            if (step == null) return;
+
+            try
+            {
+                // 기존 DeleteStep 로직 사용
+                SelectedStep = step;
+                await DeleteStep();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"테스트 스텝 삭제 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void OpenDetailedResults()
+        {
+            // 상세 결과 창 열기 로직
+            MessageBox.Show("상세 결과 창을 구현해야 합니다.", "정보", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private Task RefreshResults()
+        {
+            try
+            {
+                // 결과 통계 업데이트
+                SuccessfulTests = 0;
+                FailedTests = 0;
+
+                foreach (var scenario in Scenarios)
+                {
+                    // 각 시나리오의 마지막 실행 결과를 확인
+                    // 실제 구현에서는 데이터베이스에서 결과를 가져와야 함
+                }
+
+                LastUpdateTime = DateTime.Now;
+                OnPropertyChanged(nameof(TotalScenarios));
+                OnPropertyChanged(nameof(SuccessfulTests));
+                OnPropertyChanged(nameof(FailedTests));
+                OnPropertyChanged(nameof(SuccessRate));
+                OnPropertyChanged(nameof(LastUpdateTime));
+
+                return Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"결과 새로고침 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                return Task.CompletedTask;
+            }
         }
 
         #endregion

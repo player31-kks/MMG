@@ -1,0 +1,183 @@
+<UserControl x:Class="MMG.Views.Test.SavedScenariosPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:models="clr-namespace:MMG.Models"
+             mc:Ignorable="d"
+             d:DesignHeight="600"
+             d:DesignWidth="280"
+             Background="White">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0"
+                Style="{StaticResource PanelHeader}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock  Grid.Column="0"
+                            Text="Test"
+                            VerticalAlignment="Center"
+                            FontSize="{DynamicResource text-sm}"
+                            FontWeight="Bold"
+                            Foreground="#374151"/>
+
+                <Button Grid.Column="1"
+                        Content="+"
+                        Command="{Binding OpenCreateScenarioDialogCommand}"
+                        Width="30"
+                        Height="30"
+                        FontSize="{DynamicResource text-base}"
+                        Style="{StaticResource ModernButton}"
+                        ToolTip="새 시나리오 생성"/>
+            </Grid>
+        </Border>
+
+        <!-- Scenarios List -->
+        <ListBox Grid.Row="1"
+                 ItemsSource="{Binding Scenarios}"
+                 SelectedItem="{Binding SelectedScenario}"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 Padding="10"
+                 x:Name="ScenariosListBox">
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type models:TestScenario}">
+                    <Border Style="{StaticResource ScenarioListItem}">
+                        <Border.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="삭제"
+                                          Command="{Binding DataContext.DeleteScenarioCommand, Source={x:Reference ScenariosListBox}}"
+                                          CommandParameter="{Binding}">
+                                    <MenuItem.Icon>
+                                        <TextBlock Text="🗑️"
+                                                FontSize="12"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </Border.ContextMenu>
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- 시나리오 이름 (읽기 모드) -->
+                            <TextBlock Grid.Row="0"
+                                       Text="{Binding Name}"
+                                       FontWeight="SemiBold"
+                                       FontSize="14"
+                                       Foreground="#2C3E50"
+                                       TextWrapping="Wrap">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility"
+                                                Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsEditing}"
+                                                         Value="True">
+                                                <Setter Property="Visibility"
+                                                        Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                                <TextBlock.InputBindings>
+                                    <MouseBinding MouseAction="LeftDoubleClick"
+                                                  Command="{Binding DataContext.RenameScenarioCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  CommandParameter="{Binding}"/>
+                                </TextBlock.InputBindings>
+                            </TextBlock>
+
+                            <!-- 시나리오 이름 (편집 모드) -->
+                            <TextBox Grid.Row="0"
+                                     Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     FontWeight="SemiBold"
+                                     FontSize="14"
+                                     BorderThickness="1"
+                                     BorderBrush="#007BFF"
+                                     Padding="4,2">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Visibility"
+                                                Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsEditing}"
+                                                         Value="True">
+                                                <Setter Property="Visibility"
+                                                        Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter"
+                                                Command="{Binding DataContext.SaveScenarioRenameCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"/>
+                                    <KeyBinding Key="Escape"
+                                                Command="{Binding DataContext.CancelScenarioRenameCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"/>
+                                </TextBox.InputBindings>
+                            </TextBox>
+
+                            <!-- 상태 정보 -->
+                            <StackPanel Grid.Row="1"
+                                        Orientation="Horizontal"
+                                        Margin="0,6,0,0">
+                                <TextBlock Text="{Binding StatusText}"
+                                           FontSize="11"
+                                           Foreground="#6C757D"/>
+                                <Rectangle Width="4"
+                                           Height="4"
+                                           VerticalAlignment="Center"
+                                           Margin="8,0"
+                                           Fill="#6C757D"
+                                           RadiusX="2"
+                                           RadiusY="2"/>
+                                <TextBlock Text="{Binding TestSteps.Count, StringFormat='{}{0}개 단계'}"
+                                           FontSize="11"
+                                           Foreground="#6C757D"/>
+                            </StackPanel>
+
+                            <!-- 진행률 표시 -->
+                            <ProgressBar Grid.Row="2"
+                                         Value="{Binding Progress}"
+                                         Maximum="100"
+                                         Height="3"
+                                         Margin="0,6,0,0"
+                                         Background="#E9ECEF"
+                                         Foreground="#007BFF"
+                                         BorderThickness="0">
+                                <ProgressBar.Style>
+                                    <Style TargetType="ProgressBar">
+                                        <Setter Property="Visibility"
+                                                Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsRunning}"
+                                                         Value="True">
+                                                <Setter Property="Visibility"
+                                                        Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ProgressBar.Style>
+                            </ProgressBar>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</UserControl>
