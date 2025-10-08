@@ -44,7 +44,8 @@ namespace MMG.ViewModels
 
             // Commands
             OpenCreateScenarioDialogCommand = new RelayCommand(() => OpenCreateScenarioDialog());
-            DeleteScenarioCommand = new RelayCommand<TestScenario>(async (scenario) => {
+            DeleteScenarioCommand = new RelayCommand<TestScenario>(async (scenario) =>
+            {
                 if (scenario != null) await DeleteScenario(scenario);
             }, (scenario) => scenario != null && !IsTestRunning && !IsStopping);
             RunScenarioCommand = new RelayCommand(async () => await RunScenario(), () => SelectedScenario != null && !IsTestRunning && !IsStopping);
@@ -368,7 +369,7 @@ namespace MMG.ViewModels
                 {
                     await _testDatabaseService.DeleteScenarioAsync(scenario.Id);
                     Scenarios.Remove(scenario);
-                    
+
                     // 삭제된 시나리오가 현재 선택된 시나리오라면 선택 해제
                     if (SelectedScenario == scenario)
                     {

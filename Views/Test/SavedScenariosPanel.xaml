@@ -23,7 +23,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                
+
                 <TextBlock  Grid.Column="0"
                             Text="Test"
                             VerticalAlignment="Center"
@@ -56,11 +56,12 @@
                     <Border Style="{StaticResource ScenarioListItem}">
                         <Border.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="삭제" 
+                                <MenuItem Header="삭제"
                                           Command="{Binding DataContext.DeleteScenarioCommand, Source={x:Reference ScenariosListBox}}"
                                           CommandParameter="{Binding}">
                                     <MenuItem.Icon>
-                                        <TextBlock Text="🗑️" FontSize="12"/>
+                                        <TextBlock Text="🗑️"
+                                                FontSize="12"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
                             </ContextMenu>
@@ -86,7 +87,7 @@
                                                 Value="Visible"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsEditing}"
-                                                    Value="True">
+                                                         Value="True">
                                                 <Setter Property="Visibility"
                                                         Value="Collapsed"/>
                                             </DataTrigger>
@@ -114,7 +115,7 @@
                                                 Value="Collapsed"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsEditing}"
-                                                    Value="True">
+                                                         Value="True">
                                                 <Setter Property="Visibility"
                                                         Value="Visible"/>
                                             </DataTrigger>
@@ -165,7 +166,7 @@
                                                 Value="Collapsed"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsRunning}"
-                                                    Value="True">
+                                                         Value="True">
                                                 <Setter Property="Visibility"
                                                         Value="Visible"/>
                                             </DataTrigger>

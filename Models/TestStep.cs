@@ -97,7 +97,7 @@ namespace MMG.Models
             set { _lastResult = value; OnPropertyChanged(nameof(LastResult)); }
         }
 
-        public int StepNumber => Order + 1;
+        public int StepNumber => Order;
 
         public SavedRequest? Request { get; set; } // 연결된 요청 정보
 
