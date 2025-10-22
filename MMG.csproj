@@ -7,6 +7,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Resources\AppIcon.ico</ApplicationIcon>
+    <!-- WPF 애플리케이션을 위한 publish 설정 -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <!-- WPF에서는 트리밍을 비활성화해야 함 -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <TrimMode>none</TrimMode>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,13 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Libraries\x86\SQLite.Interop.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>x86\SQLite.Interop.dll</TargetPath>
-    </Content>
+    <!-- win-x64용 SQLite.Interop.dll만 포함 -->
     <Content Include="Libraries\x64\SQLite.Interop.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>x64\SQLite.Interop.dll</TargetPath>
+      <TargetPath>SQLite.Interop.dll</TargetPath>
     </Content>
     <Content Include="Resources\AppIcon.ico" />
   </ItemGroup>
