@@ -25,7 +25,7 @@
                 Background="#F8F9FA"
                 BorderBrush="#E9ECEF"
                 BorderThickness="0,0,1,0">
-            <api:SavedRequestsPanel/>
+            <api:SavedRequestsPanel DataContext="{Binding}"/>
         </Border>
 
         <!-- Splitter 1 -->
@@ -40,7 +40,7 @@
         <Border Grid.Column="2"
                 Background="White"
                 Padding="20">
-            <api:RequestPanel/>
+            <api:RequestPanel DataContext="{Binding}"/>
         </Border>
 
         <!-- Splitter 2 -->
@@ -57,7 +57,7 @@
                 BorderBrush="#E9ECEF"
                 BorderThickness="1,0,0,0"
                 Padding="20">
-            <api:ResponsePanel/>
+            <api:ResponsePanel DataContext="{Binding}"/>
         </Border>
     </Grid>
 </UserControl>

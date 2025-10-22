@@ -11,4 +11,17 @@
 
     <SolidColorBrush x:Key="WarningColor"
                      Color="#FF4444"/>
+
+    <!-- Text Color Resources-->
+    <SolidColorBrush x:Key="TextPrimaryColor"
+                     Color="#374151"/>
+
+    <LinearGradientBrush x:Key="PrimaryBackgroundGradient"
+                         StartPoint="0,0"
+                         EndPoint="1,0">
+        <GradientStop Color="#007ACC"
+                      Offset="0.0"/>
+        <GradientStop Color="#005A9E"
+                      Offset="1.0"/>
+    </LinearGradientBrush>
 </ResourceDictionary>
