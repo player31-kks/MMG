@@ -4,6 +4,32 @@
 
 MMG는 UDP 프로토콜 기반의 네트워크 메시지 생성 및 테스트를 위한 Windows 데스크톱 애플리케이션입니다. 이 소프트웨어는 개발자와 네트워크 엔지니어가 UDP 통신 프로토콜을 쉽게 테스트하고 검증할 수 있도록 설계된 전문적인 도구입니다.
 
+## 프로그램 특징
+
+### 🚀 혁신적인 기능
+- **비주얼 메시지 디자이너**: GUI 기반의 직관적인 UDP 메시지 구성
+- **실시간 응답 분석**: 수신된 데이터의 즉석 파싱 및 시각화
+- **스마트 포트 관리**: 자동 포트 할당으로 충돌 방지
+- **멀티 시나리오 테스트**: 복합적인 테스트 케이스 자동 실행
+
+### 🎯 개발자 친화적 설계
+- **Zero Configuration**: 설치 후 즉시 사용 가능
+- **Hot Reload**: 실시간 메시지 수정 및 재전송
+- **Export/Import**: 요청 및 시나리오 공유 기능
+- **History Tracking**: 모든 테스트 이력 자동 저장
+
+### 🔧 전문가급 도구
+- **Hex/Binary 지원**: 다양한 데이터 형식 입력
+- **Template System**: 자주 사용하는 패턴 저장
+- **Batch Testing**: 대량 테스트 자동화
+- **Performance Monitor**: 응답 시간 및 성능 측정
+
+### 🛡️ 안정성 & 보안
+- **Error Recovery**: 네트워크 오류 자동 복구
+- **Data Validation**: 입력 데이터 무결성 검증
+- **Secure Storage**: 로컬 암호화 저장
+- **Audit Trail**: 완전한 활동 로그
+
 ## 주요 기능
 
 ### 1. UDP 메시지 생성 및 전송
@@ -175,6 +201,160 @@ build-installer.bat
 2. "Run" 버튼 클릭
 3. 실행 진행률 및 결과 실시간 모니터링
 4. 완료 후 상세 결과 리포트 확인
+
+## 운용개념도 및 시퀀스 다이어그램
+
+### 📊 시스템 아키텍처
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     MMG Application                        │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│  │   API Tab   │  │  Tests Tab  │  │ Settings    │        │
+│  │             │  │             │  │             │        │
+│  │ ┌─────────┐ │  │ ┌─────────┐ │  │ ┌─────────┐ │        │
+│  │ │Request  │ │  │ │Scenario │ │  │ │Database │ │        │
+│  │ │Builder  │ │  │ │Manager  │ │  │ │Config   │ │        │
+│  │ └─────────┘ │  │ └─────────┘ │  │ └─────────┘ │        │
+│  │             │  │             │  │             │        │
+│  │ ┌─────────┐ │  │ ┌─────────┐ │  │             │        │
+│  │ │Response │ │  │ │Test     │ │  │             │        │
+│  │ │Parser   │ │  │ │Runner   │ │  │             │        │
+│  │ └─────────┘ │  │ └─────────┘ │  │             │        │
+│  └─────────────┘  └─────────────┘  └─────────────┘        │
+├─────────────────────────────────────────────────────────────┤
+│                   Core Services Layer                      │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│  │   UDP       │  │  Database   │  │    Test     │        │
+│  │  Client     │  │   Service   │  │ Execution   │        │
+│  │  Service    │  │             │  │  Service    │        │
+│  └─────────────┘  └─────────────┘  └─────────────┘        │
+├─────────────────────────────────────────────────────────────┤
+│                    Data Layer                              │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│  │   SQLite    │  │   Saved     │  │    Test     │        │
+│  │  Database   │  │  Requests   │  │  Results    │        │
+│  │             │  │             │  │             │        │
+│  └─────────────┘  └─────────────┘  └─────────────┘        │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                 Network Layer (UDP)                        │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│              Target Server / Device                        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 🔄 단일 UDP 요청 시퀀스 다이어그램
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant MMG_UI as MMG UI
+    participant UdpService as UDP Client Service
+    participant Database as SQLite DB
+    participant Target as Target Server
+
+    User->>MMG_UI: 1. Configure Request
+    MMG_UI->>MMG_UI: 2. Build Message Schema
+    
+    User->>MMG_UI: 3. Click Send Button
+    MMG_UI->>UdpService: 4. SendRequestAsync()
+    
+    UdpService->>UdpService: 5. Build Message Bytes
+    UdpService->>UdpService: 6. Get Available Port
+    UdpService->>Target: 7. Send UDP Message
+    
+    Target-->>UdpService: 8. UDP Response
+    UdpService->>UdpService: 9. Parse Response
+    UdpService-->>MMG_UI: 10. Return UdpResponse
+    
+    MMG_UI->>MMG_UI: 11. Display Response
+    MMG_UI->>Database: 12. Save to History (Optional)
+    
+    MMG_UI-->>User: 13. Show Results
+```
+
+### 🎯 테스트 시나리오 실행 시퀀스 다이어그램
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant TestUI as Tests UI
+    participant TestEngine as Test Execution Service
+    participant UdpService as UDP Client Service
+    participant Database as SQLite DB
+    participant Target as Target Server
+
+    User->>TestUI: 1. Select Scenario
+    User->>TestUI: 2. Click Run
+    TestUI->>TestEngine: 3. RunScenarioAsync()
+    
+    TestEngine->>Database: 4. Load Test Steps
+    Database-->>TestEngine: 5. Return Steps List
+    
+    loop For Each Test Step
+        TestEngine->>Database: 6. Load Saved Request
+        Database-->>TestEngine: 7. Return Request Data
+        TestEngine->>UdpService: 8. SendRequestAsync()
+        
+        alt Single Request
+            UdpService->>Target: 9a. Send Once
+            Target-->>UdpService: 10a. Response
+        else Delayed Request
+            TestEngine->>TestEngine: 9b. Wait Delay
+            UdpService->>Target: 10b. Send After Delay
+            Target-->>UdpService: 11b. Response
+        else Periodic Request
+            loop For Duration
+                UdpService->>Target: 9c. Send Periodically
+                Target-->>UdpService: 10c. Response
+                TestEngine->>TestUI: 11c. Update Progress
+            end
+        end
+        
+        UdpService-->>TestEngine: 12. Return Results
+        TestEngine->>Database: 13. Save Test Results
+        TestEngine->>TestUI: 14. Update Progress
+    end
+    
+    TestEngine->>Database: 15. Save Final Results
+    TestEngine-->>TestUI: 16. Test Complete
+    TestUI-->>User: 17. Show Results Report
+```
+
+### 💾 데이터 저장 및 관리 시퀀스
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant MMG_UI as MMG UI
+    participant DbService as Database Service
+    participant SQLite as SQLite Database
+    participant FileSystem as File System
+
+    User->>MMG_UI: 1. Save Request
+    MMG_UI->>DbService: 2. SaveRequestAsync()
+    DbService->>DbService: 3. Serialize Data Fields
+    DbService->>SQLite: 4. INSERT INTO SavedRequests
+    SQLite-->>DbService: 5. Return Request ID
+    DbService-->>MMG_UI: 6. Save Complete
+    
+    User->>MMG_UI: 7. Load Saved Requests
+    MMG_UI->>DbService: 8. LoadSavedRequestsAsync()
+    DbService->>SQLite: 9. SELECT * FROM SavedRequests
+    SQLite-->>DbService: 10. Return Request List
+    DbService->>DbService: 11. Deserialize Data
+    DbService-->>MMG_UI: 12. Return Request Objects
+    
+    MMG_UI->>FileSystem: 13. Auto-backup to %APPDATA%\MMG\
+    FileSystem-->>MMG_UI: 14. Backup Complete
+```
 
 ## 파일 구조
 
