@@ -101,6 +101,7 @@ namespace MMG.ViewModels.API
                     // 기존 요청 업데이트
                     _currentLoadedRequest.IpAddress = args.CurrentRequest.IpAddress;
                     _currentLoadedRequest.Port = args.CurrentRequest.Port;
+                    _currentLoadedRequest.IsBigEndian = args.CurrentRequest.IsBigEndian;
                     _currentLoadedRequest.RequestSchemaJson = _databaseService.SerializeDataFields(args.CurrentRequest.Headers) +
                                            "|" + _databaseService.SerializeDataFields(args.CurrentRequest.Payload);
                     _currentLoadedRequest.ResponseSchemaJson = _databaseService.SerializeDataFields(args.ResponseSchema.Headers) +
@@ -121,6 +122,7 @@ namespace MMG.ViewModels.API
                             Name = dialog.RequestName,
                             IpAddress = args.CurrentRequest.IpAddress,
                             Port = args.CurrentRequest.Port,
+                            IsBigEndian = args.CurrentRequest.IsBigEndian,
                             FolderId = dialog.SelectedFolderId,
                             RequestSchemaJson = _databaseService.SerializeDataFields(args.CurrentRequest.Headers) +
                                                "|" + _databaseService.SerializeDataFields(args.CurrentRequest.Payload),

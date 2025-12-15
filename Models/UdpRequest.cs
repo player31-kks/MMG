@@ -7,6 +7,7 @@ namespace MMG.Models
     {
         private string _ipAddress = "127.0.0.1";
         private int _port = 8080;
+        private bool _isBigEndian = true;
         private ObservableCollection<DataField> _headers = new();
         private ObservableCollection<DataField> _payload = new();
 
@@ -29,6 +30,19 @@ namespace MMG.Models
                 OnPropertyChanged(nameof(Port));
             }
         }
+
+        public bool IsBigEndian
+        {
+            get => _isBigEndian;
+            set
+            {
+                _isBigEndian = value;
+                OnPropertyChanged(nameof(IsBigEndian));
+                OnPropertyChanged(nameof(EndianText));
+            }
+        }
+
+        public string EndianText => IsBigEndian ? "Big Endian" : "Little Endian";
 
         public ObservableCollection<DataField> Headers
         {

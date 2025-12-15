@@ -95,6 +95,28 @@ namespace MMG.ViewModels.API
         public event EventHandler<SavedRequest>? RequestSelected;
         public event EventHandler? NewRequestCreated;
 
+        /// <summary>
+        /// Request를 다른 폴더로 이동
+        /// </summary>
+        public async Task<bool> MoveRequestToFolder(SavedRequest request, int? targetFolderId)
+        {
+            try
+            {
+                var result = await _databaseService.MoveRequestToFolderAsync(request.Id, targetFolderId);
+                if (result)
+                {
+                    request.FolderId = targetFolderId;
+                    await BuildTreeView();
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"이동 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+        }
+
         public async Task RefreshTreeView()
         {
             await BuildTreeView();

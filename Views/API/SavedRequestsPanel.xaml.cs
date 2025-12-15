@@ -17,6 +17,11 @@ namespace MMG.Views.API
         private bool _isMouseOverButton = false;
         private bool _isMouseOverPopup = false;
 
+        // 드래그 앤 드롭 관련
+        private Point _dragStartPoint;
+        private TreeViewItem? _draggedItem;
+        private bool _isDragging = false;
+
         public SavedRequestsPanel()
         {
             InitializeComponent();
@@ -215,5 +220,117 @@ namespace MMG.Views.API
             }
             return null;
         }
+
+        #region Drag and Drop
+
+        private void TreeViewItem_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            _dragStartPoint = e.GetPosition(null);
+        }
+
+        private void TreeViewItem_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed && !_isDragging)
+            {
+                Point position = e.GetPosition(null);
+
+                if (Math.Abs(position.X - _dragStartPoint.X) > SystemParameters.MinimumHorizontalDragDistance ||
+                    Math.Abs(position.Y - _dragStartPoint.Y) > SystemParameters.MinimumVerticalDragDistance)
+                {
+                    if (sender is TreeViewItem treeViewItem &&
+                        treeViewItem.DataContext is TreeViewItemModel treeItem &&
+                        treeItem.ItemType == TreeViewItemType.Request)
+                    {
+                        _isDragging = true;
+                        _draggedItem = treeViewItem;
+
+                        var data = new DataObject("TreeViewItemModel", treeItem);
+                        DragDrop.DoDragDrop(treeViewItem, data, DragDropEffects.Move);
+
+                        _isDragging = false;
+                        _draggedItem = null;
+                    }
+                }
+            }
+        }
+
+        private void TreeViewItem_DragOver(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent("TreeViewItemModel"))
+            {
+                var targetTreeViewItem = sender as TreeViewItem;
+                var targetItem = targetTreeViewItem?.DataContext as TreeViewItemModel;
+                var sourceItem = e.Data.GetData("TreeViewItemModel") as TreeViewItemModel;
+
+                // 자기 자신이거나 폴더가 아닌 경우 드롭 불가
+                if (sourceItem == null || targetItem == null ||
+                    sourceItem == targetItem ||
+                    (targetItem.ItemType != TreeViewItemType.Folder && targetItem.ItemType != TreeViewItemType.Request))
+                {
+                    e.Effects = DragDropEffects.None;
+                }
+                else
+                {
+                    e.Effects = DragDropEffects.Move;
+                }
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            e.Handled = true;
+        }
+
+        private async void TreeViewItem_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent("TreeViewItemModel"))
+            {
+                var targetTreeViewItem = sender as TreeViewItem;
+                var targetItem = targetTreeViewItem?.DataContext as TreeViewItemModel;
+                var sourceItem = e.Data.GetData("TreeViewItemModel") as TreeViewItemModel;
+
+                if (sourceItem?.Tag is SavedRequest request && targetItem != null && DataContext is MainViewModel viewModel)
+                {
+                    int? targetFolderId = null;
+
+                    if (targetItem.ItemType == TreeViewItemType.Folder && targetItem.Tag is Folder folder)
+                    {
+                        targetFolderId = folder.Id;
+                    }
+                    else if (targetItem.ItemType == TreeViewItemType.Request && targetItem.Tag is SavedRequest targetRequest)
+                    {
+                        // 요청 위에 드롭하면 같은 폴더로 이동
+                        targetFolderId = targetRequest.FolderId;
+                    }
+
+                    // 같은 폴더면 이동하지 않음
+                    if (request.FolderId != targetFolderId)
+                    {
+                        await viewModel.TreeViewViewModel.MoveRequestToFolder(request, targetFolderId);
+                    }
+                }
+            }
+            e.Handled = true;
+        }
+
+        private async void TreeView_Drop(object sender, DragEventArgs e)
+        {
+            // TreeView 루트에 드롭하면 루트로 이동 (FolderId = null)
+            if (e.Data.GetDataPresent("TreeViewItemModel"))
+            {
+                var sourceItem = e.Data.GetData("TreeViewItemModel") as TreeViewItemModel;
+
+                if (sourceItem?.Tag is SavedRequest request && DataContext is MainViewModel viewModel)
+                {
+                    if (request.FolderId != null)
+                    {
+                        await viewModel.TreeViewViewModel.MoveRequestToFolder(request, null);
+                    }
+                }
+            }
+            e.Handled = true;
+        }
+
+        #endregion
     }
 }
