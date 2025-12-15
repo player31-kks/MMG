@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows.Input;
 using System.Threading.Tasks;
+using MMG.ViewModels.Spec;
 
 namespace MMG.ViewModels
 {
@@ -10,14 +11,17 @@ namespace MMG.ViewModels
         private object? _currentContent;
         private readonly MainViewModel _mainViewModel;
         private readonly TestsViewModel _testsViewModel;
+        private readonly SpecViewModel _specViewModel;
 
         public NavigationViewModel()
         {
             _mainViewModel = new MainViewModel();
             _testsViewModel = new TestsViewModel();
+            _specViewModel = new SpecViewModel();
 
             ApiTabCommand = new RelayCommand(() => SelectedTab = "API");
             TestsTabCommand = new RelayCommand(() => SelectedTab = "Tests");
+            SpecTabCommand = new RelayCommand(() => SelectedTab = "Spec");
 
             // 기본값으로 API 탭 선택
             CurrentContent = _mainViewModel;
@@ -52,6 +56,7 @@ namespace MMG.ViewModels
 
         public ICommand ApiTabCommand { get; }
         public ICommand TestsTabCommand { get; }
+        public ICommand SpecTabCommand { get; }
 
         private void UpdateCurrentContent()
         {
@@ -59,6 +64,7 @@ namespace MMG.ViewModels
             {
                 "API" => _mainViewModel,
                 "Tests" => _testsViewModel,
+                "Spec" => _specViewModel,
                 _ => _mainViewModel
             };
 

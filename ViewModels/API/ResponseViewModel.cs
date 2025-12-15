@@ -1,12 +1,16 @@
 using System.ComponentModel;
 using System.Windows.Input;
+using System.Collections.ObjectModel;
 using MMG.Models;
 using MMG.Services;
 using MMG.ViewModels.Base;
-using System.Collections.ObjectModel;
+using MMG.Core.Utilities;
 
 namespace MMG.ViewModels.API
 {
+    /// <summary>
+    /// UDP 응답 관리 ViewModel
+    /// </summary>
     public class ResponseViewModel : ViewModelBase
     {
         private ResponseSchema _responseSchema;
@@ -17,24 +21,16 @@ namespace MMG.ViewModels.API
         {
             _responseSchema = new ResponseSchema();
 
-            AddResponseHeaderCommand = new RelayCommand<object>(AddResponseHeader);
-            RemoveResponseHeaderCommand = new RelayCommand<DataField>(RemoveResponseHeader);
-            AddResponsePayloadFieldCommand = new RelayCommand<object>(AddResponsePayloadField);
-            RemoveResponsePayloadFieldCommand = new RelayCommand<DataField>(RemoveResponsePayloadField);
-            ClearAllResponseHeadersCommand = new RelayCommand(ClearAllResponseHeaders);
-            ClearAllResponsePayloadFieldsCommand = new RelayCommand(ClearAllResponsePayloadFields);
-
+            InitializeCommands();
             InitializeDefaultFields();
         }
+
+        #region Properties
 
         public ResponseSchema ResponseSchema
         {
             get => _responseSchema;
-            set
-            {
-                _responseSchema = value;
-                OnPropertyChanged(nameof(ResponseSchema));
-            }
+            set => SetProperty(ref _responseSchema, value);
         }
 
         public UdpResponse? LastResponse
@@ -42,193 +38,115 @@ namespace MMG.ViewModels.API
             get => _lastResponse;
             set
             {
-                _lastResponse = value;
-                OnPropertyChanged(nameof(LastResponse));
-                UpdateResponseText();
+                if (SetProperty(ref _lastResponse, value))
+                    UpdateResponseText();
             }
         }
 
         public string ResponseText
         {
             get => _responseText;
-            set
-            {
-                _responseText = value;
-                OnPropertyChanged(nameof(ResponseText));
-            }
+            set => SetProperty(ref _responseText, value);
         }
 
-        public int ResponseHeaderBytes => CalculateBytes(ResponseSchema.Headers);
-        public int ResponsePayloadBytes => CalculateBytes(ResponseSchema.Payload);
-        public string ResponseHeaderBytesText => $"Total: {ResponseHeaderBytes} bytes";
-        public string ResponsePayloadBytesText => $"Total: {ResponsePayloadBytes} bytes";
+        public int ResponseHeaderBytes => ByteCalculator.CalculateBytes(ResponseSchema.Headers);
+        public int ResponsePayloadBytes => ByteCalculator.CalculateBytes(ResponseSchema.Payload);
+        public string ResponseHeaderBytesText => ByteCalculator.FormatBytesText(ResponseHeaderBytes);
+        public string ResponsePayloadBytesText => ByteCalculator.FormatBytesText(ResponsePayloadBytes);
 
-        public ICommand AddResponseHeaderCommand { get; }
-        public ICommand RemoveResponseHeaderCommand { get; }
-        public ICommand AddResponsePayloadFieldCommand { get; }
-        public ICommand RemoveResponsePayloadFieldCommand { get; }
-        public ICommand ClearAllResponseHeadersCommand { get; }
-        public ICommand ClearAllResponsePayloadFieldsCommand { get; }
+        #endregion
+
+        #region Commands
+
+        public ICommand AddResponseHeaderCommand { get; private set; } = null!;
+        public ICommand RemoveResponseHeaderCommand { get; private set; } = null!;
+        public ICommand AddResponsePayloadFieldCommand { get; private set; } = null!;
+        public ICommand RemoveResponsePayloadFieldCommand { get; private set; } = null!;
+        public ICommand ClearAllResponseHeadersCommand { get; private set; } = null!;
+        public ICommand ClearAllResponsePayloadFieldsCommand { get; private set; } = null!;
+
+        #endregion
+
+        #region Initialization
+
+        private void InitializeCommands()
+        {
+            AddResponseHeaderCommand = new RelayCommand<object>(AddResponseHeader);
+            RemoveResponseHeaderCommand = new RelayCommand<DataField>(RemoveResponseHeader);
+            AddResponsePayloadFieldCommand = new RelayCommand<object>(AddResponsePayloadField);
+            RemoveResponsePayloadFieldCommand = new RelayCommand<DataField>(RemoveResponsePayloadField);
+            ClearAllResponseHeadersCommand = new RelayCommand(ClearAllResponseHeaders);
+            ClearAllResponsePayloadFieldsCommand = new RelayCommand(ClearAllResponsePayloadFields);
+        }
 
         private void InitializeDefaultFields()
         {
-            var defaultResponseHeader = new DataField { Name = "ResponseHeader1", Type = DataType.Byte };
-            defaultResponseHeader.PropertyChanged += OnResponseDataFieldPropertyChanged;
-            ResponseSchema.Headers.Add(defaultResponseHeader);
-
-            var defaultResponsePayload = new DataField { Name = "ResponseField1", Type = DataType.Byte };
-            defaultResponsePayload.PropertyChanged += OnResponseDataFieldPropertyChanged;
-            ResponseSchema.Payload.Add(defaultResponsePayload);
+            AddFieldWithHandler(ResponseSchema.Headers, "ResponseHeader1", DataType.Byte);
+            AddFieldWithHandler(ResponseSchema.Payload, "ResponseField1", DataType.Byte);
         }
+
+        #endregion
+
+        #region Public Methods
 
         public void LoadResponseSchema(SavedRequest savedRequest)
         {
-            if (!string.IsNullOrEmpty(savedRequest.ResponseSchemaJson))
-            {
-                var responseSchemaParts = savedRequest.ResponseSchemaJson.Split('|');
-                if (responseSchemaParts.Length >= 2)
-                {
-                    var databaseService = new DatabaseService();
-                    var responseHeadersJson = responseSchemaParts[0];
-                    var responsePayloadJson = responseSchemaParts[1];
+            if (string.IsNullOrEmpty(savedRequest.ResponseSchemaJson)) return;
 
-                    ResponseSchema.Headers.Clear();
-                    var responseHeaders = databaseService.DeserializeDataFields(responseHeadersJson);
-                    foreach (var header in responseHeaders)
-                    {
-                        header.PropertyChanged += OnResponseDataFieldPropertyChanged;
-                        ResponseSchema.Headers.Add(header);
-                    }
+            var parts = savedRequest.ResponseSchemaJson.Split('|');
+            if (parts.Length < 2) return;
 
-                    ResponseSchema.Payload.Clear();
-                    var responsePayload = databaseService.DeserializeDataFields(responsePayloadJson);
-                    foreach (var field in responsePayload)
-                    {
-                        field.PropertyChanged += OnResponseDataFieldPropertyChanged;
-                        ResponseSchema.Payload.Add(field);
-                    }
-                }
-            }
+            var databaseService = new DatabaseService();
+            LoadFields(ResponseSchema.Headers, databaseService.DeserializeDataFields(parts[0]));
+            LoadFields(ResponseSchema.Payload, databaseService.DeserializeDataFields(parts[1]));
 
             NotifyBytesChanged();
         }
 
         public void CreateNewResponseSchema()
         {
-            // Clear existing fields
-            foreach (var header in ResponseSchema.Headers)
-            {
-                header.PropertyChanged -= OnResponseDataFieldPropertyChanged;
-            }
-            foreach (var field in ResponseSchema.Payload)
-            {
-                field.PropertyChanged -= OnResponseDataFieldPropertyChanged;
-            }
+            ClearFieldsWithHandler(ResponseSchema.Headers);
+            ClearFieldsWithHandler(ResponseSchema.Payload);
 
-            ResponseSchema.Headers.Clear();
-            ResponseSchema.Payload.Clear();
-
-            // Add default fields
-            var defaultResponseHeader = new DataField { Name = "ResponseHeader1", Type = DataType.Byte };
-            defaultResponseHeader.PropertyChanged += OnResponseDataFieldPropertyChanged;
-            ResponseSchema.Headers.Add(defaultResponseHeader);
-
-            var defaultResponsePayload = new DataField { Name = "ResponseField1", Type = DataType.Byte };
-            defaultResponsePayload.PropertyChanged += OnResponseDataFieldPropertyChanged;
-            ResponseSchema.Payload.Add(defaultResponsePayload);
-
+            InitializeDefaultFields();
             LastResponse = null;
             NotifyBytesChanged();
         }
 
+        #endregion
+
+        #region Private Methods
+
         private void AddResponseHeader(object? selectedIndexObj = null)
         {
-            var newHeader = new DataField { Name = $"ResponseHeader{ResponseSchema.Headers.Count + 1}", Type = DataType.Byte };
-            newHeader.PropertyChanged += OnResponseDataFieldPropertyChanged;
-
-            if (selectedIndexObj is int selectedIndex && selectedIndex >= 0 && selectedIndex < ResponseSchema.Headers.Count)
-            {
-                ResponseSchema.Headers.Insert(selectedIndex + 1, newHeader);
-            }
-            else
-            {
-                ResponseSchema.Headers.Add(newHeader);
-            }
-
-            NotifyBytesChanged();
+            var name = $"ResponseHeader{ResponseSchema.Headers.Count + 1}";
+            InsertField(ResponseSchema.Headers, name, DataType.Byte, selectedIndexObj);
         }
 
-        private void RemoveResponseHeader(DataField? header)
-        {
-            if (header != null)
-            {
-                header.PropertyChanged -= OnResponseDataFieldPropertyChanged;
-                ResponseSchema.Headers.Remove(header);
-                NotifyBytesChanged();
-            }
-        }
+        private void RemoveResponseHeader(DataField? header) => RemoveFieldWithHandler(ResponseSchema.Headers, header);
 
         private void AddResponsePayloadField(object? selectedIndexObj = null)
         {
-            var newField = new DataField { Name = $"ResponseField{ResponseSchema.Payload.Count + 1}", Type = DataType.Int };
-            newField.PropertyChanged += OnResponseDataFieldPropertyChanged;
-
-            if (selectedIndexObj is int selectedIndex && selectedIndex >= 0 && selectedIndex < ResponseSchema.Payload.Count)
-            {
-                ResponseSchema.Payload.Insert(selectedIndex + 1, newField);
-            }
-            else
-            {
-                ResponseSchema.Payload.Add(newField);
-            }
-
-            NotifyBytesChanged();
+            var name = $"ResponseField{ResponseSchema.Payload.Count + 1}";
+            InsertField(ResponseSchema.Payload, name, DataType.Int, selectedIndexObj);
         }
 
-        private void RemoveResponsePayloadField(DataField? field)
-        {
-            if (field != null)
-            {
-                field.PropertyChanged -= OnResponseDataFieldPropertyChanged;
-                ResponseSchema.Payload.Remove(field);
-                NotifyBytesChanged();
-            }
-        }
+        private void RemoveResponsePayloadField(DataField? field) => RemoveFieldWithHandler(ResponseSchema.Payload, field);
 
         private void ClearAllResponseHeaders()
         {
-            var result = System.Windows.MessageBox.Show(
-                "모든 Response Header 필드를 삭제하시겠습니까?",
-                "확인",
-                System.Windows.MessageBoxButton.YesNo,
-                System.Windows.MessageBoxImage.Question);
-
-            if (result == System.Windows.MessageBoxResult.Yes)
+            if (ConfirmClear("모든 Response Header 필드를 삭제하시겠습니까?"))
             {
-                foreach (var header in ResponseSchema.Headers)
-                {
-                    header.PropertyChanged -= OnResponseDataFieldPropertyChanged;
-                }
-                ResponseSchema.Headers.Clear();
+                ClearFieldsWithHandler(ResponseSchema.Headers);
                 NotifyBytesChanged();
             }
         }
 
         private void ClearAllResponsePayloadFields()
         {
-            var result = System.Windows.MessageBox.Show(
-                "모든 Response Payload 필드를 삭제하시겠습니까?",
-                "확인",
-                System.Windows.MessageBoxButton.YesNo,
-                System.Windows.MessageBoxImage.Question);
-
-            if (result == System.Windows.MessageBoxResult.Yes)
+            if (ConfirmClear("모든 Response Payload 필드를 삭제하시겠습니까?"))
             {
-                foreach (var field in ResponseSchema.Payload)
-                {
-                    field.PropertyChanged -= OnResponseDataFieldPropertyChanged;
-                }
-                ResponseSchema.Payload.Clear();
+                ClearFieldsWithHandler(ResponseSchema.Payload);
                 NotifyBytesChanged();
             }
         }
@@ -241,40 +159,83 @@ namespace MMG.ViewModels.API
                 return;
             }
 
-            var text = $"Status: {LastResponse.Status}\n";
-            text += $"Received At: {LastResponse.ReceivedAt:yyyy-MM-dd HH:mm:ss}\n";
-            text += $"Raw Data Length: {LastResponse.RawData.Length} bytes\n";
-            text += $"Raw Data (Hex): {Convert.ToHexString(LastResponse.RawData)}\n\n";
+            var lines = new List<string>
+            {
+                $"Status: {LastResponse.Status}",
+                $"Received At: {LastResponse.ReceivedAt:yyyy-MM-dd HH:mm:ss}",
+                $"Raw Data Length: {LastResponse.RawData.Length} bytes",
+                $"Raw Data (Hex): {Convert.ToHexString(LastResponse.RawData)}",
+                ""
+            };
 
             if (LastResponse.ParsedData.Any())
             {
-                text += "Parsed Data:\n";
+                lines.Add("Parsed Data:");
                 foreach (var kvp in LastResponse.ParsedData)
                 {
-                    text += $"  {kvp.Key}: {kvp.Value}\n";
+                    lines.Add($"  {kvp.Key}: {kvp.Value}");
                 }
             }
 
-            ResponseText = text;
+            ResponseText = string.Join("\n", lines);
         }
 
-        private int CalculateBytes(ObservableCollection<DataField> fields)
+        #endregion
+
+        #region Helper Methods
+
+        private void AddFieldWithHandler(ObservableCollection<DataField> collection, string name, DataType type)
         {
-            int totalBytes = 0;
+            var field = new DataField { Name = name, Type = type };
+            field.PropertyChanged += OnResponseDataFieldPropertyChanged;
+            collection.Add(field);
+        }
+
+        private void InsertField(ObservableCollection<DataField> collection, string name, DataType type, object? selectedIndexObj)
+        {
+            var field = new DataField { Name = name, Type = type };
+            field.PropertyChanged += OnResponseDataFieldPropertyChanged;
+
+            if (selectedIndexObj is int index && index >= 0 && index < collection.Count)
+                collection.Insert(index + 1, field);
+            else
+                collection.Add(field);
+
+            NotifyBytesChanged();
+        }
+
+        private void RemoveFieldWithHandler(ObservableCollection<DataField> collection, DataField? field)
+        {
+            if (field == null) return;
+
+            field.PropertyChanged -= OnResponseDataFieldPropertyChanged;
+            collection.Remove(field);
+            NotifyBytesChanged();
+        }
+
+        private void ClearFieldsWithHandler(ObservableCollection<DataField> collection)
+        {
+            foreach (var field in collection)
+                field.PropertyChanged -= OnResponseDataFieldPropertyChanged;
+            collection.Clear();
+        }
+
+        private void LoadFields(ObservableCollection<DataField> collection, IEnumerable<DataField> fields)
+        {
+            ClearFieldsWithHandler(collection);
             foreach (var field in fields)
             {
-                totalBytes += field.Type switch
-                {
-                    DataType.Byte => 1,
-                    DataType.UInt16 => 2,
-                    DataType.Int => 4,
-                    DataType.UInt => 4,
-                    DataType.Float => 4,
-                    DataType.Padding => field.PaddingSize,
-                    _ => 0
-                };
+                field.PropertyChanged += OnResponseDataFieldPropertyChanged;
+                collection.Add(field);
             }
-            return totalBytes;
+        }
+
+        private static bool ConfirmClear(string message)
+        {
+            return System.Windows.MessageBox.Show(
+                message, "확인",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Question) == System.Windows.MessageBoxResult.Yes;
         }
 
         private void NotifyBytesChanged()
@@ -287,12 +248,10 @@ namespace MMG.ViewModels.API
 
         private void OnResponseDataFieldPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(DataField.Type) ||
-                e.PropertyName == nameof(DataField.Value) ||
-                e.PropertyName == nameof(DataField.PaddingSize))
-            {
+            if (e.PropertyName is nameof(DataField.Type) or nameof(DataField.Value) or nameof(DataField.PaddingSize))
                 NotifyBytesChanged();
-            }
         }
+
+        #endregion
     }
 }

@@ -1,12 +1,16 @@
 using System.ComponentModel;
 using System.Windows.Input;
+using System.Collections.ObjectModel;
 using MMG.Models;
 using MMG.Services;
 using MMG.ViewModels.Base;
-using System.Collections.ObjectModel;
+using MMG.Core.Utilities;
 
 namespace MMG.ViewModels.API
 {
+    /// <summary>
+    /// UDP 요청 관리 ViewModel
+    /// </summary>
     public class RequestViewModel : ViewModelBase
     {
         private readonly UdpClientService _udpClientService;
@@ -16,31 +20,21 @@ namespace MMG.ViewModels.API
         public RequestViewModel()
         {
             _udpClientService = new UdpClientService();
-            _currentRequest = new UdpRequest
-            {
-                IpAddress = "127.0.0.1",
-                Port = 8080
-            };
+            _currentRequest = new UdpRequest();
 
-            SendCommand = new RelayCommand(async () => await SendRequest(), () => !IsSending);
-            AddHeaderCommand = new RelayCommand<object>(AddHeader);
-            RemoveHeaderCommand = new RelayCommand<DataField>(RemoveHeader);
-            AddPayloadFieldCommand = new RelayCommand<object>(AddPayloadField);
-            RemovePayloadFieldCommand = new RelayCommand<DataField>(RemovePayloadField);
-            ClearAllHeadersCommand = new RelayCommand(ClearAllHeaders);
-            ClearAllPayloadFieldsCommand = new RelayCommand(ClearAllPayloadFields);
-
+            InitializeCommands();
             InitializeDefaultFields();
         }
+
+        #region Properties
 
         public UdpRequest CurrentRequest
         {
             get => _currentRequest;
             set
             {
-                _currentRequest = value;
-                OnPropertyChanged(nameof(CurrentRequest));
-                NotifyBytesChanged();
+                if (SetProperty(ref _currentRequest, value))
+                    NotifyBytesChanged();
             }
         }
 
@@ -49,86 +43,71 @@ namespace MMG.ViewModels.API
             get => _isSending;
             set
             {
-                _isSending = value;
-                OnPropertyChanged(nameof(IsSending));
-                ((RelayCommand)SendCommand).RaiseCanExecuteChanged();
+                if (SetProperty(ref _isSending, value))
+                    ((RelayCommand)SendCommand).RaiseCanExecuteChanged();
             }
         }
 
-        public int HeaderBytes => CalculateBytes(CurrentRequest.Headers);
-        public int PayloadBytes => CalculateBytes(CurrentRequest.Payload);
-        public string HeaderBytesText => $"Total: {HeaderBytes} bytes";
-        public string PayloadBytesText => $"Total: {PayloadBytes} bytes";
+        public int HeaderBytes => ByteCalculator.CalculateBytes(CurrentRequest.Headers);
+        public int PayloadBytes => ByteCalculator.CalculateBytes(CurrentRequest.Payload);
+        public string HeaderBytesText => ByteCalculator.FormatBytesText(HeaderBytes);
+        public string PayloadBytesText => ByteCalculator.FormatBytesText(PayloadBytes);
 
-        public ICommand SendCommand { get; }
-        public ICommand AddHeaderCommand { get; }
-        public ICommand RemoveHeaderCommand { get; }
-        public ICommand AddPayloadFieldCommand { get; }
-        public ICommand RemovePayloadFieldCommand { get; }
-        public ICommand ClearAllHeadersCommand { get; }
-        public ICommand ClearAllPayloadFieldsCommand { get; }
+        #endregion
+
+        #region Commands
+
+        public ICommand SendCommand { get; private set; } = null!;
+        public ICommand AddHeaderCommand { get; private set; } = null!;
+        public ICommand RemoveHeaderCommand { get; private set; } = null!;
+        public ICommand AddPayloadFieldCommand { get; private set; } = null!;
+        public ICommand RemovePayloadFieldCommand { get; private set; } = null!;
+        public ICommand ClearAllHeadersCommand { get; private set; } = null!;
+        public ICommand ClearAllPayloadFieldsCommand { get; private set; } = null!;
+
+        #endregion
+
+        #region Events
 
         public event EventHandler<UdpResponse>? ResponseReceived;
         public event EventHandler<ResponseSchemaRequestEventArgs>? ResponseSchemaRequested;
 
+        #endregion
+
+        #region Initialization
+
+        private void InitializeCommands()
+        {
+            SendCommand = new RelayCommand(async () => await SendRequest(), () => !IsSending);
+            AddHeaderCommand = new RelayCommand<object>(AddHeader);
+            RemoveHeaderCommand = new RelayCommand<DataField>(RemoveHeader);
+            AddPayloadFieldCommand = new RelayCommand<object>(AddPayloadField);
+            RemovePayloadFieldCommand = new RelayCommand<DataField>(RemovePayloadField);
+            ClearAllHeadersCommand = new RelayCommand(ClearAllHeaders);
+            ClearAllPayloadFieldsCommand = new RelayCommand(ClearAllPayloadFields);
+        }
+
         private void InitializeDefaultFields()
         {
-            var defaultHeader = new DataField { Name = "Header1", Type = DataType.Byte, Value = "0" };
-            defaultHeader.PropertyChanged += OnDataFieldPropertyChanged;
-            CurrentRequest.Headers.Add(defaultHeader);
-
-            var defaultPayload = new DataField { Name = "Field1", Type = DataType.Byte, Value = "0" };
-            defaultPayload.PropertyChanged += OnDataFieldPropertyChanged;
-            CurrentRequest.Payload.Add(defaultPayload);
+            AddFieldWithHandler(CurrentRequest.Headers, "Header1", DataType.Byte, "0");
+            AddFieldWithHandler(CurrentRequest.Payload, "Field1", DataType.Byte, "0");
         }
 
-        private async Task SendRequest()
-        {
-            IsSending = true;
-            try
-            {
-                // ResponseSchema를 외부에서 요청
-                var args = new ResponseSchemaRequestEventArgs();
-                ResponseSchemaRequested?.Invoke(this, args);
+        #endregion
 
-                var responseSchema = args.ResponseSchema ?? new ResponseSchema();
-                var response = await _udpClientService.SendRequestAsync(CurrentRequest, responseSchema);
-                ResponseReceived?.Invoke(this, response);
-            }
-            finally
-            {
-                IsSending = false;
-            }
-        }
+        #region Public Methods
 
         public void LoadRequest(SavedRequest savedRequest)
         {
             CurrentRequest.IpAddress = savedRequest.IpAddress;
             CurrentRequest.Port = savedRequest.Port;
 
-            var requestSchemaParts = savedRequest.RequestSchemaJson.Split('|');
-            if (requestSchemaParts.Length >= 2)
-            {
-                var databaseService = new DatabaseService();
+            var parts = savedRequest.RequestSchemaJson.Split('|');
+            if (parts.Length < 2) return;
 
-                // Headers 복원
-                CurrentRequest.Headers.Clear();
-                var headers = databaseService.DeserializeDataFields(requestSchemaParts[0]);
-                foreach (var header in headers)
-                {
-                    header.PropertyChanged += OnDataFieldPropertyChanged;
-                    CurrentRequest.Headers.Add(header);
-                }
-
-                // Payload 복원
-                CurrentRequest.Payload.Clear();
-                var payload = databaseService.DeserializeDataFields(requestSchemaParts[1]);
-                foreach (var field in payload)
-                {
-                    field.PropertyChanged += OnDataFieldPropertyChanged;
-                    CurrentRequest.Payload.Add(field);
-                }
-            }
+            var databaseService = new DatabaseService();
+            LoadFields(CurrentRequest.Headers, databaseService.DeserializeDataFields(parts[0]));
+            LoadFields(CurrentRequest.Payload, databaseService.DeserializeDataFields(parts[1]));
 
             NotifyBytesChanged();
         }
@@ -138,133 +117,127 @@ namespace MMG.ViewModels.API
             CurrentRequest.IpAddress = "127.0.0.1";
             CurrentRequest.Port = 8080;
 
-            // Clear existing fields
-            foreach (var header in CurrentRequest.Headers)
-            {
-                header.PropertyChanged -= OnDataFieldPropertyChanged;
-            }
-            foreach (var field in CurrentRequest.Payload)
-            {
-                field.PropertyChanged -= OnDataFieldPropertyChanged;
-            }
+            ClearFieldsWithHandler(CurrentRequest.Headers);
+            ClearFieldsWithHandler(CurrentRequest.Payload);
 
-            CurrentRequest.Headers.Clear();
-            CurrentRequest.Payload.Clear();
-
-            // Add default fields
             InitializeDefaultFields();
             NotifyBytesChanged();
         }
 
+        #endregion
+
+        #region Private Methods
+
+        private async Task SendRequest()
+        {
+            IsSending = true;
+            try
+            {
+                var args = new ResponseSchemaRequestEventArgs();
+                ResponseSchemaRequested?.Invoke(this, args);
+
+                var response = await _udpClientService.SendRequestAsync(
+                    CurrentRequest,
+                    args.ResponseSchema ?? new ResponseSchema());
+
+                ResponseReceived?.Invoke(this, response);
+            }
+            finally
+            {
+                IsSending = false;
+            }
+        }
+
         private void AddHeader(object? selectedIndexObj = null)
         {
-            var newHeader = new DataField { Name = $"Header{CurrentRequest.Headers.Count + 1}", Type = DataType.Byte, Value = "0" };
-            newHeader.PropertyChanged += OnDataFieldPropertyChanged;
-
-            if (selectedIndexObj is int selectedIndex && selectedIndex >= 0 && selectedIndex < CurrentRequest.Headers.Count)
-            {
-                CurrentRequest.Headers.Insert(selectedIndex + 1, newHeader);
-            }
-            else
-            {
-                CurrentRequest.Headers.Add(newHeader);
-            }
-
-            NotifyBytesChanged();
+            var name = $"Header{CurrentRequest.Headers.Count + 1}";
+            InsertField(CurrentRequest.Headers, name, DataType.Byte, "0", selectedIndexObj);
         }
 
-        private void RemoveHeader(DataField? header)
-        {
-            if (header != null)
-            {
-                header.PropertyChanged -= OnDataFieldPropertyChanged;
-                CurrentRequest.Headers.Remove(header);
-                NotifyBytesChanged();
-            }
-        }
+        private void RemoveHeader(DataField? header) => RemoveFieldWithHandler(CurrentRequest.Headers, header);
 
         private void AddPayloadField(object? selectedIndexObj = null)
         {
-            var newField = new DataField { Name = $"Field{CurrentRequest.Payload.Count + 1}", Type = DataType.Int, Value = "0" };
-            newField.PropertyChanged += OnDataFieldPropertyChanged;
-
-            if (selectedIndexObj is int selectedIndex && selectedIndex >= 0 && selectedIndex < CurrentRequest.Payload.Count)
-            {
-                CurrentRequest.Payload.Insert(selectedIndex + 1, newField);
-            }
-            else
-            {
-                CurrentRequest.Payload.Add(newField);
-            }
-
-            NotifyBytesChanged();
+            var name = $"Field{CurrentRequest.Payload.Count + 1}";
+            InsertField(CurrentRequest.Payload, name, DataType.Int, "0", selectedIndexObj);
         }
 
-        private void RemovePayloadField(DataField? field)
-        {
-            if (field != null)
-            {
-                field.PropertyChanged -= OnDataFieldPropertyChanged;
-                CurrentRequest.Payload.Remove(field);
-                NotifyBytesChanged();
-            }
-        }
+        private void RemovePayloadField(DataField? field) => RemoveFieldWithHandler(CurrentRequest.Payload, field);
 
         private void ClearAllHeaders()
         {
-            var result = System.Windows.MessageBox.Show(
-                "모든 Header 필드를 삭제하시겠습니까?",
-                "확인",
-                System.Windows.MessageBoxButton.YesNo,
-                System.Windows.MessageBoxImage.Question);
-
-            if (result == System.Windows.MessageBoxResult.Yes)
+            if (ConfirmClear("모든 Header 필드를 삭제하시겠습니까?"))
             {
-                foreach (var header in CurrentRequest.Headers)
-                {
-                    header.PropertyChanged -= OnDataFieldPropertyChanged;
-                }
-                CurrentRequest.Headers.Clear();
+                ClearFieldsWithHandler(CurrentRequest.Headers);
                 NotifyBytesChanged();
             }
         }
 
         private void ClearAllPayloadFields()
         {
-            var result = System.Windows.MessageBox.Show(
-                "모든 Payload 필드를 삭제하시겠습니까?",
-                "확인",
-                System.Windows.MessageBoxButton.YesNo,
-                System.Windows.MessageBoxImage.Question);
-
-            if (result == System.Windows.MessageBoxResult.Yes)
+            if (ConfirmClear("모든 Payload 필드를 삭제하시겠습니까?"))
             {
-                foreach (var field in CurrentRequest.Payload)
-                {
-                    field.PropertyChanged -= OnDataFieldPropertyChanged;
-                }
-                CurrentRequest.Payload.Clear();
+                ClearFieldsWithHandler(CurrentRequest.Payload);
                 NotifyBytesChanged();
             }
         }
 
-        private int CalculateBytes(ObservableCollection<DataField> fields)
+        #endregion
+
+        #region Helper Methods
+
+        private void AddFieldWithHandler(ObservableCollection<DataField> collection, string name, DataType type, string value)
         {
-            int totalBytes = 0;
+            var field = new DataField { Name = name, Type = type, Value = value };
+            field.PropertyChanged += OnDataFieldPropertyChanged;
+            collection.Add(field);
+        }
+
+        private void InsertField(ObservableCollection<DataField> collection, string name, DataType type, string value, object? selectedIndexObj)
+        {
+            var field = new DataField { Name = name, Type = type, Value = value };
+            field.PropertyChanged += OnDataFieldPropertyChanged;
+
+            if (selectedIndexObj is int index && index >= 0 && index < collection.Count)
+                collection.Insert(index + 1, field);
+            else
+                collection.Add(field);
+
+            NotifyBytesChanged();
+        }
+
+        private void RemoveFieldWithHandler(ObservableCollection<DataField> collection, DataField? field)
+        {
+            if (field == null) return;
+
+            field.PropertyChanged -= OnDataFieldPropertyChanged;
+            collection.Remove(field);
+            NotifyBytesChanged();
+        }
+
+        private void ClearFieldsWithHandler(ObservableCollection<DataField> collection)
+        {
+            foreach (var field in collection)
+                field.PropertyChanged -= OnDataFieldPropertyChanged;
+            collection.Clear();
+        }
+
+        private void LoadFields(ObservableCollection<DataField> collection, IEnumerable<DataField> fields)
+        {
+            ClearFieldsWithHandler(collection);
             foreach (var field in fields)
             {
-                totalBytes += field.Type switch
-                {
-                    DataType.Byte => 1,
-                    DataType.UInt16 => 2,
-                    DataType.Int => 4,
-                    DataType.UInt => 4,
-                    DataType.Float => 4,
-                    DataType.Padding => field.PaddingSize,
-                    _ => 0
-                };
+                field.PropertyChanged += OnDataFieldPropertyChanged;
+                collection.Add(field);
             }
-            return totalBytes;
+        }
+
+        private static bool ConfirmClear(string message)
+        {
+            return System.Windows.MessageBox.Show(
+                message, "확인",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Question) == System.Windows.MessageBoxResult.Yes;
         }
 
         private void NotifyBytesChanged()
@@ -277,15 +250,16 @@ namespace MMG.ViewModels.API
 
         private void OnDataFieldPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(DataField.Type) ||
-                e.PropertyName == nameof(DataField.Value) ||
-                e.PropertyName == nameof(DataField.PaddingSize))
-            {
+            if (e.PropertyName is nameof(DataField.Type) or nameof(DataField.Value) or nameof(DataField.PaddingSize))
                 NotifyBytesChanged();
-            }
         }
+
+        #endregion
     }
 
+    /// <summary>
+    /// ResponseSchema 요청 이벤트 인자
+    /// </summary>
     public class ResponseSchemaRequestEventArgs : EventArgs
     {
         public ResponseSchema? ResponseSchema { get; set; }

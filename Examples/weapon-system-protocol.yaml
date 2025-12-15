@@ -1,0 +1,217 @@
+# UDP API 스펙 예제 - 무기체계 통신 프로토콜
+# 이 파일을 참고하여 실제 프로토콜 문서를 작성하세요
+
+udpapi: "1.0.0"
+
+info:
+  title: "무기체계 통신 프로토콜"
+  description: "시뮬레이터와 무기체계 간 UDP 통신 프로토콜 정의"
+  version: "1.0.0"
+  contact:
+    name: "개발팀"
+    email: "dev@example.com"
+
+servers:
+  - name: "SimulatorServer"
+    description: "시뮬레이터 서버"
+    ip: "192.168.1.100"
+    port: 5000
+  - name: "WeaponSystem"
+    description: "무기체계"
+    ip: "192.168.1.200"
+    port: 6000
+
+# 재사용 가능한 컴포넌트 정의
+components:
+  headers:
+    StandardHeader:
+      - name: "MessageType"
+        type: "uint16"
+        format: "hex"
+        description: "메시지 타입 코드"
+      - name: "MessageLength"
+        type: "uint16"
+        description: "메시지 전체 길이 (bytes)"
+      - name: "SequenceNumber"
+        type: "uint32"
+        description: "메시지 시퀀스 번호"
+      - name: "Timestamp"
+        type: "uint32"
+        description: "타임스탬프 (ms)"
+
+  schemas:
+    Position3D:
+      description: "3차원 좌표"
+      fields:
+        - name: "X"
+          type: "float"
+          description: "X 좌표 (m)"
+        - name: "Y"
+          type: "float"
+          description: "Y 좌표 (m)"
+        - name: "Z"
+          type: "float"
+          description: "Z 좌표 (m)"
+
+    Attitude:
+      description: "자세 정보"
+      fields:
+        - name: "Roll"
+          type: "float"
+          description: "롤 각도 (deg)"
+        - name: "Pitch"
+          type: "float"
+          description: "피치 각도 (deg)"
+        - name: "Yaw"
+          type: "float"
+          description: "요 각도 (deg)"
+
+# 메시지 정의
+messages:
+  # 시스템 상태 요청
+  SystemStatusRequest:
+    description: "시스템 상태 정보 요청"
+    group: "시스템"
+    endpoint:
+      $ref: "#/servers/SimulatorServer"
+    timeout: 3000
+    request:
+      header:
+        - name: "MessageType"
+          type: "uint16"
+          value: "0x0001"
+          format: "hex"
+        - name: "MessageLength"
+          type: "uint16"
+          value: "8"
+      payload:
+        - name: "RequestType"
+          type: "byte"
+          value: "1"
+          enum:
+            "1": "전체상태"
+            "2": "부분상태"
+        - name: "Reserved"
+          type: "padding"
+          size: 3
+    response:
+      header:
+        - name: "MessageType"
+          type: "uint16"
+          format: "hex"
+        - name: "MessageLength"
+          type: "uint16"
+      payload:
+        - name: "SystemStatus"
+          type: "byte"
+          enum:
+            "0": "정상"
+            "1": "경고"
+            "2": "오류"
+        - name: "SubSystemCount"
+          type: "byte"
+        - name: "Reserved"
+          type: "padding"
+          size: 2
+
+  # 위치 정보 전송
+  PositionUpdate:
+    description: "현재 위치 및 자세 정보 전송"
+    group: "위치/항법"
+    endpoint:
+      ip: "192.168.1.100"
+      port: 5001
+    timeout: 1000
+    request:
+      header:
+        - name: "MessageType"
+          type: "uint16"
+          value: "0x0010"
+          format: "hex"
+        - name: "MessageLength"
+          type: "uint16"
+          value: "32"
+      payload:
+        - name: "EntityId"
+          type: "uint32"
+          description: "개체 식별자"
+        - name: "PositionX"
+          type: "float"
+          description: "X 좌표 (m)"
+        - name: "PositionY"
+          type: "float"
+          description: "Y 좌표 (m)"
+        - name: "PositionZ"
+          type: "float"
+          description: "Z 좌표 (m)"
+        - name: "VelocityX"
+          type: "float"
+          description: "X 속도 (m/s)"
+        - name: "VelocityY"
+          type: "float"
+          description: "Y 속도 (m/s)"
+        - name: "VelocityZ"
+          type: "float"
+          description: "Z 속도 (m/s)"
+
+  # 명령 메시지
+  FireCommand:
+    description: "발사 명령"
+    group: "명령/제어"
+    endpoint:
+      $ref: "#/servers/WeaponSystem"
+    timeout: 5000
+    request:
+      header:
+        - name: "MessageType"
+          type: "uint16"
+          value: "0x0100"
+          format: "hex"
+        - name: "MessageLength"
+          type: "uint16"
+          value: "24"
+        - name: "Priority"
+          type: "byte"
+          value: "1"
+          description: "우선순위 (1=높음, 2=보통, 3=낮음)"
+        - name: "Reserved"
+          type: "padding"
+          size: 3
+      payload:
+        - name: "TargetId"
+          type: "uint32"
+          description: "표적 식별자"
+        - name: "WeaponType"
+          type: "uint16"
+          description: "무장 종류"
+          enum:
+            "1": "미사일A"
+            "2": "미사일B"
+            "3": "기관포"
+        - name: "Quantity"
+          type: "uint16"
+          description: "발사 수량"
+        - name: "TargetX"
+          type: "float"
+          description: "표적 X 좌표"
+        - name: "TargetY"
+          type: "float"
+          description: "표적 Y 좌표"
+    response:
+      header:
+        - name: "MessageType"
+          type: "uint16"
+          format: "hex"
+        - name: "MessageLength"
+          type: "uint16"
+      payload:
+        - name: "Result"
+          type: "byte"
+          enum:
+            "0": "성공"
+            "1": "실패-무장부족"
+            "2": "실패-범위초과"
+            "3": "실패-시스템오류"
+        - name: "Reserved"
+          type: "padding"
+          size: 3
