@@ -8,6 +8,14 @@ using MMG.Services;
 
 namespace MMG.Services
 {
+    /// <summary>
+    /// 테스트 로그 이벤트 인자
+    /// </summary>
+    public class TestLogEventArgs : EventArgs
+    {
+        public TestLogItem LogItem { get; set; } = null!;
+    }
+
     public class TestExecutionService
     {
         private readonly UdpClientService _udpClientService;
@@ -18,6 +26,9 @@ namespace MMG.Services
         public event EventHandler<TestProgressEventArgs>? ProgressChanged;
         public event EventHandler<TestCompletedEventArgs>? TestCompleted;
         public event EventHandler<DataReceivedEventArgs>? DataReceived;
+        public event EventHandler<TestLogEventArgs>? LogAdded;
+
+        public bool IsRunning => _cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested;
 
         public TestExecutionService(
             UdpClientService udpClientService,
@@ -30,6 +41,12 @@ namespace MMG.Services
 
             // Subscribe to data received events
             _udpClientService.DataReceived += (sender, args) => DataReceived?.Invoke(this, args);
+        }
+
+        private void AddLog(LogLevel level, string message, string stepName = "", string details = "")
+        {
+            var logItem = TestLogItem.Create(level, message, stepName, details);
+            LogAdded?.Invoke(this, new TestLogEventArgs { LogItem = logItem });
         }
 
         public async Task RunScenarioAsync(TestScenario scenario)
@@ -46,6 +63,7 @@ namespace MMG.Services
 
             try
             {
+                AddLog(LogLevel.Info, "테스트 시나리오 로딩...", scenario.Name);
                 ReportProgress("테스트 시나리오 로딩...", 0);
 
                 // 데이터베이스에서 최신 스텝 정보를 가져옴
@@ -56,6 +74,7 @@ namespace MMG.Services
                 int successfulSteps = 0;
                 int failedSteps = 0;
 
+                AddLog(LogLevel.Info, $"테스트 시나리오 시작 - 총 {totalSteps}개 스텝", scenario.Name);
                 ReportProgress("테스트 시나리오 시작...", 0);
 
                 foreach (var step in latestSteps)
@@ -65,10 +84,14 @@ namespace MMG.Services
                     if (!step.IsEnabled)
                     {
                         completedSteps++;
+                        AddLog(LogLevel.Warning, $"스텝 건너뜀 (비활성화)", step.Name);
                         ReportProgress($"스텝 '{step.Name}' 건너뜀 (비활성화)",
                                        (double)completedSteps / totalSteps * 100);
                         continue;
                     }
+
+                    AddLog(LogLevel.Info, $"스텝 실행 시작 [{step.StepTypeDisplay}]", step.Name);
+                    step.StatusText = "실행 중...";
 
                     var stepResult = await ExecuteStepAsync(step, token);
 
@@ -78,10 +101,14 @@ namespace MMG.Services
                     if (stepResult.IsSuccess)
                     {
                         successfulSteps++;
+                        step.StatusText = "완료";
+                        AddLog(LogLevel.Success, $"스텝 실행 성공 ({stepResult.ExecutionTimeMs:F0}ms)", step.Name);
                     }
                     else
                     {
                         failedSteps++;
+                        step.StatusText = $"실패: {stepResult.ErrorMessage}";
+                        AddLog(LogLevel.Error, $"스텝 실행 실패: {stepResult.ErrorMessage}", step.Name);
                     }
 
                     completedSteps++;
@@ -103,14 +130,17 @@ namespace MMG.Services
                     Summary = $"테스트 완료: {successfulSteps}/{totalSteps} 성공"
                 };
 
+                AddLog(LogLevel.Success, $"시나리오 완료: {successfulSteps}/{totalSteps} 성공, 총 실행시간: {stopwatch.Elapsed.TotalSeconds:F2}초", scenario.Name);
                 TestCompleted?.Invoke(this, completedArgs);
             }
             catch (OperationCanceledException)
             {
+                AddLog(LogLevel.Warning, "테스트가 사용자에 의해 중지되었습니다.", scenario.Name);
                 ReportProgress("테스트가 중지되었습니다.", 100);
             }
             catch (Exception ex)
             {
+                AddLog(LogLevel.Error, $"테스트 실행 중 오류: {ex.Message}", scenario.Name, ex.StackTrace ?? "");
                 ReportProgress($"테스트 실행 중 오류: {ex.Message}", 100);
             }
             finally
@@ -142,14 +172,32 @@ namespace MMG.Services
                     throw new Exception($"저장된 요청을 찾을 수 없습니다. ID: {step.SavedRequestId}");
                 }
 
+                // StepType에 따라 실행 방식 결정
                 switch (step.StepType)
                 {
+                    case "Immediate":
+                        await ExecuteImmediateRequest(savedRequest, step, result, cancellationToken);
+                        break;
+
+                    case "PreDelayed":
+                        await ExecutePreDelayedRequest(savedRequest, step, result, cancellationToken);
+                        break;
+
+                    case "PostDelayed":
+                        await ExecutePostDelayedRequest(savedRequest, step, result, cancellationToken);
+                        break;
+
+                    case "Periodic":
+                        await ExecutePeriodicRequest(savedRequest, step, result, cancellationToken);
+                        break;
+
+                    // 하위 호환성을 위한 기존 타입 지원
                     case "SingleRequest":
-                        await ExecuteSingleRequest(savedRequest, result, cancellationToken);
+                        await ExecuteImmediateRequest(savedRequest, step, result, cancellationToken);
                         break;
 
                     case "DelayedRequest":
-                        await ExecuteDelayedRequest(savedRequest, step, result, cancellationToken);
+                        await ExecutePreDelayedRequest(savedRequest, step, result, cancellationToken);
                         break;
 
                     case "PeriodicRequest":
@@ -174,33 +222,142 @@ namespace MMG.Services
             return result;
         }
 
-        private async Task ExecuteSingleRequest(SavedRequest savedRequest, TestResult result, CancellationToken cancellationToken)
+        /// <summary>
+        /// 즉시 실행 - 지연 없이 바로 요청 전송
+        /// </summary>
+        private async Task ExecuteImmediateRequest(SavedRequest savedRequest, TestStep step, TestResult result, CancellationToken cancellationToken)
         {
+            AddLog(LogLevel.Debug, $"요청 전송: {savedRequest.IpAddress}:{savedRequest.Port}", step.Name);
+
             result.RequestSent = $"{savedRequest.IpAddress}:{savedRequest.Port}";
 
             var udpRequest = CreateUdpRequestFromSaved(savedRequest);
-
             var response = await _udpClientService.SendRequestAsync(udpRequest);
-            result.ResponseReceived = response != null ? System.Text.Encoding.UTF8.GetString(response.RawData) : "응답 없음";
-        }
 
-        private async Task ExecuteDelayedRequest(SavedRequest savedRequest, TestStep step, TestResult result, CancellationToken cancellationToken)
-        {
-            // Wait for delay first
-            if (step.DelaySeconds > 0)
+            if (response == null)
             {
-                result.RequestSent = $"{savedRequest.IpAddress}:{savedRequest.Port} (지연 시간: {step.DelaySeconds}초)";
-                await Task.Delay(TimeSpan.FromSeconds(step.DelaySeconds), cancellationToken);
+                result.ResponseReceived = "응답 없음";
+                AddLog(LogLevel.Warning, "응답 없음", step.Name);
+                throw new Exception("UDP 응답을 받지 못했습니다.");
             }
 
-            // Execute request after delay
-            await ExecuteSingleRequest(savedRequest, result, cancellationToken);
+            // 응답 상태 확인
+            if (!string.IsNullOrEmpty(response.Status))
+            {
+                if (response.Status.StartsWith("Error:"))
+                {
+                    var errorMessage = response.Status.Substring(6).Trim();
+                    result.ResponseReceived = response.Status;
+                    AddLog(LogLevel.Error, $"요청 실패: {errorMessage}", step.Name);
+                    throw new Exception(errorMessage);
+                }
+                else if (response.Status == "Timeout")
+                {
+                    result.ResponseReceived = "타임아웃";
+                    AddLog(LogLevel.Warning, "응답 타임아웃 (5초)", step.Name);
+                    throw new Exception("UDP 응답 타임아웃 (5초)");
+                }
+            }
+
+            // 성공적인 응답 처리
+            if (response.RawData != null && response.RawData.Length > 0)
+            {
+                var responseText = BitConverter.ToString(response.RawData).Replace("-", " ");
+                result.ResponseReceived = responseText;
+                AddLog(LogLevel.Debug, $"응답 수신: {response.RawData.Length} bytes", step.Name, responseText);
+            }
+            else
+            {
+                result.ResponseReceived = "빈 응답";
+                AddLog(LogLevel.Warning, "빈 응답 수신", step.Name);
+            }
         }
 
+        /// <summary>
+        /// 사전 지연 실행 - 지정된 시간(ms) 대기 후 요청 전송
+        /// </summary>
+        private async Task ExecutePreDelayedRequest(SavedRequest savedRequest, TestStep step, TestResult result, CancellationToken cancellationToken)
+        {
+            int delayMs = step.PreDelayMs;
+
+            // 하위 호환성: DelaySeconds가 설정되어 있으면 사용
+            if (delayMs <= 0 && step.DelaySeconds > 0)
+            {
+                delayMs = (int)(step.DelaySeconds * 1000);
+            }
+
+            if (delayMs > 0)
+            {
+                AddLog(LogLevel.Debug, $"사전 지연 대기: {delayMs}ms", step.Name);
+                result.RequestSent = $"{savedRequest.IpAddress}:{savedRequest.Port} (사전 지연: {delayMs}ms)";
+                await Task.Delay(delayMs, cancellationToken);
+            }
+
+            // 지연 후 요청 실행
+            await ExecuteImmediateRequest(savedRequest, step, result, cancellationToken);
+        }
+
+        /// <summary>
+        /// 사후 지연 실행 - 요청 전송 후 지정된 시간(ms) 대기
+        /// </summary>
+        private async Task ExecutePostDelayedRequest(SavedRequest savedRequest, TestStep step, TestResult result, CancellationToken cancellationToken)
+        {
+            // 먼저 요청 실행
+            await ExecuteImmediateRequest(savedRequest, step, result, cancellationToken);
+
+            int delayMs = step.PostDelayMs;
+
+            if (delayMs > 0)
+            {
+                AddLog(LogLevel.Debug, $"사후 지연 대기: {delayMs}ms", step.Name);
+                result.RequestSent += $" (사후 지연: {delayMs}ms)";
+                await Task.Delay(delayMs, cancellationToken);
+            }
+        }
+
+        /// <summary>
+        /// 주기적 실행 - 지정된 간격(ms)으로 반복 실행
+        /// </summary>
         private async Task ExecutePeriodicRequest(SavedRequest savedRequest, TestStep step, TestResult result, CancellationToken cancellationToken)
         {
-            var intervalMs = (int)(1000.0 / step.FrequencyHz); // 밀리초 단위 간격
-            var totalExecutions = (int)(step.FrequencyHz * step.DurationSeconds); // 총 실행 횟수 계산
+            int intervalMs = step.IntervalMs;
+            int repeatCount = step.RepeatCount;
+            int durationMs = step.DurationMs;
+
+            // 하위 호환성: FrequencyHz가 설정되어 있으면 사용
+            if (intervalMs <= 0 && step.FrequencyHz > 0)
+            {
+                intervalMs = (int)(1000.0 / step.FrequencyHz);
+            }
+
+            // 하위 호환성: DurationSeconds가 설정되어 있으면 사용
+            if (durationMs <= 0 && step.DurationSeconds > 0)
+            {
+                durationMs = (int)(step.DurationSeconds * 1000);
+            }
+
+            // RepeatCount가 설정되어 있으면 횟수 기반 실행
+            // 아니면 DurationMs 기반으로 횟수 계산
+            int totalExecutions;
+            if (repeatCount > 0)
+            {
+                totalExecutions = repeatCount;
+            }
+            else if (durationMs > 0 && intervalMs > 0)
+            {
+                totalExecutions = durationMs / intervalMs;
+            }
+            else
+            {
+                totalExecutions = 1; // 기본값
+            }
+
+            if (intervalMs <= 0)
+            {
+                intervalMs = 100; // 기본 간격 100ms
+            }
+
+            AddLog(LogLevel.Info, $"주기적 실행 시작: {totalExecutions}회, 간격 {intervalMs}ms", step.Name);
 
             var responses = new System.Text.StringBuilder();
             int executionCount = 0;
@@ -208,18 +365,10 @@ namespace MMG.Services
 
             for (int i = 0; i < totalExecutions && !cancellationToken.IsCancellationRequested; i++)
             {
-                // 다음 실행 시간 계산
-                var nextExecutionTime = startTime.AddMilliseconds((i + 1) * intervalMs);
-
-                // 현재 시간이 다음 실행 시간보다 이르면 대기
-                var currentTime = DateTime.Now;
-                if (currentTime < nextExecutionTime)
+                // 첫 실행이 아니면 간격 대기
+                if (i > 0)
                 {
-                    var waitTime = nextExecutionTime - currentTime;
-                    if (waitTime.TotalMilliseconds > 0)
-                    {
-                        await Task.Delay(waitTime, cancellationToken);
-                    }
+                    await Task.Delay(intervalMs, cancellationToken);
                 }
 
                 // 요청 실행
@@ -227,17 +376,23 @@ namespace MMG.Services
                 var response = await _udpClientService.SendRequestAsync(udpRequest);
                 executionCount++;
 
-                responses.AppendLine($"실행 #{executionCount} ({DateTime.Now:HH:mm:ss.fff}): {(response != null ? System.Text.Encoding.UTF8.GetString(response.RawData) : "응답 없음")}");
+                string responseText = response != null
+                    ? BitConverter.ToString(response.RawData).Replace("-", " ")
+                    : "응답 없음";
 
-                // 진행 상황 보고 (선택적)
-                if (executionCount % Math.Max(1, totalExecutions / 10) == 0)
+                responses.AppendLine($"[{executionCount}/{totalExecutions}] {DateTime.Now:HH:mm:ss.fff}: {responseText}");
+
+                // 주기적으로 로그 출력 (10% 간격 또는 마지막)
+                if (executionCount % Math.Max(1, totalExecutions / 10) == 0 || executionCount == totalExecutions)
                 {
-                    ReportProgress($"주기적 요청 진행 중: {executionCount}/{totalExecutions}", 0);
+                    AddLog(LogLevel.Debug, $"주기적 요청 진행: {executionCount}/{totalExecutions}", step.Name);
                 }
             }
 
-            result.RequestSent = $"{savedRequest.IpAddress}:{savedRequest.Port} (주기적 실행 {executionCount}회, {step.FrequencyHz}Hz × {step.DurationSeconds}초)";
+            result.RequestSent = $"{savedRequest.IpAddress}:{savedRequest.Port} (주기적 실행 {executionCount}회, 간격 {intervalMs}ms)";
             result.ResponseReceived = responses.ToString();
+
+            AddLog(LogLevel.Info, $"주기적 실행 완료: {executionCount}회 실행", step.Name);
         }
 
         private UdpRequest CreateUdpRequestFromSaved(SavedRequest savedRequest)
