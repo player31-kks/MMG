@@ -215,3 +215,184 @@ messages:
         - name: "Reserved"
           type: "padding"
           size: 3
+
+  # ============================================
+  # 비트 필드 사용 예제
+  # ============================================
+  
+  # 시스템 상태 비트 필드 예제
+  SystemStatusBitField:
+    description: "비트 단위 시스템 상태 정보 (1바이트에 여러 상태 패킹)"
+    group: "시스템"
+    endpoint:
+      $ref: "#/servers/SimulatorServer"
+    request:
+      header:
+        - name: "MessageType"
+          type: "uint16"
+          value: "0x0010"
+          format: "hex"
+        - name: "MessageLength"
+          type: "uint16"
+          value: "4"
+      payload:
+        - name: "Reserved"
+          type: "padding"
+          size: 0
+    response:
+      header:
+        - name: "MessageType"
+          type: "uint16"
+          format: "hex"
+        - name: "MessageLength"
+          type: "uint16"
+      payload:
+        # 1바이트를 비트 단위로 분할하는 예제
+        - name: "StatusFlags"
+          type: "byte"
+          description: "시스템 상태 플래그 (8비트)"
+          bits:
+            - name: "PowerOn"
+              bit: 0
+              description: "전원 상태 (0: OFF, 1: ON)"
+              enum:
+                "0": "OFF"
+                "1": "ON"
+            - name: "SystemReady"
+              bit: 1
+              description: "시스템 준비 상태"
+              enum:
+                "0": "Not Ready"
+                "1": "Ready"
+            - name: "ErrorFlag"
+              bit: 2
+              description: "에러 발생 여부"
+            - name: "Reserved1"
+              bit: 3
+              description: "예약 비트"
+            - name: "OperationMode"
+              bits: "4:5"
+              description: "동작 모드 (2비트: 0~3)"
+              enum:
+                "0": "대기"
+                "1": "수동"
+                "2": "반자동"
+                "3": "자동"
+            - name: "AlarmLevel"
+              bits: "6:7"
+              description: "경보 수준 (2비트: 0~3)"
+              enum:
+                "0": "정상"
+                "1": "주의"
+                "2": "경고"
+                "3": "위험"
+        
+        # 2바이트(uint16)를 비트 단위로 분할하는 예제
+        - name: "SensorStatus"
+          type: "uint16"
+          description: "센서 상태 비트맵 (16비트)"
+          bits:
+            - name: "RadarActive"
+              bit: 0
+              description: "레이더 활성화"
+            - name: "IRSensorActive"
+              bit: 1
+              description: "IR 센서 활성화"
+            - name: "GPSValid"
+              bit: 2
+              description: "GPS 유효"
+            - name: "INSAligned"
+              bit: 3
+              description: "INS 정렬 완료"
+            - name: "DataLinkConnected"
+              bit: 4
+              description: "데이터링크 연결"
+            - name: "Reserved"
+              bits: "5:7"
+              description: "예약 비트"
+            - name: "TrackCount"
+              bits: "8:15"
+              description: "추적 표적 수 (8비트: 0~255)"
+
+  # 제어 명령 비트 필드 예제
+  ControlCommandBitField:
+    description: "비트 단위 제어 명령"
+    group: "제어"
+    endpoint:
+      $ref: "#/servers/WeaponSystem"
+    request:
+      header:
+        - name: "MessageType"
+          type: "uint16"
+          value: "0x0020"
+          format: "hex"
+        - name: "MessageLength"
+          type: "uint16"
+          value: "8"
+      payload:
+        - name: "CommandFlags"
+          type: "uint32"
+          description: "제어 명령 플래그 (32비트)"
+          bits:
+            - name: "EngagementAuth"
+              bit: 0
+              description: "교전 권한"
+            - name: "TrackingEnable"
+              bit: 1
+              description: "추적 활성화"
+            - name: "FireEnable"
+              bit: 2
+              description: "발사 활성화"
+            - name: "SafetyOverride"
+              bit: 3
+              description: "안전장치 해제"
+            - name: "ManualOverride"
+              bit: 4
+              description: "수동 제어"
+            - name: "Reserved"
+              bits: "5:7"
+              description: "예약"
+            - name: "TargetPriority"
+              bits: "8:11"
+              description: "표적 우선순위 (4비트: 0~15)"
+            - name: "WeaponSelect"
+              bits: "12:15"
+              description: "무장 선택 (4비트: 0~15)"
+            - name: "EngagementMode"
+              bits: "16:19"
+              description: "교전 모드 (4비트)"
+              enum:
+                "0": "None"
+                "1": "Single"
+                "2": "Burst"
+                "3": "Continuous"
+            - name: "Reserved2"
+              bits: "20:31"
+              description: "예약 비트"
+    response:
+      header:
+        - name: "MessageType"
+          type: "uint16"
+          format: "hex"
+        - name: "MessageLength"
+          type: "uint16"
+      payload:
+        - name: "AckFlags"
+          type: "byte"
+          description: "응답 플래그"
+          bits:
+            - name: "CommandReceived"
+              bit: 0
+              description: "명령 수신 확인"
+            - name: "CommandValid"
+              bit: 1
+              description: "명령 유효성"
+            - name: "CommandExecuted"
+              bit: 2
+              description: "명령 실행 완료"
+            - name: "ErrorOccurred"
+              bit: 3
+              description: "에러 발생"
+            - name: "ErrorCode"
+              bits: "4:7"
+              description: "에러 코드 (4비트)"

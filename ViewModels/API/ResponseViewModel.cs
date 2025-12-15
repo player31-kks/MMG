@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using MMG.Models;
 using MMG.Services;
 using MMG.ViewModels.Base;
+using MMG.ViewModels.Spec;
 using MMG.Core.Utilities;
 
 namespace MMG.ViewModels.API
@@ -109,6 +110,39 @@ namespace MMG.ViewModels.API
             ClearFieldsWithHandler(ResponseSchema.Payload);
 
             InitializeDefaultFields();
+            LastResponse = null;
+            NotifyBytesChanged();
+        }
+
+        /// <summary>
+        /// Spec에서 응답 스키마 로드
+        /// </summary>
+        public void LoadFromSpec(CreateApiRequestEventArgs args)
+        {
+            // 기존 필드 정리
+            ClearFieldsWithHandler(ResponseSchema.Headers);
+            ClearFieldsWithHandler(ResponseSchema.Payload);
+
+            // 응답 헤더 필드 로드
+            foreach (var field in args.ResponseHeaders)
+            {
+                field.PropertyChanged += OnResponseDataFieldPropertyChanged;
+                ResponseSchema.Headers.Add(field);
+            }
+
+            // 응답 페이로드 필드 로드
+            foreach (var field in args.ResponsePayload)
+            {
+                field.PropertyChanged += OnResponseDataFieldPropertyChanged;
+                ResponseSchema.Payload.Add(field);
+            }
+
+            // 응답 필드가 없으면 기본값 설정
+            if (ResponseSchema.Headers.Count == 0 && ResponseSchema.Payload.Count == 0)
+            {
+                InitializeDefaultFields();
+            }
+
             LastResponse = null;
             NotifyBytesChanged();
         }

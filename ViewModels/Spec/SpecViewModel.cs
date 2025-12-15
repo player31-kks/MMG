@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Input;
 using MMG.Core.Models.Schema;
 using MMG.Core.Services;
+using MMG.Models;
 using MMG.ViewModels.Base;
 using Microsoft.Win32;
 
@@ -113,6 +114,16 @@ namespace MMG.ViewModels.Spec
         public ICommand ExportSpecCommand { get; private set; } = null!;
         public ICommand SaveSpecCommand { get; private set; } = null!;
         public ICommand RefreshFromYamlCommand { get; private set; } = null!;
+        public ICommand CreateApiRequestCommand { get; private set; } = null!;
+
+        #endregion
+
+        #region Events
+
+        /// <summary>
+        /// API 요청 생성 요청 이벤트 (NavigationViewModel에서 처리)
+        /// </summary>
+        public event EventHandler<CreateApiRequestEventArgs>? CreateApiRequestRequested;
 
         #endregion
 
@@ -125,6 +136,7 @@ namespace MMG.ViewModels.Spec
             ExportSpecCommand = new RelayCommand(ExportSpec, () => HasSpec);
             SaveSpecCommand = new RelayCommand(SaveSpec, () => HasSpec && !string.IsNullOrEmpty(CurrentFilePath));
             RefreshFromYamlCommand = new RelayCommand(RefreshFromYaml, () => !string.IsNullOrEmpty(SpecYamlContent));
+            CreateApiRequestCommand = new RelayCommand<MessageItem>(CreateApiRequest, msg => msg != null);
         }
 
         #endregion
@@ -239,9 +251,127 @@ namespace MMG.ViewModels.Spec
             }
         }
 
+        private void CreateApiRequest(MessageItem? messageItem)
+        {
+            if (messageItem?.Definition == null) return;
+
+            var definition = messageItem.Definition;
+            var args = new CreateApiRequestEventArgs
+            {
+                MessageId = messageItem.MessageId
+            };
+
+            // 엔드포인트 정보 설정
+            if (definition.Endpoint != null)
+            {
+                if (!string.IsNullOrEmpty(definition.Endpoint.ServerRef) && CurrentSpec?.Servers != null)
+                {
+                    // $ref로 서버 참조
+                    var serverName = definition.Endpoint.ServerRef.Replace("#/servers/", "");
+                    var server = CurrentSpec.Servers.FirstOrDefault(s => s.Name == serverName);
+                    if (server != null)
+                    {
+                        args.IpAddress = server.IpAddress;
+                        args.Port = server.Port;
+                    }
+                }
+                else
+                {
+                    // 직접 지정
+                    if (!string.IsNullOrEmpty(definition.Endpoint.IpAddress))
+                        args.IpAddress = definition.Endpoint.IpAddress;
+                    if (definition.Endpoint.Port.HasValue)
+                        args.Port = definition.Endpoint.Port.Value;
+                }
+            }
+            else if (CurrentSpec?.Servers != null && CurrentSpec.Servers.Count > 0)
+            {
+                // 기본 서버 사용
+                args.IpAddress = CurrentSpec.Servers[0].IpAddress;
+                args.Port = CurrentSpec.Servers[0].Port;
+            }
+
+            // 요청 헤더 변환
+            if (definition.Request?.Header != null)
+            {
+                foreach (var field in definition.Request.Header)
+                {
+                    args.Headers.Add(ConvertToDataField(field));
+                }
+            }
+
+            // 요청 페이로드 변환
+            if (definition.Request?.Payload != null)
+            {
+                foreach (var field in definition.Request.Payload)
+                {
+                    args.Payload.Add(ConvertToDataField(field));
+                }
+            }
+
+            // 응답 헤더 변환
+            if (definition.Response?.Header != null)
+            {
+                foreach (var field in definition.Response.Header)
+                {
+                    args.ResponseHeaders.Add(ConvertToDataField(field));
+                }
+            }
+
+            // 응답 페이로드 변환
+            if (definition.Response?.Payload != null)
+            {
+                foreach (var field in definition.Response.Payload)
+                {
+                    args.ResponsePayload.Add(ConvertToDataField(field));
+                }
+            }
+
+            // 이벤트 발생
+            CreateApiRequestRequested?.Invoke(this, args);
+            StatusMessage = $"API 요청 생성됨: {messageItem.MessageId}";
+        }
+
         #endregion
 
         #region Helper Methods
+
+        private static DataField ConvertToDataField(FieldDefinition fieldDef)
+        {
+            var dataType = fieldDef.Type.ToLowerInvariant() switch
+            {
+                "byte" or "uint8" or "int8" => DataType.Byte,
+                "uint16" or "int16" or "short" => DataType.UInt16,
+                "int32" or "int" => DataType.Int,
+                "uint32" or "uint" => DataType.UInt,
+                "float" or "float32" => DataType.Float,
+                "padding" => DataType.Padding,
+                _ => DataType.Byte
+            };
+
+            var dataField = new DataField
+            {
+                Name = fieldDef.Name,
+                Type = dataType,
+                Value = fieldDef.Value ?? GetDefaultValue(dataType)
+            };
+
+            if (dataType == DataType.Padding && fieldDef.Size.HasValue)
+            {
+                dataField.PaddingSize = fieldDef.Size.Value;
+            }
+
+            return dataField;
+        }
+
+        private static string GetDefaultValue(DataType type)
+        {
+            return type switch
+            {
+                DataType.Float => "0.0",
+                _ => "0"
+            };
+        }
 
         private void UpdateMessagesCollection()
         {
@@ -326,5 +456,19 @@ namespace MMG.ViewModels.Spec
         public int HeaderCount { get; set; }
         public int PayloadCount { get; set; }
         public MessageDefinition? Definition { get; set; }
+    }
+
+    /// <summary>
+    /// API 요청 생성 이벤트 인자
+    /// </summary>
+    public class CreateApiRequestEventArgs : EventArgs
+    {
+        public string MessageId { get; set; } = "";
+        public string IpAddress { get; set; } = "127.0.0.1";
+        public int Port { get; set; } = 8080;
+        public ObservableCollection<DataField> Headers { get; set; } = new();
+        public ObservableCollection<DataField> Payload { get; set; } = new();
+        public ObservableCollection<DataField> ResponseHeaders { get; set; } = new();
+        public ObservableCollection<DataField> ResponsePayload { get; set; } = new();
     }
 }

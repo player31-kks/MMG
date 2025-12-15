@@ -57,10 +57,22 @@ namespace MMG.Core.Models.Schema
         public Dictionary<string, string>? EnumValues { get; set; }
 
         /// <summary>
+        /// 비트 필드 정의 (바이트/워드 내 비트 단위 분할)
+        /// </summary>
+        [YamlMember(Alias = "bits")]
+        public List<BitFieldDefinition>? BitFields { get; set; }
+
+        /// <summary>
         /// 컴포넌트 참조 ($ref)
         /// </summary>
         [YamlMember(Alias = "$ref")]
         public string? ComponentRef { get; set; }
+
+        /// <summary>
+        /// 비트 필드가 있는지 여부
+        /// </summary>
+        [YamlIgnore]
+        public bool HasBitFields => BitFields != null && BitFields.Count > 0;
 
         /// <summary>
         /// 실제 바이트 크기 계산

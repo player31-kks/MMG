@@ -4,6 +4,7 @@ using MMG.Models;
 using MMG.Services;
 using MMG.Views.Common;
 using MMG.ViewModels.Base;
+using MMG.ViewModels.Spec;
 using System.Windows;
 
 namespace MMG.ViewModels.API
@@ -180,6 +181,47 @@ namespace MMG.ViewModels.API
             catch (Exception ex)
             {
                 MessageBox.Show($"새 요청 생성 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Spec에서 새 요청을 생성하고 저장
+        /// </summary>
+        public async Task SaveFromSpec(CreateApiRequestEventArgs args)
+        {
+            try
+            {
+                var folders = await _databaseService.GetAllFoldersAsync();
+                var dialog = new SaveRequestDialog(folders, args.MessageId); // 메시지 ID를 기본 이름으로 설정
+
+                if (dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(dialog.RequestName))
+                {
+                    var savedRequest = new SavedRequest
+                    {
+                        Name = dialog.RequestName,
+                        IpAddress = args.IpAddress,
+                        Port = args.Port,
+                        FolderId = dialog.SelectedFolderId,
+                        RequestSchemaJson = _databaseService.SerializeDataFields(args.Headers) +
+                                           "|" + _databaseService.SerializeDataFields(args.Payload),
+                        ResponseSchemaJson = _databaseService.SerializeDataFields(args.ResponseHeaders) +
+                                            "|" + _databaseService.SerializeDataFields(args.ResponsePayload)
+                    };
+
+                    await _databaseService.SaveRequestAsync(savedRequest);
+                    CurrentLoadedRequest = savedRequest;
+
+                    await LoadSavedRequests();
+
+                    // 저장된 요청 로드
+                    RequestLoaded?.Invoke(this, savedRequest);
+
+                    MessageBox.Show($"요청 '{dialog.RequestName}'이 저장되었습니다.", "저장 완료", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Spec에서 저장 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

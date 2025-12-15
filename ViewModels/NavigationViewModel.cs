@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows.Input;
 using System.Threading.Tasks;
+using MMG.Models;
 using MMG.ViewModels.Spec;
 
 namespace MMG.ViewModels
@@ -22,6 +23,9 @@ namespace MMG.ViewModels
             ApiTabCommand = new RelayCommand(() => SelectedTab = "API");
             TestsTabCommand = new RelayCommand(() => SelectedTab = "Tests");
             SpecTabCommand = new RelayCommand(() => SelectedTab = "Spec");
+
+            // SpecViewModel 이벤트 연결
+            _specViewModel.CreateApiRequestRequested += OnCreateApiRequestRequested;
 
             // 기본값으로 API 탭 선택
             CurrentContent = _mainViewModel;
@@ -90,6 +94,15 @@ namespace MMG.ViewModels
                 // 오류 처리 (필요시)
                 System.Diagnostics.Debug.WriteLine($"Tests 데이터 새로고침 중 오류: {ex.Message}");
             }
+        }
+
+        private void OnCreateApiRequestRequested(object? sender, CreateApiRequestEventArgs args)
+        {
+            // SavedRequestsViewModel을 통해 저장 다이얼로그 표시 및 저장
+            _ = _mainViewModel.SavedRequestsViewModel.SaveFromSpec(args);
+
+            // API 탭으로 전환
+            SelectedTab = "API";
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

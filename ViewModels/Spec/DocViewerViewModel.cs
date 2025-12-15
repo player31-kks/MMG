@@ -190,6 +190,29 @@ namespace MMG.ViewModels.Spec
         .field-name {{ font-family: 'Consolas', monospace; color: #d63384; }}
         .field-type {{ font-family: 'Consolas', monospace; color: #0d6efd; }}
         .field-size {{ color: #6c757d; font-size: 0.9em; }}
+        .bit-badge {{ background: #ffc107; color: #212529; padding: 1px 5px; border-radius: 3px; font-size: 0.7em; margin-left: 5px; }}
+        
+        /* Bit Field Styles */
+        .bitfield-row {{ background: #f8f9fa !important; }}
+        .bitfield-row:hover {{ background: #f0f0f0 !important; }}
+        .bitfield-container {{ padding: 15px; background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; margin: 5px 0; }}
+        .bitfield-header {{ font-weight: 600; color: #495057; margin-bottom: 12px; font-size: 0.9em; }}
+        .bitfield-visual {{ margin-bottom: 15px; overflow-x: auto; }}
+        .bit-grid {{ display: inline-block; min-width: 100%; }}
+        .bit-numbers {{ display: flex; margin-bottom: 2px; }}
+        .bit-num {{ width: 28px; text-align: center; font-size: 10px; color: #888; font-family: 'Consolas', monospace; }}
+        .bit-fields {{ display: flex; }}
+        .bit-cell {{ width: 28px; height: 24px; text-align: center; font-size: 9px; border: 1px solid #ddd; display: inline-flex; align-items: center; justify-content: center; font-family: 'Consolas', monospace; }}
+        .bit-cell.unused {{ background: #f5f5f5; color: #ccc; }}
+        .byte-sep {{ width: 8px; }}
+        .bitfield-table {{ width: 100%; border-collapse: collapse; font-size: 0.85em; }}
+        .bitfield-table th {{ background: #e9ecef; padding: 6px 8px; text-align: left; font-weight: 600; color: #495057; border: 1px solid #dee2e6; }}
+        .bitfield-table td {{ padding: 6px 8px; border: 1px solid #e9ecef; }}
+        .bitfield-name {{ font-family: 'Consolas', monospace; color: #6f42c1; font-weight: 500; }}
+        .bitfield-pos {{ font-family: 'Consolas', monospace; color: #fd7e14; }}
+        .bitfield-size {{ color: #20c997; }}
+        .enum-cell {{ font-size: 0.85em; }}
+        .enum-val {{ background: #e7f1ff; padding: 1px 4px; border-radius: 2px; margin-right: 4px; font-size: 0.9em; white-space: nowrap; }}
         
         /* Footer */
         .footer {{ text-align: center; padding: 30px; color: #adb5bd; font-size: 0.9em; }}
@@ -307,13 +330,58 @@ namespace MMG.ViewModels.Spec
         {
             if (fields == null || fields.Count == 0) return "";
 
-            return string.Join("", fields.Select(f => $@"
+            var sb = new System.Text.StringBuilder();
+            foreach (var f in fields)
+            {
+                var typeDisplay = f.Type + (f.Size > 1 ? $"[{f.Size}]" : "");
+                var hasBits = f.HasBitFields;
+
+                sb.Append($@"
                 <tr>
                     <td class='field-name'>{f.Name}</td>
-                    <td class='field-type'>{f.Type}{(f.Size > 1 ? $"[{f.Size}]" : "")}</td>
+                    <td class='field-type'>{typeDisplay}{(hasBits ? " <span class='bit-badge'>bits</span>" : "")}</td>
                     <td class='field-size'>{f.ByteSize} bytes</td>
                     <td>{f.Description}</td>
-                </tr>"));
+                </tr>");
+
+                // 비트 필드가 있으면 하위 행으로 표시
+                if (hasBits && f.BitFields != null)
+                {
+                    sb.Append($@"
+                <tr class='bitfield-row'>
+                    <td colspan='4'>
+                        <div class='bitfield-container'>
+                            <div class='bitfield-header'>비트 필드 구조 ({f.ByteSize * 8} bits)</div>
+                            <table class='bitfield-table'>
+                                <thead><tr><th>필드</th><th>비트</th><th>크기</th><th>설명</th><th>값</th></tr></thead>
+                                <tbody>");
+
+                    foreach (var bit in f.BitFields)
+                    {
+                        var bitPos = bit.SingleBit.HasValue ? $"[{bit.SingleBit}]" : $"[{bit.BitRange}]";
+                        var enumHtml = bit.EnumValues != null
+                            ? string.Join(", ", bit.EnumValues.Select(e => $"<span class='enum-val'>{e.Key}={e.Value}</span>"))
+                            : "";
+
+                        sb.Append($@"
+                                <tr>
+                                    <td class='bitfield-name'>{bit.Name}</td>
+                                    <td class='bitfield-pos'>{bitPos}</td>
+                                    <td class='bitfield-size'>{bit.BitSize} bit{(bit.BitSize > 1 ? "s" : "")}</td>
+                                    <td>{bit.Description}</td>
+                                    <td class='enum-cell'>{enumHtml}</td>
+                                </tr>");
+                    }
+
+                    sb.Append(@"
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>");
+                }
+            }
+            return sb.ToString();
         }
 
         private static string GenerateEmptyHtml()

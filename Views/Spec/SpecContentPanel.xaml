@@ -157,15 +157,24 @@
                                             Background="Transparent"
                                             BorderBrush="#DEE2E6"
                                             BorderThickness="0,0,0,1">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding MessageId}"
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Row="0"
+                                                       Text="{Binding MessageId}"
                                                        FontWeight="SemiBold"
                                                        FontSize="13"/>
-                                            <TextBlock Text="{Binding Description}"
+                                            <TextBlock Grid.Row="1"
+                                                       Text="{Binding Description}"
                                                        Foreground="#6C757D"
                                                        FontSize="11"
                                                        TextTrimming="CharacterEllipsis"/>
-                                            <StackPanel Orientation="Horizontal"
+                                            <StackPanel Grid.Row="2"
+                                                        Orientation="Horizontal"
                                                         Margin="0,4,0,0">
                                                 <Border Background="#E3F2FD"
                                                         CornerRadius="3"
@@ -179,15 +188,50 @@
                                                 </Border>
                                                 <Border Background="#E8F5E9"
                                                         CornerRadius="3"
-                                                        Padding="5,2">
+                                                        Padding="5,2"
+                                                        Margin="0,0,5,0">
                                                     <TextBlock FontSize="10"
                                                                Foreground="#388E3C">
                                                     <Run Text="Payload: "/>
                                                     <Run Text="{Binding PayloadCount}"/>
                                                     </TextBlock>
                                                 </Border>
+                                                <Button Content="🚀 API"
+                                                        ToolTip="API 탭에서 요청 생성"
+                                                        Command="{Binding DataContext.CreateApiRequestCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                        CommandParameter="{Binding}"
+                                                        Padding="8,2"
+                                                        FontSize="10"
+                                                        Background="#007ACC"
+                                                        Foreground="White"
+                                                        BorderThickness="0"
+                                                        Cursor="Hand">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="Button">
+                                                                        <Border Background="{TemplateBinding Background}"
+                                                                                CornerRadius="3"
+                                                                                Padding="{TemplateBinding Padding}">
+                                                                            <ContentPresenter HorizontalAlignment="Center"
+                                                                                              VerticalAlignment="Center"/>
+                                                                        </Border>
+                                                                        <ControlTemplate.Triggers>
+                                                                            <Trigger Property="IsMouseOver"
+                                                                                    Value="True">
+                                                                                <Setter Property="Background"
+                                                                                        Value="#005A9E"/>
+                                                                            </Trigger>
+                                                                        </ControlTemplate.Triggers>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
                                             </StackPanel>
-                                        </StackPanel>
+                                        </Grid>
                                     </Border>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>

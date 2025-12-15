@@ -17,6 +17,30 @@ namespace MMG.Views.Spec
 
             // DataContext가 변경될 때 (NavigationViewModel에서 전달) 이벤트 연결
             DataContextChanged += OnDataContextChanged;
+
+            // 문서 뷰 라디오 버튼 체크 이벤트 연결
+            Loaded += OnLoaded;
+        }
+
+        private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            // DocViewRadio 버튼에 이벤트 연결
+            if (DocViewRadio != null)
+            {
+                DocViewRadio.Checked += OnDocViewRadioChecked;
+            }
+        }
+
+        private void OnDocViewRadioChecked(object sender, System.Windows.RoutedEventArgs e)
+        {
+            // 문서 뷰로 전환 시 자동으로 YAML 적용
+            if (_viewModel != null && !string.IsNullOrEmpty(_viewModel.SpecYamlContent))
+            {
+                if (_viewModel.RefreshFromYamlCommand.CanExecute(null))
+                {
+                    _viewModel.RefreshFromYamlCommand.Execute(null);
+                }
+            }
         }
 
         private void OnDataContextChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)

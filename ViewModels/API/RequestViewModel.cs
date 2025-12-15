@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using MMG.Models;
 using MMG.Services;
 using MMG.ViewModels.Base;
+using MMG.ViewModels.Spec;
 using MMG.Core.Utilities;
 
 namespace MMG.ViewModels.API
@@ -121,6 +122,35 @@ namespace MMG.ViewModels.API
             ClearFieldsWithHandler(CurrentRequest.Payload);
 
             InitializeDefaultFields();
+            NotifyBytesChanged();
+        }
+
+        /// <summary>
+        /// Spec에서 요청 데이터 로드
+        /// </summary>
+        public void LoadFromSpec(CreateApiRequestEventArgs args)
+        {
+            CurrentRequest.IpAddress = args.IpAddress;
+            CurrentRequest.Port = args.Port;
+
+            // 기존 필드 정리
+            ClearFieldsWithHandler(CurrentRequest.Headers);
+            ClearFieldsWithHandler(CurrentRequest.Payload);
+
+            // 헤더 필드 로드
+            foreach (var field in args.Headers)
+            {
+                field.PropertyChanged += OnDataFieldPropertyChanged;
+                CurrentRequest.Headers.Add(field);
+            }
+
+            // 페이로드 필드 로드
+            foreach (var field in args.Payload)
+            {
+                field.PropertyChanged += OnDataFieldPropertyChanged;
+                CurrentRequest.Payload.Add(field);
+            }
+
             NotifyBytesChanged();
         }
 
