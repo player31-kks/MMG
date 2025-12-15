@@ -107,9 +107,10 @@
                                       Margin="0,0,0,8"
                                       BorderBrush="#DEE2E6"
                                       BorderThickness="1">
-                                <ComboBoxItem Tag="SingleRequest">단일요청</ComboBoxItem>
-                                <ComboBoxItem Tag="ContinuousRequest">지속적 요청</ComboBoxItem>
-                                <ComboBoxItem Tag="DelayedRequest">지연요청</ComboBoxItem>
+                                <ComboBoxItem Tag="Immediate">즉시 실행</ComboBoxItem>
+                                <ComboBoxItem Tag="PreDelayed">사전 지연</ComboBoxItem>
+                                <ComboBoxItem Tag="PostDelayed">사후 지연</ComboBoxItem>
+                                <ComboBoxItem Tag="Periodic">주기적 실행</ComboBoxItem>
                             </ComboBox>
 
                             <CheckBox Grid.Row="2"
@@ -132,168 +133,211 @@
                                    Foreground="#2C3E50"
                                    Margin="0,0,0,12"/>
 
-                        <!-- Single Request 설정 -->
-                        <Grid>
-                            <Grid.Style>
-                                <Style TargetType="Grid">
-                                    <Setter Property="Visibility"
-                                            Value="Collapsed"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SelectedStep.StepType}"
-                                                     Value="SingleRequest">
-                                            <Setter Property="Visibility"
-                                                    Value="Visible"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Grid.Style>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                        <!-- 공통 - 저장된 요청 선택 -->
+                        <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="80"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Row="0"
-                                       Grid.Column="0"
+                            <TextBlock Grid.Column="0"
                                        Text="저장된 요청:"
                                        FontSize="12"
                                        Foreground="#495057"
-                                       VerticalAlignment="Top"
-                                       Margin="0,8,0,8"/>
-                            <ComboBox Grid.Row="0"
-                                      Grid.Column="1"
+                                       VerticalAlignment="Center"/>
+                            <ComboBox Grid.Column="1"
                                       ItemsSource="{Binding SavedRequests}"
                                       SelectedValue="{Binding SelectedStep.SavedRequestId, Mode=TwoWay}"
                                       SelectedValuePath="Id"
                                       DisplayMemberPath="Name"
                                       FontSize="12"
                                       Padding="8,4"
-                                      Margin="0,4,0,8"
                                       BorderBrush="#DEE2E6"
                                       BorderThickness="1"/>
                         </Grid>
 
-                        <!-- Continuous Request 설정 -->
-                        <Grid>
-                            <Grid.Style>
-                                <Style TargetType="Grid">
+                        <!-- Immediate 설정 (추가 설정 없음) -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
                                     <Setter Property="Visibility"
                                             Value="Collapsed"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding SelectedStep.StepType}"
-                                                     Value="ContinuousRequest">
+                                                Value="Immediate">
                                             <Setter Property="Visibility"
                                                     Value="Visible"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
-                            </Grid.Style>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="80"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
+                            </StackPanel.Style>
+                            <TextBlock Text="💡 요청이 지연 없이 즉시 실행됩니다."
+                                       FontSize="11"
+                                       Foreground="#6C757D"
+                                       FontStyle="Italic"/>
+                        </StackPanel>
 
-                            <TextBlock Grid.Row="0"
-                                       Grid.Column="0"
-                                       Text="저장된 요청:"
-                                       FontSize="12"
-                                       Foreground="#495057"
-                                       VerticalAlignment="Top"
-                                       Margin="0,8,0,8"/>
-                            <ComboBox Grid.Row="0"
-                                      Grid.Column="1"
-                                      ItemsSource="{Binding SavedRequests}"
-                                      SelectedValue="{Binding SelectedStep.SavedRequestId, Mode=TwoWay}"
-                                      SelectedValuePath="Id"
-                                      DisplayMemberPath="Name"
-                                      FontSize="12"
-                                      Padding="8,4"
-                                      Margin="0,4,0,8"
-                                      BorderBrush="#DEE2E6"
-                                      BorderThickness="1"/>
-
-                            <TextBlock Grid.Row="1"
-                                       Grid.Column="0"
-                                       Text="빈도(Hz):"
-                                       FontSize="12"
-                                       Foreground="#495057"
-                                       VerticalAlignment="Center"
-                                       Margin="0,0,0,8"/>
-                            <TextBox Grid.Row="1"
-                                     Grid.Column="1"
-                                     Text="{Binding SelectedStep.FrequencyHz, Mode=TwoWay}"
-                                     FontSize="12"
-                                     Padding="8,4"
-                                     Margin="0,0,0,8"
-                                     BorderBrush="#DEE2E6"
-                                     BorderThickness="1"/>
-                        </Grid>
-
-                        <!-- 지연요청 설정 -->
-                        <Grid>
-                            <Grid.Style>
-                                <Style TargetType="Grid">
+                        <!-- PreDelayed 설정 -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
                                     <Setter Property="Visibility"
                                             Value="Collapsed"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding SelectedStep.StepType}"
-                                                     Value="DelayedRequest">
+                                                Value="PreDelayed">
                                             <Setter Property="Visibility"
                                                     Value="Visible"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
-                            </Grid.Style>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="80"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
+                            </StackPanel.Style>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="30"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="사전 지연:"
+                                           FontSize="12"
+                                           Foreground="#495057"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding SelectedStep.PreDelayMs, Mode=TwoWay}"
+                                         FontSize="12"
+                                         Padding="8,4"
+                                         BorderBrush="#DEE2E6"
+                                         BorderThickness="1"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="ms"
+                                           FontSize="12"
+                                           Foreground="#6C757D"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0,0,0"/>
+                            </Grid>
+                            <TextBlock Text="💡 지정된 시간(ms) 대기 후 요청이 실행됩니다."
+                                       FontSize="11"
+                                       Foreground="#6C757D"
+                                       FontStyle="Italic"
+                                       Margin="0,8,0,0"/>
+                        </StackPanel>
 
-                            <TextBlock Grid.Row="0"
-                                       Grid.Column="0"
-                                       Text="저장된 요청:"
-                                       FontSize="12"
-                                       Foreground="#495057"
-                                       VerticalAlignment="Top"
-                                       Margin="0,8,0,8"/>
-                            <ComboBox Grid.Row="0"
-                                      Grid.Column="1"
-                                      ItemsSource="{Binding SavedRequests}"
-                                      SelectedValue="{Binding SelectedStep.SavedRequestId, Mode=TwoWay}"
-                                      SelectedValuePath="Id"
-                                      DisplayMemberPath="Name"
-                                      FontSize="12"
-                                      Padding="8,4"
-                                      Margin="0,4,0,8"
-                                      BorderBrush="#DEE2E6"
-                                      BorderThickness="1"/>
+                        <!-- PostDelayed 설정 -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility"
+                                            Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedStep.StepType}"
+                                                Value="PostDelayed">
+                                            <Setter Property="Visibility"
+                                                    Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="30"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="사후 지연:"
+                                           FontSize="12"
+                                           Foreground="#495057"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding SelectedStep.PostDelayMs, Mode=TwoWay}"
+                                         FontSize="12"
+                                         Padding="8,4"
+                                         BorderBrush="#DEE2E6"
+                                         BorderThickness="1"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="ms"
+                                           FontSize="12"
+                                           Foreground="#6C757D"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0,0,0"/>
+                            </Grid>
+                            <TextBlock Text="💡 요청 실행 후 지정된 시간(ms) 동안 대기합니다."
+                                       FontSize="11"
+                                       Foreground="#6C757D"
+                                       FontStyle="Italic"
+                                       Margin="0,8,0,0"/>
+                        </StackPanel>
 
-                            <TextBlock Grid.Row="1"
-                                       Grid.Column="0"
-                                       Text="지연(초):"
-                                       FontSize="12"
-                                       Foreground="#495057"
-                                       VerticalAlignment="Center"
-                                       Margin="0,0,0,8"/>
-                            <TextBox Grid.Row="1"
-                                     Grid.Column="1"
-                                     Text="{Binding SelectedStep.DelaySeconds, Mode=TwoWay}"
-                                     FontSize="12"
-                                     Padding="8,4"
-                                     Margin="0,0,0,8"
-                                     BorderBrush="#DEE2E6"
-                                     BorderThickness="1"/>
-                        </Grid>
+                        <!-- Periodic 설정 -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility"
+                                            Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedStep.StepType}"
+                                                Value="Periodic">
+                                            <Setter Property="Visibility"
+                                                    Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="30"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="실행 간격:"
+                                           FontSize="12"
+                                           Foreground="#495057"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding SelectedStep.IntervalMs, Mode=TwoWay}"
+                                         FontSize="12"
+                                         Padding="8,4"
+                                         BorderBrush="#DEE2E6"
+                                         BorderThickness="1"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="ms"
+                                           FontSize="12"
+                                           Foreground="#6C757D"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0,0,0"/>
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="30"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="반복 횟수:"
+                                           FontSize="12"
+                                           Foreground="#495057"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding SelectedStep.RepeatCount, Mode=TwoWay}"
+                                         FontSize="12"
+                                         Padding="8,4"
+                                         BorderBrush="#DEE2E6"
+                                         BorderThickness="1"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="회"
+                                           FontSize="12"
+                                           Foreground="#6C757D"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0,0,0"/>
+                            </Grid>
+                            <TextBlock Text="💡 지정된 간격(ms)으로 반복 횟수만큼 요청을 실행합니다."
+                                       FontSize="11"
+                                       Foreground="#6C757D"
+                                       FontStyle="Italic"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 

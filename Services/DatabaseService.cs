@@ -48,6 +48,7 @@ namespace MMG.Services
                     Name TEXT NOT NULL,
                     IpAddress TEXT NOT NULL,
                     Port INTEGER NOT NULL,
+                    IsBigEndian INTEGER NOT NULL DEFAULT 1,
                     FolderId INTEGER,
                     RequestSchemaJson TEXT NOT NULL,
                     ResponseSchemaJson TEXT,
@@ -61,14 +62,19 @@ namespace MMG.Services
             var checkColumnCommand = connection.CreateCommand();
             checkColumnCommand.CommandText = "PRAGMA table_info(SavedRequests)";
             var reader = checkColumnCommand.ExecuteReader();
-            
+
             bool hasFolderId = false;
+            bool hasIsBigEndian = false;
             while (reader.Read())
             {
-                if (reader["name"].ToString() == "FolderId")
+                var columnName = reader["name"].ToString();
+                if (columnName == "FolderId")
                 {
                     hasFolderId = true;
-                    break;
+                }
+                if (columnName == "IsBigEndian")
+                {
+                    hasIsBigEndian = true;
                 }
             }
             reader.Close();
@@ -77,6 +83,13 @@ namespace MMG.Services
             {
                 var alterTableCommand = connection.CreateCommand();
                 alterTableCommand.CommandText = "ALTER TABLE SavedRequests ADD COLUMN FolderId INTEGER";
+                alterTableCommand.ExecuteNonQuery();
+            }
+
+            if (!hasIsBigEndian)
+            {
+                var alterTableCommand = connection.CreateCommand();
+                alterTableCommand.CommandText = "ALTER TABLE SavedRequests ADD COLUMN IsBigEndian INTEGER NOT NULL DEFAULT 1";
                 alterTableCommand.ExecuteNonQuery();
             }
         }
@@ -93,15 +106,15 @@ namespace MMG.Services
             if (request.Id == 0) // Insert
             {
                 command.CommandText = @"
-                    INSERT INTO SavedRequests (Name, IpAddress, Port, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified)
-                    VALUES (@name, @ipAddress, @port, @folderId, @requestSchemaJson, @responseSchemaJson, @createdAt, @lastModified);
+                    INSERT INTO SavedRequests (Name, IpAddress, Port, IsBigEndian, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified)
+                    VALUES (@name, @ipAddress, @port, @isBigEndian, @folderId, @requestSchemaJson, @responseSchemaJson, @createdAt, @lastModified);
                     SELECT last_insert_rowid();";
             }
             else // Update
             {
                 command.CommandText = @"
                     UPDATE SavedRequests 
-                    SET Name = @name, IpAddress = @ipAddress, Port = @port, FolderId = @folderId,
+                    SET Name = @name, IpAddress = @ipAddress, Port = @port, IsBigEndian = @isBigEndian, FolderId = @folderId,
                         RequestSchemaJson = @requestSchemaJson, ResponseSchemaJson = @responseSchemaJson, 
                         LastModified = @lastModified
                     WHERE Id = @id;
@@ -112,6 +125,7 @@ namespace MMG.Services
             command.Parameters.AddWithValue("@name", request.Name);
             command.Parameters.AddWithValue("@ipAddress", request.IpAddress);
             command.Parameters.AddWithValue("@port", request.Port);
+            command.Parameters.AddWithValue("@isBigEndian", request.IsBigEndian ? 1 : 0);
             command.Parameters.AddWithValue("@folderId", request.FolderId.HasValue ? (object)request.FolderId.Value : DBNull.Value);
             command.Parameters.AddWithValue("@requestSchemaJson", request.RequestSchemaJson);
             command.Parameters.AddWithValue("@responseSchemaJson", request.ResponseSchemaJson ?? "");
@@ -134,7 +148,7 @@ namespace MMG.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT Id, Name, IpAddress, Port, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
+                SELECT Id, Name, IpAddress, Port, IsBigEndian, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
                 FROM SavedRequests
                 ORDER BY LastModified DESC";
 
@@ -147,11 +161,12 @@ namespace MMG.Services
                     Name = reader.GetString(1),
                     IpAddress = reader.GetString(2),
                     Port = reader.GetInt32(3),
-                    FolderId = reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                    RequestSchemaJson = reader.GetString(5),
-                    ResponseSchemaJson = reader.GetString(6),
-                    CreatedAt = DateTime.Parse(reader.GetString(7)),
-                    LastModified = DateTime.Parse(reader.GetString(8))
+                    IsBigEndian = reader.IsDBNull(4) ? true : reader.GetInt32(4) == 1,
+                    FolderId = reader.IsDBNull(5) ? null : reader.GetInt32(5),
+                    RequestSchemaJson = reader.GetString(6),
+                    ResponseSchemaJson = reader.GetString(7),
+                    CreatedAt = DateTime.Parse(reader.GetString(8)),
+                    LastModified = DateTime.Parse(reader.GetString(9))
                 };
                 requests.Add(request);
             }
@@ -166,7 +181,7 @@ namespace MMG.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT Id, Name, IpAddress, Port, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
+                SELECT Id, Name, IpAddress, Port, IsBigEndian, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
                 FROM SavedRequests
                 WHERE Id = @id";
             command.Parameters.AddWithValue("@id", id);
@@ -180,11 +195,12 @@ namespace MMG.Services
                     Name = reader.GetString(1),
                     IpAddress = reader.GetString(2),
                     Port = reader.GetInt32(3),
-                    FolderId = reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                    RequestSchemaJson = reader.GetString(5),
-                    ResponseSchemaJson = reader.GetString(6),
-                    CreatedAt = DateTime.Parse(reader.GetString(7)),
-                    LastModified = DateTime.Parse(reader.GetString(8))
+                    IsBigEndian = reader.IsDBNull(4) ? true : reader.GetInt32(4) == 1,
+                    FolderId = reader.IsDBNull(5) ? null : reader.GetInt32(5),
+                    RequestSchemaJson = reader.GetString(6),
+                    ResponseSchemaJson = reader.GetString(7),
+                    CreatedAt = DateTime.Parse(reader.GetString(8)),
+                    LastModified = DateTime.Parse(reader.GetString(9))
                 };
             }
 
@@ -199,6 +215,27 @@ namespace MMG.Services
             var command = connection.CreateCommand();
             command.CommandText = "DELETE FROM SavedRequests WHERE Id = @id";
             command.Parameters.AddWithValue("@id", id);
+
+            var rowsAffected = await command.ExecuteNonQueryAsync();
+            return rowsAffected > 0;
+        }
+
+        /// <summary>
+        /// Request의 폴더를 변경 (드래그 앤 드롭용)
+        /// </summary>
+        public async Task<bool> MoveRequestToFolderAsync(int requestId, int? targetFolderId)
+        {
+            using var connection = new SQLiteConnection(_connectionString);
+            await connection.OpenAsync();
+
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                UPDATE SavedRequests 
+                SET FolderId = @folderId, LastModified = @lastModified
+                WHERE Id = @id";
+            command.Parameters.AddWithValue("@id", requestId);
+            command.Parameters.AddWithValue("@folderId", targetFolderId.HasValue ? (object)targetFolderId.Value : DBNull.Value);
+            command.Parameters.AddWithValue("@lastModified", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
             var rowsAffected = await command.ExecuteNonQueryAsync();
             return rowsAffected > 0;
@@ -373,7 +410,7 @@ namespace MMG.Services
             await connection.OpenAsync();
 
             var command = connection.CreateCommand();
-            
+
             if (folderId.HasValue)
             {
                 command.CommandText = @"

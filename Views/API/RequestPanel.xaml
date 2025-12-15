@@ -39,13 +39,15 @@
                         <ColumnDefinition Width="Auto"/>
 
                         <ColumnDefinition Width="Auto"
-                                          MinWidth="80"/>
+                                          MinWidth="70"/>
+
+                        <ColumnDefinition Width="Auto"/>
 
                         <ColumnDefinition Width="Auto"
-                                          MinWidth="80"/>
+                                          MinWidth="60"/>
 
                         <ColumnDefinition Width="Auto"
-                                          MinWidth="80"/>
+                                          MinWidth="60"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- Request Name -->
@@ -80,8 +82,67 @@
                              Style="{StaticResource ModernTextBox}"
                              Margin="0,0,10,0"/>
 
+                    <!-- Endian Toggle Button -->
+                    <ToggleButton Grid.Row="1"
+                                  Grid.Column="4"
+                                  IsChecked="{Binding CurrentRequest.IsBigEndian}"
+                                  ToolTip="바이트 순서 설정 (BigEndian/LittleEndian)"
+                                  Margin="0,0,10,0"
+                                  MinWidth="90"
+                                  Height="30">
+                        <ToggleButton.Style>
+                            <Style TargetType="ToggleButton">
+                                <Setter Property="Background"
+                                        Value="#FF5722"/>
+                                <Setter Property="Foreground"
+                                        Value="White"/>
+                                <Setter Property="FontSize"
+                                        Value="11"/>
+                                <Setter Property="FontWeight"
+                                        Value="Bold"/>
+                                <Setter Property="BorderThickness"
+                                        Value="0"/>
+                                <Setter Property="Cursor"
+                                        Value="Hand"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    CornerRadius="4"
+                                                    Padding="8,4">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsChecked"
+                                            Value="True">
+                                        <Setter Property="Background"
+                                                Value="#FF5722"/>
+                                        <Setter Property="Content"
+                                                Value="Big Endian"/>
+                                    </Trigger>
+                                    <Trigger Property="IsChecked"
+                                            Value="False">
+                                        <Setter Property="Background"
+                                                Value="#2196F3"/>
+                                        <Setter Property="Content"
+                                                Value="Little Endian"/>
+                                    </Trigger>
+                                    <Trigger Property="IsMouseOver"
+                                            Value="True">
+                                        <Setter Property="Opacity"
+                                                Value="0.9"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ToggleButton.Style>
+                    </ToggleButton>
+
                     <Button Grid.Row="1"
-                            Grid.Column="4"
+                            Grid.Column="5"
                             Content="Send"
                             Command="{Binding SendCommand}"
                             Style="{StaticResource ModernButton}"
@@ -91,7 +152,7 @@
                             Margin="0,0,10,0"/>
 
                     <Button Grid.Row="1"
-                            Grid.Column="5"
+                            Grid.Column="6"
                             Content="Save"
                             Command="{Binding SaveCommand}"
                             Style="{StaticResource ModernButton}"

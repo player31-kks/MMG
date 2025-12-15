@@ -8,6 +8,7 @@ namespace MMG.Models
         private string _name = "";
         private string _ipAddress = "";
         private int _port;
+        private bool _isBigEndian = true;
         private int? _folderId;
         private string _requestSchemaJson = "";
         private string _responseSchemaJson = "";
@@ -51,6 +52,16 @@ namespace MMG.Models
             {
                 _port = value;
                 OnPropertyChanged(nameof(Port));
+            }
+        }
+
+        public bool IsBigEndian
+        {
+            get => _isBigEndian;
+            set
+            {
+                _isBigEndian = value;
+                OnPropertyChanged(nameof(IsBigEndian));
             }
         }
 

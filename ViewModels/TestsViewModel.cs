@@ -22,11 +22,13 @@ namespace MMG.ViewModels
         private TestStep? _selectedStep;
         private ObservableCollection<SavedRequest> _savedRequests = new();
         private ObservableCollection<ReceivedDataItem> _receivedDataItems = new();
+        private ObservableCollection<TestLogItem> _logItems = new();
 
         private bool _isTestRunning = false;
         private string _testProgress = "";
         private int _progressPercentage = 0;
         private bool _isStopping = false;
+        private bool _autoScrollLog = true;
 
         public TestsViewModel()
         {
@@ -41,6 +43,7 @@ namespace MMG.ViewModels
             _testExecutionService.ProgressChanged += OnTestProgress;
             _testExecutionService.TestCompleted += OnTestCompleted;
             _testExecutionService.DataReceived += OnDataReceived;
+            _testExecutionService.LogAdded += OnLogAdded;
 
             // Commands
             OpenCreateScenarioDialogCommand = new RelayCommand(() => OpenCreateScenarioDialog());
@@ -66,6 +69,7 @@ namespace MMG.ViewModels
             OpenDetailedResultsCommand = new RelayCommand(() => OpenDetailedResults());
             RefreshResultsCommand = new RelayCommand(async () => await RefreshResults());
             SelectStepCommand = new RelayCommand<TestStep>((step) => { if (step != null) SelectedStep = step; });
+            ClearLogCommand = new RelayCommand(() => ClearLog());
 
             // Initial data loading
             _ = RefreshAll();
@@ -97,6 +101,32 @@ namespace MMG.ViewModels
                     OnPropertyChanged();
                     _ = LoadSteps();
                     CommandManager.InvalidateRequerySuggested();
+                }
+            }
+        }
+
+        public ObservableCollection<TestLogItem> LogItems
+        {
+            get => _logItems;
+            set
+            {
+                if (_logItems != value)
+                {
+                    _logItems = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool AutoScrollLog
+        {
+            get => _autoScrollLog;
+            set
+            {
+                if (_autoScrollLog != value)
+                {
+                    _autoScrollLog = value;
+                    OnPropertyChanged();
                 }
             }
         }
@@ -240,6 +270,7 @@ namespace MMG.ViewModels
         public ICommand OpenDetailedResultsCommand { get; }
         public ICommand RefreshResultsCommand { get; }
         public ICommand SelectStepCommand { get; }
+        public ICommand ClearLogCommand { get; }
 
         #endregion
 
@@ -255,7 +286,7 @@ namespace MMG.ViewModels
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"데이터를 새로고침하는 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"데이터를 새로고침하는 중 오류가 발생했습니다: {ex.Message}");
             }
         }
 
@@ -272,7 +303,7 @@ namespace MMG.ViewModels
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"시나리오를 로드하는 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"시나리오를 로드하는 중 오류가 발생했습니다: {ex.Message}");
             }
         }
 
@@ -289,7 +320,7 @@ namespace MMG.ViewModels
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"저장된 요청을 로드하는 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"저장된 요청을 로드하는 중 오류가 발생했습니다: {ex.Message}");
             }
         }
 
@@ -311,7 +342,7 @@ namespace MMG.ViewModels
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"스텝을 로드하는 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"스텝을 로드하는 중 오류가 발생했습니다: {ex.Message}");
             }
         }
 
@@ -343,7 +374,7 @@ namespace MMG.ViewModels
                     {
                         Application.Current.Dispatcher.Invoke(() =>
                         {
-                            MessageBox.Show($"시나리오를 생성하는 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                            ModernMessageDialog.ShowError($"시나리오를 생성하는 중 오류가 발생했습니다: {ex.Message}");
                         });
                     }
                 });
@@ -360,10 +391,9 @@ namespace MMG.ViewModels
         {
             if (scenario == null) return;
 
-            var result = MessageBox.Show($"시나리오 '{scenario.Name}'을(를) 삭제하시겠습니까?",
-                "삭제 확인", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var confirmed = ConfirmDialog.Show("시나리오 삭제", $"시나리오 '{scenario.Name}'을(를) 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.");
 
-            if (result == MessageBoxResult.Yes)
+            if (confirmed)
             {
                 try
                 {
@@ -378,7 +408,7 @@ namespace MMG.ViewModels
                 }
                 catch (System.Exception ex)
                 {
-                    MessageBox.Show($"시나리오를 삭제하는 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ModernMessageDialog.ShowError($"시나리오를 삭제하는 중 오류가 발생했습니다: {ex.Message}");
                 }
             }
         }
@@ -410,7 +440,7 @@ namespace MMG.ViewModels
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"테스트 실행 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"테스트 실행 중 오류가 발생했습니다: {ex.Message}");
                 IsTestRunning = false;
                 IsStopping = false;
                 SelectedScenario.IsRunning = false;
@@ -447,7 +477,7 @@ namespace MMG.ViewModels
                 ScenarioId = SelectedScenario.Id,
                 Name = $"Step {CurrentSteps.Count + 1}",
                 Order = CurrentSteps.Count + 1,
-                StepType = "SingleRequest"
+                StepType = "Immediate"
             };
 
             try
@@ -460,7 +490,7 @@ namespace MMG.ViewModels
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"스텝을 추가하는 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"스텝을 추가하는 중 오류가 발생했습니다: {ex.Message}");
             }
         }
 
@@ -471,7 +501,7 @@ namespace MMG.ViewModels
             try
             {
                 await _testDatabaseService.UpdateStepAsync(SelectedStep);
-                MessageBox.Show("스텝이 성공적으로 저장되었습니다.", "저장 완료", MessageBoxButton.OK, MessageBoxImage.Information);
+                ModernMessageDialog.ShowSuccess("스텝이 성공적으로 저장되었습니다.", "저장 완료");
 
                 // 스텝 목록 새로고침으로 UI 업데이트
                 await LoadSteps();
@@ -489,7 +519,7 @@ namespace MMG.ViewModels
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"스텝을 저장하는 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"스텝을 저장하는 중 오류가 발생했습니다: {ex.Message}");
             }
         }
 
@@ -523,7 +553,7 @@ namespace MMG.ViewModels
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"스텝을 삭제하는 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"스텝을 삭제하는 중 오류가 발생했습니다: {ex.Message}");
             }
         }
 
@@ -548,14 +578,8 @@ namespace MMG.ViewModels
                 }
                 TestProgress = e.Summary;
 
-                var message = $"테스트가 완료되었습니다.\n\n" +
-                             $"총 스텝: {e.TotalSteps}\n" +
-                             $"성공: {e.SuccessfulSteps}\n" +
-                             $"실패: {e.FailedSteps}\n" +
-                             $"실행 시간: {e.TotalExecutionTime.TotalSeconds:F1}초";
-
-                MessageBox.Show(message, "테스트 결과", MessageBoxButton.OK,
-                    e.FailedSteps == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
+                // 모던 테스트 결과 다이얼로그 표시
+                TestResultDialog.Show(e.TotalSteps, e.SuccessfulSteps, e.FailedSteps, e.TotalExecutionTime);
             });
         }
 
@@ -581,7 +605,7 @@ namespace MMG.ViewModels
             {
                 if (scenario != null && string.IsNullOrWhiteSpace(scenario.Name))
                 {
-                    MessageBox.Show("시나리오 이름을 입력해주세요.", "알림", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ModernMessageDialog.ShowWarning("시나리오 이름을 입력해주세요.", "알림");
                 }
                 return;
             }
@@ -593,7 +617,7 @@ namespace MMG.ViewModels
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show($"시나리오 이름 변경 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"시나리오 이름 변경 중 오류가 발생했습니다: {ex.Message}");
             }
         }
 
@@ -621,7 +645,7 @@ namespace MMG.ViewModels
                 {
                     Application.Current.Dispatcher.Invoke(() =>
                     {
-                        MessageBox.Show($"원래 이름을 복원하는 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ModernMessageDialog.ShowError($"원래 이름을 복원하는 중 오류가 발생했습니다: {ex.Message}");
                     });
                 }
             });
@@ -649,6 +673,34 @@ namespace MMG.ViewModels
             });
         }
 
+        private void OnLogAdded(object? sender, TestLogEventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                LogItems.Add(e.LogItem);
+
+                // 최대 500개 로그만 유지
+                if (LogItems.Count > 500)
+                {
+                    LogItems.RemoveAt(0);
+                }
+            });
+        }
+
+        private void ClearLog()
+        {
+            LogItems.Clear();
+        }
+
+        public void AddCustomLog(LogLevel level, string message)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                var logItem = TestLogItem.Create(level, message);
+                LogItems.Add(logItem);
+            });
+        }
+
         // 새로 추가된 메서드들
         private async Task RunSingleStep(TestStep step)
         {
@@ -673,8 +725,7 @@ namespace MMG.ViewModels
                     step.LastErrorMessage = result.ErrorMessage ?? "알 수 없는 오류가 발생했습니다.";
 
                     // 실패 시 사용자에게 알림
-                    MessageBox.Show($"스텝 '{step.Name}' 실행이 실패했습니다.\n\n오류: {step.LastErrorMessage}",
-                        "스텝 실행 실패", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ModernMessageDialog.ShowWarning($"스텝 '{step.Name}' 실행이 실패했습니다.\n\n오류: {step.LastErrorMessage}", "스텝 실행 실패");
                 }
                 else
                 {
@@ -682,8 +733,7 @@ namespace MMG.ViewModels
                     step.LastErrorMessage = string.Empty;
 
                     // 성공 시 간단한 알림
-                    MessageBox.Show($"스텝 '{step.Name}'이 성공적으로 실행되었습니다.",
-                        "스텝 실행 완료", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ModernMessageDialog.ShowSuccess($"스텝 '{step.Name}'이 성공적으로 실행되었습니다.", "스텝 실행 완료");
                 }
             }
             catch (Exception ex)
@@ -692,8 +742,7 @@ namespace MMG.ViewModels
                 step.HasFailed = true;
                 step.LastErrorMessage = ex.Message;
 
-                MessageBox.Show($"스텝 '{step.Name}' 실행 중 오류가 발생했습니다.\n\n{ex.Message}",
-                    "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"스텝 '{step.Name}' 실행 중 오류가 발생했습니다.\n\n{ex.Message}");
             }
             finally
             {
@@ -714,14 +763,14 @@ namespace MMG.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"테스트 스텝 삭제 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"테스트 스텝 삭제 중 오류가 발생했습니다: {ex.Message}");
             }
         }
 
         private void OpenDetailedResults()
         {
             // 상세 결과 창 열기 로직
-            MessageBox.Show("상세 결과 창을 구현해야 합니다.", "정보", MessageBoxButton.OK, MessageBoxImage.Information);
+            ModernMessageDialog.ShowInfo("상세 결과 창을 구현해야 합니다.", "정보");
         }
 
         private Task RefreshResults()
@@ -749,7 +798,7 @@ namespace MMG.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"결과 새로고침 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"결과 새로고침 중 오류가 발생했습니다: {ex.Message}");
                 return Task.CompletedTask;
             }
         }

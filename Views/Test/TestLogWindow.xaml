@@ -1,0 +1,298 @@
+<Window x:Class="MMG.Views.Test.TestLogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="테스트 실시간 로그"
+        Height="500"
+        Width="900"
+        WindowStartupLocation="CenterOwner"
+        Background="#1E1E1E">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0"
+                Background="#2D2D2D"
+                Padding="16,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0"
+                        Orientation="Horizontal">
+                    <TextBlock Text="📋"
+                               FontSize="18"
+                               VerticalAlignment="Center"
+                               Margin="0,0,10,0"/>
+                    <TextBlock Text="실시간 로그"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="#FFFFFF"
+                               VerticalAlignment="Center"/>
+                    <TextBlock x:Name="LogCountText"
+                               FontSize="13"
+                               Foreground="#888888"
+                               VerticalAlignment="Center"
+                               Margin="8,0,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2"
+                        Orientation="Horizontal">
+                    <CheckBox x:Name="AutoScrollCheckBox"
+                              Content="자동 스크롤"
+                              IsChecked="True"
+                              Foreground="#AAAAAA"
+                              FontSize="12"
+                              VerticalAlignment="Center"
+                              Margin="0,0,16,0"/>
+                    <Button x:Name="ClearButton"
+                            Content="🗑️ 지우기"
+                            Click="ClearButton_Click"
+                            Background="#3D3D3D"
+                            Foreground="#CCCCCC"
+                            BorderThickness="0"
+                            Padding="12,6"
+                            FontSize="12"
+                            Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    CornerRadius="4"
+                                                    Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver"
+                                            Value="True">
+                                        <Setter Property="Background"
+                                                Value="#4D4D4D"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Log Content -->
+        <ListBox x:Name="LogListBox"
+                 Grid.Row="1"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 VirtualizingPanel.IsVirtualizing="True"
+                 VirtualizingPanel.VirtualizationMode="Recycling">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Padding"
+                            Value="16,6"/>
+                    <Setter Property="BorderThickness"
+                            Value="0"/>
+                    <Setter Property="Background"
+                            Value="Transparent"/>
+                    <Setter Property="HorizontalContentAlignment"
+                            Value="Stretch"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <Border Background="{TemplateBinding Background}"
+                                        Padding="{TemplateBinding Padding}"
+                                        BorderBrush="#333333"
+                                        BorderThickness="0,0,0,1">
+                                    <ContentPresenter/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver"
+                                Value="True">
+                            <Setter Property="Background"
+                                    Value="#2A2A2A"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected"
+                                Value="True">
+                            <Setter Property="Background"
+                                    Value="#333333"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="70"/>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Timestamp -->
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding TimestampText}"
+                                   FontSize="12"
+                                   FontFamily="Consolas"
+                                   Foreground="#888888"
+                                   VerticalAlignment="Center"/>
+
+                        <!-- Level -->
+                        <Border Grid.Column="1"
+                                CornerRadius="3"
+                                Padding="6,2"
+                                Margin="4,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background"
+                                            Value="#17A2B8"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Level}"
+                                                Value="Debug">
+                                            <Setter Property="Background"
+                                                    Value="#6C757D"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Level}"
+                                                Value="Info">
+                                            <Setter Property="Background"
+                                                    Value="#17A2B8"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Level}"
+                                                Value="Warning">
+                                            <Setter Property="Background"
+                                                    Value="#FFC107"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Level}"
+                                                Value="Error">
+                                            <Setter Property="Background"
+                                                    Value="#DC3545"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Level}"
+                                                Value="Success">
+                                            <Setter Property="Background"
+                                                    Value="#28A745"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Text="{Binding LevelText}"
+                                       FontSize="10"
+                                       FontWeight="Bold"
+                                       Foreground="White"/>
+                        </Border>
+
+                        <!-- Step Name -->
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding StepName}"
+                                   FontSize="12"
+                                   Foreground="#AAAAAA"
+                                   VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"
+                                   Margin="4,0"/>
+
+                        <!-- Message -->
+                        <TextBlock Grid.Column="3"
+                                   Text="{Binding Message}"
+                                   FontSize="12"
+                                   Foreground="#DDDDDD"
+                                   VerticalAlignment="Center"
+                                   TextWrapping="NoWrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding Details}"/>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- Empty State -->
+        <TextBlock x:Name="EmptyStateText"
+                   Grid.Row="1"
+                   Text="로그가 없습니다. 테스트를 실행하면 실시간으로 로그가 표시됩니다."
+                   FontSize="14"
+                   Foreground="#666666"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Visibility="Visible"/>
+
+        <!-- Footer -->
+        <Border Grid.Row="2"
+                Background="#2D2D2D"
+                Padding="16,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0"
+                        Orientation="Horizontal">
+                    <Ellipse x:Name="StatusIndicator"
+                             Width="10"
+                             Height="10"
+                             Fill="#28A745"
+                             VerticalAlignment="Center"
+                             Margin="0,0,8,0"/>
+                    <TextBlock x:Name="StatusText"
+                               Text="대기 중"
+                               FontSize="12"
+                               Foreground="#AAAAAA"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <Button Grid.Column="1"
+                        Content="닫기"
+                        Click="CloseButton_Click"
+                        Background="#495057"
+                        Foreground="White"
+                        BorderThickness="0"
+                        Padding="20,8"
+                        FontSize="12"
+                        Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                                CornerRadius="4"
+                                                Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver"
+                                        Value="True">
+                                    <Setter Property="Background"
+                                            Value="#6C757D"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

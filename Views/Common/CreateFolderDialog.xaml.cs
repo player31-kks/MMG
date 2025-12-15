@@ -19,7 +19,7 @@ namespace MMG.Views.Common
         {
             if (string.IsNullOrWhiteSpace(FolderNameTextBox.Text))
             {
-                MessageBox.Show("폴더 이름을 입력해주세요.", "오류", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ModernMessageDialog.ShowWarning("폴더 이름을 입력해주세요.", "입력 오류");
                 return;
             }
 

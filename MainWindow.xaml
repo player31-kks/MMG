@@ -8,6 +8,8 @@
         xmlns:api="clr-namespace:MMG.Views.API"
         xmlns:test="clr-namespace:MMG.Views.Test"
         xmlns:viewModels="clr-namespace:MMG.ViewModels"
+        xmlns:specViewModels="clr-namespace:MMG.ViewModels.Spec"
+        xmlns:spec="clr-namespace:MMG.Views.Spec"
         xmlns:converters="clr-namespace:MMG.Converters"
         mc:Ignorable="d"
         Title="MMG"
@@ -289,6 +291,31 @@
                         </StackPanel>
                     </ToggleButton>
 
+                    <!-- Spec Tab -->
+                    <ToggleButton x:Name="SpecTabButton"
+                                  Width="50"
+                                  Height="50"
+                                  Margin="5,0,5,15"
+                                  IsChecked="{Binding SelectedTab, Converter={StaticResource StringToBooleanConverter}, ConverterParameter=Spec}"
+                                  Command="{Binding SpecTabCommand}"
+                                  Style="{StaticResource SidebarTabStyle}"
+                                  ToolTip="Spec">
+                        <StackPanel Orientation="Vertical">
+                            <Viewbox Width="20"
+                                     Height="20">
+                                <Canvas Width="24"
+                                        Height="24">
+                                    <Path Data="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M9,13V19H7V13H9M15,15V19H17V15H15M11,11V19H13V11H11Z"
+                                          Fill="{Binding RelativeSource={RelativeSource AncestorType=ToggleButton}, Path=Foreground}"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Spec"
+                                       FontSize="10"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </ToggleButton>
+
                 </StackPanel>
             </Border>
 
@@ -305,6 +332,11 @@
                         <!-- Tests Content Template -->
                         <DataTemplate DataType="{x:Type viewModels:TestsViewModel}">
                             <test:TestsContentPanel/>
+                        </DataTemplate>
+
+                        <!-- Spec Content Template -->
+                        <DataTemplate DataType="{x:Type specViewModels:SpecViewModel}">
+                            <spec:SpecContentPanel/>
                         </DataTemplate>
                     </ContentPresenter.Resources>
                 </ContentPresenter>

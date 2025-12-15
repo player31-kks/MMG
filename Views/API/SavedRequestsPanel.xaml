@@ -107,7 +107,7 @@
                                FontSize="{DynamicResource text-sm}"
                                FontWeight="SemiBold"
                                VerticalAlignment="Center"
-                               Foreground="#374151"/>
+                               Foreground="{StaticResource TextPrimaryColor}"/>
 
                     <!-- + 버튼 with Dropdown -->
                     <Grid Grid.Column="1"
@@ -122,7 +122,6 @@
                                 ToolTip="새로 추가"
                                 MouseEnter="AddButton_MouseEnter"
                                 MouseLeave="AddButton_MouseLeave"/>
-
                         <Popup x:Name="AddPopup"
                                PlacementTarget="{Binding ElementName=AddButton}"
                                Placement="Bottom"
@@ -214,8 +213,10 @@
                       BorderThickness="0"
                       Background="Transparent"
                       Focusable="True"
+                      AllowDrop="True"
                       SelectedItemChanged="TreeView_SelectedItemChanged"
-                      KeyDown="TreeView_KeyDown">
+                      KeyDown="TreeView_KeyDown"
+                      Drop="TreeView_Drop">
                 <!-- 빈 영역을 위한 기본 컨텍스트 메뉴 -->
                 <TreeView.ContextMenu>
                     <ContextMenu x:Name="EmptyAreaContextMenu">
@@ -374,17 +375,25 @@
                                 Value="13"/>
                         <Setter Property="Padding"
                                 Value="2"/>
+                        <Setter Property="AllowDrop"
+                                Value="True"/>
                         <EventSetter Event="MouseDoubleClick"
                                      Handler="TreeViewItem_MouseDoubleClick"/>
                         <EventSetter Event="PreviewMouseRightButtonDown"
                                      Handler="TreeViewItem_RightClick"/>
                         <EventSetter Event="Loaded"
                                      Handler="TreeViewItem_Loaded"/>
+                        <EventSetter Event="PreviewMouseLeftButtonDown"
+                                     Handler="TreeViewItem_PreviewMouseLeftButtonDown"/>
+                        <EventSetter Event="PreviewMouseMove"
+                                     Handler="TreeViewItem_PreviewMouseMove"/>
+                        <EventSetter Event="DragOver"
+                                     Handler="TreeViewItem_DragOver"/>
+                        <EventSetter Event="Drop"
+                                     Handler="TreeViewItem_Drop"/>
                     </Style>
                 </TreeView.ItemContainerStyle>
             </TreeView>
-
-
         </Grid>
     </Grid>
 </UserControl>
