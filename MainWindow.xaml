@@ -17,7 +17,7 @@
         Width="1600"
         MinHeight="600"
         MinWidth="1000"
-        Background="#FFFFFF">
+        Background="{StaticResource SurfaceBackground}">
 
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="35"
@@ -42,8 +42,8 @@
 
         <!-- Custom Title Bar -->
         <Border Grid.Row="0"
-                Background="#F8F9FA"
-                BorderBrush="#E9ECEF"
+                Background="{StaticResource PanelBackground}"
+                BorderBrush="{StaticResource MutedBorder}"
                 BorderThickness="0,0,0,1">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -227,7 +227,8 @@
         </Border>
 
         <!-- Main Content -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="1"
+              Background="{StaticResource SurfaceBackground}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="80"/>
                 <ColumnDefinition Width="*"/>
@@ -235,17 +236,17 @@
 
             <!-- Left Sidebar with Icons -->
             <Border Grid.Column="0"
-                    Background="#F8F9FA"
-                    BorderBrush="#E9ECEF"
+                    Background="#F3F4F8"
+                    BorderBrush="{StaticResource MutedBorder}"
                     BorderThickness="0,0,1,0">
                 <StackPanel Orientation="Vertical"
-                            Margin="0,20,0,0">
+                            Margin="0,18,0,0">
 
                     <!-- APIs Tab -->
                     <ToggleButton x:Name="ApiTabButton"
-                                  Width="50"
-                                  Height="50"
-                                  Margin="5,5,5,15"
+                                  Width="56"
+                                  Height="56"
+                                  Margin="6,6,6,16"
                                   IsChecked="{Binding SelectedTab, Converter={StaticResource StringToBooleanConverter}, ConverterParameter=API}"
                                   Command="{Binding ApiTabCommand}"
                                   Style="{StaticResource SidebarTabStyle}"
@@ -268,9 +269,9 @@
 
                     <!-- Tests Tab -->
                     <ToggleButton x:Name="TestsTabButton"
-                                  Width="50"
-                                  Height="50"
-                                  Margin="5,0,5,15"
+                                  Width="56"
+                                  Height="56"
+                                  Margin="6,0,6,16"
                                   IsChecked="{Binding SelectedTab, Converter={StaticResource StringToBooleanConverter}, ConverterParameter=Tests}"
                                   Command="{Binding TestsTabCommand}"
                                   Style="{StaticResource SidebarTabStyle}"
@@ -293,9 +294,9 @@
 
                     <!-- Spec Tab -->
                     <ToggleButton x:Name="SpecTabButton"
-                                  Width="50"
-                                  Height="50"
-                                  Margin="5,0,5,15"
+                                  Width="56"
+                                  Height="56"
+                                  Margin="6,0,6,16"
                                   IsChecked="{Binding SelectedTab, Converter={StaticResource StringToBooleanConverter}, ConverterParameter=Spec}"
                                   Command="{Binding SpecTabCommand}"
                                   Style="{StaticResource SidebarTabStyle}"
@@ -321,7 +322,7 @@
 
             <!-- Main Content Area -->
             <Border Grid.Column="1"
-                    Background="White">
+                    Background="{StaticResource SurfaceBackground}">
                 <ContentPresenter Content="{Binding CurrentContent}">
                     <ContentPresenter.Resources>
                         <!-- API Content Template -->

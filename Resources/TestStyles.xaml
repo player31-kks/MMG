@@ -35,24 +35,24 @@
                 <Setter Property="Background"
                         Value="White"/>
                 <Setter Property="BorderBrush"
-                        Value="#DEE2E6"/>
+                        Value="#E5E7EB"/>
                 <Setter Property="BorderThickness"
                         Value="1"/>
                 <Setter Property="CornerRadius"
-                        Value="4"/>
+                        Value="8"/>
                 <Setter Property="Padding"
-                        Value="12"/>
+                        Value="12,10"/>
                 <Setter Property="Margin"
-                        Value="0,4"/>
+                        Value="0,3"/>
                 <Setter Property="MinHeight"
-                        Value="60"/>
+                        Value="72"/>
                 <Style.Triggers>
                         <Trigger Property="IsMouseOver"
                                  Value="True">
                                 <Setter Property="BorderBrush"
-                                        Value="#007BFF"/>
+                                        Value="#6F5FF5"/>
                                 <Setter Property="Background"
-                                        Value="#F0F7FF"/>
+                                        Value="#EEF2FF"/>
                         </Trigger>
                 </Style.Triggers>
         </Style>
@@ -102,45 +102,45 @@
                 <Setter Property="Background"
                         Value="White"/>
                 <Setter Property="BorderBrush"
-                        Value="#DEE2E6"/>
+                        Value="#E5E7EB"/>
                 <Setter Property="BorderThickness"
                         Value="1"/>
                 <Setter Property="CornerRadius"
-                        Value="6"/>
+                        Value="10"/>
                 <Setter Property="Padding"
-                        Value="16"/>
+                        Value="12,10"/>
                 <Setter Property="Margin"
-                        Value="0,0,0,12"/>
+                        Value="0,0,0,6"/>
                 <Setter Property="MinHeight"
-                        Value="120"/>
+                        Value="0"/>
                 <Style.Triggers>
                         <DataTrigger Binding="{Binding IsRunning}"
                                      Value="True">
                                 <Setter Property="BorderBrush"
-                                        Value="#FFC107"/>
+                                        Value="#F59E0B"/>
                                 <Setter Property="Background"
-                                        Value="#FFFBF0"/>
+                                        Value="#FFFBEB"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding HasFailed}"
                                      Value="True">
                                 <Setter Property="BorderBrush"
-                                        Value="#DC3545"/>
+                                        Value="#EF4444"/>
                                 <Setter Property="Background"
-                                        Value="#FFF8F8"/>
+                                        Value="#FEF2F2"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding LastResult.IsSuccess}"
                                      Value="True">
                                 <Setter Property="BorderBrush"
-                                        Value="#28A745"/>
+                                        Value="#10B981"/>
                                 <Setter Property="Background"
-                                        Value="#F8FFF8"/>
+                                        Value="#ECFDF5"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding LastResult.IsSuccess}"
                                      Value="False">
                                 <Setter Property="BorderBrush"
-                                        Value="#DC3545"/>
+                                        Value="#EF4444"/>
                                 <Setter Property="Background"
-                                        Value="#FFF8F8"/>
+                                        Value="#FEF2F2"/>
                         </DataTrigger>
                 </Style.Triggers>
         </Style>
@@ -192,15 +192,15 @@
         <Style x:Key="StepNumberBadge"
                TargetType="Border">
                 <Setter Property="Background"
-                        Value="#007BFF"/>
+                        Value="#6F5FF5"/>
                 <Setter Property="CornerRadius"
-                        Value="12"/>
+                        Value="10"/>
                 <Setter Property="Width"
-                        Value="24"/>
+                        Value="22"/>
                 <Setter Property="Height"
-                        Value="24"/>
+                        Value="22"/>
                 <Setter Property="Margin"
-                        Value="0,0,10,0"/>
+                        Value="0,0,8,0"/>
         </Style>
 
         <!-- Progress Bar Styles -->
@@ -237,7 +237,7 @@
                 <Setter Property="Padding"
                         Value="0"/>
                 <Setter Property="Margin"
-                        Value="0,0,0,12"/>
+                        Value="0,0,0,6"/>
                 <Setter Property="HorizontalContentAlignment"
                         Value="Stretch"/>
                 <Setter Property="VerticalContentAlignment"
@@ -256,19 +256,19 @@
                                                          Value="True">
                                                         <Setter TargetName="StepBorder"
                                                                 Property="BorderBrush"
-                                                                Value="#007BFF"/>
+                                                                Value="#6F5FF5"/>
                                                         <Setter TargetName="StepBorder"
                                                                 Property="Background"
-                                                                Value="#F0F7FF"/>
+                                                                Value="#EEF2FF"/>
                                                 </Trigger>
                                                 <Trigger Property="IsPressed"
                                                          Value="True">
                                                         <Setter TargetName="StepBorder"
                                                                 Property="BorderBrush"
-                                                                Value="#0056b3"/>
+                                                                Value="#5B4DF5"/>
                                                         <Setter TargetName="StepBorder"
                                                                 Property="Background"
-                                                                Value="#E3F2FD"/>
+                                                                Value="#E0E7FF"/>
                                                 </Trigger>
                                         </ControlTemplate.Triggers>
                                 </ControlTemplate>

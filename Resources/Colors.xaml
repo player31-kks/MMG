@@ -3,14 +3,29 @@
                     xmlns:local="clr-namespace:MMG">
 
     <!-- Color Resources -->
+    <!-- Modern purple-accent palette for API UI -->
     <SolidColorBrush x:Key="PrimaryColor"
-                     Color="#007ACC"/>
+                     Color="#6F5FF5"/>
 
     <SolidColorBrush x:Key="SecondaryColor"
-                     Color="#4CAF50"/>
+                     Color="#2AC3A2"/>
 
     <SolidColorBrush x:Key="WarningColor"
                      Color="#FF4444"/>
+
+    <!-- Neutrals for surfaces and outlines -->
+    <SolidColorBrush x:Key="SurfaceBackground"
+                     Color="#F6F7FB"/>
+    <SolidColorBrush x:Key="PanelBackground"
+                     Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="MutedBorder"
+                     Color="#E5E7EB"/>
+    <SolidColorBrush x:Key="MutedText"
+                     Color="#6B7280"/>
+    <SolidColorBrush x:Key="SoftAccent"
+                     Color="#EEF2FF"/>
+    <SolidColorBrush x:Key="SoftShadow"
+                     Color="#11000000"/>
 
     <!-- Text Color Resources-->
     <SolidColorBrush x:Key="TextPrimaryColor"
@@ -19,9 +34,9 @@
     <LinearGradientBrush x:Key="PrimaryBackgroundGradient"
                          StartPoint="0,0"
                          EndPoint="1,0">
-        <GradientStop Color="#007ACC"
+        <GradientStop Color="#7D6EF7"
                       Offset="0.0"/>
-        <GradientStop Color="#005A9E"
+        <GradientStop Color="#5B4DF5"
                       Offset="1.0"/>
     </LinearGradientBrush>
 </ResourceDictionary>

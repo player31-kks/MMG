@@ -112,7 +112,7 @@ namespace MMG.ViewModels.API
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"이동 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"이동 중 오류가 발생했습니다: {ex.Message}", "오류");
                 return false;
             }
         }
@@ -134,13 +134,11 @@ namespace MMG.ViewModels.API
         {
             if (SelectedTreeItem == null) return;
 
-            var result = MessageBox.Show(
+            var result = ModernMessageDialog.ShowConfirm(
                 $"'{SelectedTreeItem.Name}'을(를) 삭제하시겠습니까?",
-                "삭제 확인",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                "삭제 확인");
 
-            if (result != MessageBoxResult.Yes) return;
+            if (result != true) return;
 
             try
             {
@@ -166,12 +164,12 @@ namespace MMG.ViewModels.API
                 }
                 else
                 {
-                    MessageBox.Show("삭제에 실패했습니다.", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ModernMessageDialog.ShowError("삭제에 실패했습니다.", "오류");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"삭제 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"삭제 중 오류가 발생했습니다: {ex.Message}", "오류");
             }
         }
 
@@ -196,7 +194,7 @@ namespace MMG.ViewModels.API
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"폴더 생성 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"폴더 생성 중 오류가 발생했습니다: {ex.Message}", "오류");
             }
         }
 
@@ -237,7 +235,7 @@ namespace MMG.ViewModels.API
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"트리 뷰 구성 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"트리 뷰 구성 중 오류가 발생했습니다: {ex.Message}", "오류");
             }
         }
 
@@ -279,13 +277,11 @@ namespace MMG.ViewModels.API
         {
             if (item == null) return;
 
-            var result = MessageBox.Show(
+            var result = ModernMessageDialog.ShowConfirm(
                 $"'{item.Name}'을(를) 삭제하시겠습니까?",
-                "삭제 확인",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                "삭제 확인");
 
-            if (result != MessageBoxResult.Yes) return;
+            if (result != true) return;
 
             try
             {
@@ -311,12 +307,12 @@ namespace MMG.ViewModels.API
                 }
                 else
                 {
-                    MessageBox.Show("삭제에 실패했습니다.", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ModernMessageDialog.ShowError("삭제에 실패했습니다.", "오류");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"삭제 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"삭제 중 오류가 발생했습니다: {ex.Message}", "오류");
             }
         }
 
@@ -348,13 +344,13 @@ namespace MMG.ViewModels.API
                     }
                     else
                     {
-                        MessageBox.Show("복사에 실패했습니다.", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ModernMessageDialog.ShowError("복사에 실패했습니다.", "오류");
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"복사 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"복사 중 오류가 발생했습니다: {ex.Message}", "오류");
             }
         }
 
@@ -380,7 +376,7 @@ namespace MMG.ViewModels.API
         {
             if (string.IsNullOrWhiteSpace(item.Name))
             {
-                MessageBox.Show("이름을 입력해주세요.", "알림", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ModernMessageDialog.ShowWarning("이름을 입력해주세요.", "알림");
                 return;
             }
 
@@ -402,7 +398,7 @@ namespace MMG.ViewModels.API
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"이름 변경 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"이름 변경 중 오류가 발생했습니다: {ex.Message}", "오류");
             }
         }
 

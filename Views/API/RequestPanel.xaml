@@ -9,10 +9,11 @@
              mc:Ignorable="d"
              d:DesignHeight="600"
              d:DesignWidth="400">
-    <Border Background="White"
-            BorderBrush="#DDDDDD"
-            BorderThickness="1"
-            CornerRadius="8">
+    <Border Background="{StaticResource PanelBackground}"
+            BorderBrush="{StaticResource MutedBorder}"
+            BorderThickness="0"
+            CornerRadius="12"
+            Padding="6">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -21,10 +22,12 @@
 
             <!-- Connection Info -->
             <Border Grid.Row="0"
-                    Background="#F8F9FA"
-                    BorderBrush="#DDDDDD"
-                    BorderThickness="0,0,0,1"
-                    Padding="10">
+                    Background="{StaticResource SoftAccent}"
+                    BorderBrush="{StaticResource MutedBorder}"
+                    BorderThickness="0"
+                    CornerRadius="10"
+                    Padding="14"
+                    Margin="0,0,0,8">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -54,40 +57,45 @@
                     <TextBlock Grid.Row="0"
                                Grid.ColumnSpan="6"
                                Text="{Binding CurrentLoadedRequestName}"
-                               FontSize="14"
+                               FontSize="16"
                                FontWeight="Bold"
-                               Foreground="#2196F3"
-                               Margin="8,0,0,8"
+                               Foreground="{StaticResource PrimaryColor}"
+                               Margin="4,0,0,10"
                                HorizontalAlignment="Left"/>
 
                     <!-- Connection Controls -->
 
                     <Label Grid.Row="1"
                            Grid.Column="0"
-                           Content="IP:"
-                           VerticalAlignment="Center"/>
+                           Content="IP"
+                           VerticalAlignment="Center"
+                           Foreground="{StaticResource MutedText}"
+                           FontWeight="SemiBold"
+                           Margin="0,0,6,0"/>
                     <TextBox Grid.Row="1"
                              Grid.Column="1"
                              Text="{Binding CurrentRequest.IpAddress}"
                              Style="{StaticResource ModernTextBox}"
-                             Margin="0,0,10,0"/>
+                             Margin="0,0,12,0"/>
                     <Label Grid.Row="1"
                            Grid.Column="2"
-                           Content="Port:"
+                           Content="Port"
                            VerticalAlignment="Center"
-                           Margin="0,0,10,0"/>
+                           Foreground="{StaticResource MutedText}"
+                           FontWeight="SemiBold"
+                           Margin="0,0,12,0"/>
                     <TextBox Grid.Row="1"
                              Grid.Column="3"
                              Text="{Binding CurrentRequest.Port}"
                              Style="{StaticResource ModernTextBox}"
-                             Margin="0,0,10,0"/>
+                             Margin="0,0,12,0"/>
 
                     <!-- Endian Toggle Button -->
                     <ToggleButton Grid.Row="1"
                                   Grid.Column="4"
                                   IsChecked="{Binding CurrentRequest.IsBigEndian}"
                                   ToolTip="바이트 순서 설정 (BigEndian/LittleEndian)"
-                                  Margin="0,0,10,0"
+                                  Margin="0,0,12,0"
                                   MinWidth="90"
                                   Height="30">
                         <ToggleButton.Style>
@@ -108,8 +116,8 @@
                                     <Setter.Value>
                                         <ControlTemplate TargetType="ToggleButton">
                                             <Border Background="{TemplateBinding Background}"
-                                                    CornerRadius="4"
-                                                    Padding="8,4">
+                                                    CornerRadius="14"
+                                                    Padding="12,6">
                                                 <ContentPresenter HorizontalAlignment="Center"
                                                                   VerticalAlignment="Center"/>
                                             </Border>
@@ -118,23 +126,23 @@
                                 </Setter>
                                 <Style.Triggers>
                                     <Trigger Property="IsChecked"
-                                            Value="True">
+                                             Value="True">
                                         <Setter Property="Background"
                                                 Value="#FF5722"/>
                                         <Setter Property="Content"
                                                 Value="Big Endian"/>
                                     </Trigger>
                                     <Trigger Property="IsChecked"
-                                            Value="False">
+                                             Value="False">
                                         <Setter Property="Background"
                                                 Value="#2196F3"/>
                                         <Setter Property="Content"
                                                 Value="Little Endian"/>
                                     </Trigger>
                                     <Trigger Property="IsMouseOver"
-                                            Value="True">
+                                             Value="True">
                                         <Setter Property="Opacity"
-                                                Value="0.9"/>
+                                                Value="0.94"/>
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>
@@ -149,7 +157,8 @@
                             FontSize="{DynamicResource text-xs}"
                             FontWeight="Bold"
                             IsEnabled="{Binding IsSending, Converter={x:Static local:BooleanToInverseBooleanConverter.Instance}}"
-                            Margin="0,0,10,0"/>
+                            Margin="0,0,12,0"
+                            Padding="14,8"/>
 
                     <Button Grid.Row="1"
                             Grid.Column="6"
@@ -161,13 +170,14 @@
                             FontWeight="Bold"
                             IsEnabled="{Binding IsSending, Converter={x:Static local:BooleanToInverseBooleanConverter.Instance}}"
                             ToolTip="새 요청 저장 또는 기존 요청 업데이트"
-                            Margin="0,0,5,0"/>
+                            Margin="0,0,6,0"
+                            Padding="14,8"/>
                 </Grid>
             </Border>
 
             <!-- Request Content -->
             <TabControl Grid.Row="1"
-                        Margin="20"
+                        Margin="8,0,8,8"
                         Style="{x:Null}">
                 <!-- Request Schema Tab -->
                 <TabItem Header="Request Schema"

@@ -7,6 +7,7 @@ using MMG.Core.Models.Schema;
 using MMG.Core.Services;
 using MMG.Models;
 using MMG.ViewModels.Base;
+using MMG.Views.Common;
 using Microsoft.Win32;
 
 namespace MMG.ViewModels.Spec
@@ -179,8 +180,8 @@ namespace MMG.ViewModels.Spec
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"스펙 파일을 불러오는 중 오류가 발생했습니다:\n{ex.Message}",
-                    "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"스펙 파일을 불러오는 중 오류가 발생했습니다:\n{ex.Message}",
+                    "오류");
             }
         }
 
@@ -210,8 +211,8 @@ namespace MMG.ViewModels.Spec
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"스펙 파일을 저장하는 중 오류가 발생했습니다:\n{ex.Message}",
-                    "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"스펙 파일을 저장하는 중 오류가 발생했습니다:\n{ex.Message}",
+                    "오류");
             }
         }
 
@@ -231,8 +232,8 @@ namespace MMG.ViewModels.Spec
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"저장 중 오류가 발생했습니다:\n{ex.Message}",
-                    "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"저장 중 오류가 발생했습니다:\n{ex.Message}",
+                    "오류");
             }
         }
 
@@ -246,8 +247,8 @@ namespace MMG.ViewModels.Spec
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"YAML 파싱 오류:\n{ex.Message}",
-                    "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"YAML 파싱 오류:\n{ex.Message}",
+                    "오류");
             }
         }
 
@@ -436,11 +437,9 @@ namespace MMG.ViewModels.Spec
 
         private static bool ConfirmDiscardChanges()
         {
-            return MessageBox.Show(
+            return ModernMessageDialog.ShowConfirm(
                 "저장하지 않은 변경사항이 있습니다. 계속하시겠습니까?",
-                "확인",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning) == MessageBoxResult.Yes;
+                "확인") == true;
         }
 
         #endregion

@@ -7,10 +7,11 @@
              mc:Ignorable="d"
              d:DesignHeight="600"
              d:DesignWidth="400">
-    <Border Background="White"
-            BorderBrush="#DDDDDD"
-            BorderThickness="1"
-            CornerRadius="8">
+    <Border Background="{StaticResource PanelBackground}"
+            BorderBrush="{StaticResource MutedBorder}"
+            BorderThickness="0"
+            CornerRadius="12"
+            Padding="6">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -19,18 +20,21 @@
 
             <!-- Response Header -->
             <Border Grid.Row="0"
-                    Background="#F8F9FA"
-                    BorderBrush="#DDDDDD"
-                    BorderThickness="0,0,0,1"
-                    Padding="15">
+                    Background="{StaticResource SoftAccent}"
+                    BorderBrush="{StaticResource MutedBorder}"
+                    BorderThickness="0"
+                    CornerRadius="10"
+                    Padding="14"
+                    Margin="0,0,0,8">
                 <TextBlock Text="Response"
                            FontSize="{DynamicResource text-sm}"
-                           FontWeight="Bold"/>
+                           FontWeight="Bold"
+                           Foreground="{StaticResource PrimaryColor}"/>
             </Border>
 
             <!-- Response Content -->
             <ScrollViewer Grid.Row="1"
-                          Margin="20"
+                          Margin="8,0,8,8"
                           VerticalScrollBarVisibility="Auto">
                 <TextBox Text="{Binding ResponseText, Mode=OneWay}"
                          IsReadOnly="True"

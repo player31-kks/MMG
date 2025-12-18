@@ -83,7 +83,7 @@
         </ContextMenu>
     </UserControl.Resources>
 
-    <Grid Background="White">
+    <Grid Background="{StaticResource PanelBackground}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -92,10 +92,12 @@
 
             <!-- Header -->
             <Border Grid.Row="0"
-                    Background="Transparent"
-                    BorderBrush="#EEEEEE"
-                    BorderThickness="0,0,0,1"
-                    Padding="15,15,15,10">
+                    Background="{StaticResource SoftAccent}"
+                    BorderBrush="{StaticResource MutedBorder}"
+                    BorderThickness="0"
+                    CornerRadius="10"
+                    Padding="14,14,14,10"
+                    Margin="2,2,2,8">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -107,7 +109,7 @@
                                FontSize="{DynamicResource text-sm}"
                                FontWeight="SemiBold"
                                VerticalAlignment="Center"
-                               Foreground="{StaticResource TextPrimaryColor}"/>
+                               Foreground="{StaticResource PrimaryColor}"/>
 
                     <!-- + 버튼 with Dropdown -->
                     <Grid Grid.Column="1"
@@ -209,7 +211,7 @@
             <TreeView Grid.Row="1"
                       x:Name="RequestTreeView"
                       ItemsSource="{Binding TreeItems}"
-                      Margin="10"
+                      Margin="6,0,6,6"
                       BorderThickness="0"
                       Background="Transparent"
                       Focusable="True"
@@ -374,9 +376,111 @@
                         <Setter Property="FontSize"
                                 Value="13"/>
                         <Setter Property="Padding"
-                                Value="2"/>
+                                Value="6"/>
+                        <Setter Property="Margin"
+                                Value="0,2"/>
+                        <Setter Property="Background"
+                                Value="Transparent"/>
+                        <Setter Property="BorderBrush"
+                                Value="Transparent"/>
+                        <Setter Property="BorderThickness"
+                                Value="1"/>
                         <Setter Property="AllowDrop"
                                 Value="True"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="TreeViewItem">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <ToggleButton x:Name="Expander"
+                                                      IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
+                                                      Visibility="Visible"
+                                                      Margin="0,0,6,0"
+                                                      Grid.Row="0"
+                                                      Grid.Column="0"
+                                                      Focusable="False"
+                                                      Cursor="Hand">
+                                            <ToggleButton.Template>
+                                                <ControlTemplate TargetType="ToggleButton">
+                                                    <Grid Width="16"
+                                                          Height="16"
+                                                          Background="Transparent">
+                                                        <Path x:Name="ExpanderArrow"
+                                                              Data="M 4 6 L 8 10 L 12 6"
+                                                              StrokeThickness="1.6"
+                                                              Stroke="#6B7280"
+                                                              StrokeLineJoin="Round"
+                                                              StrokeStartLineCap="Round"
+                                                              StrokeEndLineCap="Round"/>
+                                                    </Grid>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsChecked"
+                                                                 Value="True">
+                                                            <Setter TargetName="ExpanderArrow"
+                                                                    Property="Data"
+                                                                    Value="M 4 10 L 8 6 L 12 10"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </ToggleButton.Template>
+                                        </ToggleButton>
+
+                                        <Border x:Name="Header"
+                                                Grid.Row="0"
+                                                Grid.Column="1"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="8">
+                                            <ContentPresenter x:Name="PART_Header"
+                                                              Margin="6,4"
+                                                              ContentSource="Header"/>
+                                        </Border>
+
+                                        <ItemsPresenter x:Name="ItemsHost"
+                                                        Grid.Row="1"
+                                                        Grid.Column="1"
+                                                        Margin="18,4,0,0"/>
+                                    </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsExpanded"
+                                                 Value="False">
+                                            <Setter TargetName="ItemsHost"
+                                                    Property="Visibility"
+                                                    Value="Collapsed"/>
+                                        </Trigger>
+                                        <Trigger Property="HasItems"
+                                                 Value="False">
+                                            <Setter TargetName="Expander"
+                                                    Property="Visibility"
+                                                    Value="Collapsed"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected"
+                                                 Value="True">
+                                            <Setter TargetName="Header"
+                                                    Property="Background"
+                                                    Value="{StaticResource SoftAccent}"/>
+                                            <Setter TargetName="Header"
+                                                    Property="BorderBrush"
+                                                    Value="{StaticResource PrimaryColor}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled"
+                                                 Value="False">
+                                            <Setter Property="Foreground"
+                                                    Value="{StaticResource MutedText}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
                         <EventSetter Event="MouseDoubleClick"
                                      Handler="TreeViewItem_MouseDoubleClick"/>
                         <EventSetter Event="PreviewMouseRightButtonDown"

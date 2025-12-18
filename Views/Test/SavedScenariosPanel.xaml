@@ -6,8 +6,8 @@
              xmlns:models="clr-namespace:MMG.Models"
              mc:Ignorable="d"
              d:DesignHeight="600"
-             d:DesignWidth="280"
-             Background="White">
+             d:DesignWidth="360"
+             Background="{StaticResource PanelBackground}">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -17,7 +17,12 @@
 
         <!-- Header -->
         <Border Grid.Row="0"
-                Style="{StaticResource PanelHeader}">
+                Background="{StaticResource SoftAccent}"
+                BorderBrush="{StaticResource MutedBorder}"
+                BorderThickness="0"
+                CornerRadius="10"
+                Padding="14,14,14,10"
+                Margin="2,2,2,8">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -29,7 +34,7 @@
                             VerticalAlignment="Center"
                             FontSize="{DynamicResource text-sm}"
                             FontWeight="Bold"
-                            Foreground="#374151"/>
+                            Foreground="{StaticResource PrimaryColor}"/>
 
                 <Button Grid.Column="1"
                         Content="+"
@@ -49,8 +54,23 @@
                  Background="Transparent"
                  BorderThickness="0"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                 Padding="10"
+                 Padding="8,0,8,6"
+                 HorizontalContentAlignment="Stretch"
                  x:Name="ScenariosListBox">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="Margin" Value="0"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <ContentPresenter/>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListBox.ItemContainerStyle>
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type models:TestScenario}">
                     <Border Style="{StaticResource ScenarioListItem}">

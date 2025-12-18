@@ -7,57 +7,92 @@
              mc:Ignorable="d"
              d:DesignHeight="450"
              d:DesignWidth="800"
-             Background="White">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="280"
-                              MinWidth="250"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"
-                              MinWidth="400"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="350"
-                              MinWidth="300"/>
-        </Grid.ColumnDefinitions>
+             Background="{StaticResource SurfaceBackground}">
+    <Grid Background="{StaticResource SurfaceBackground}">
+        <Border Background="{StaticResource PanelBackground}"
+                BorderBrush="{StaticResource MutedBorder}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Padding="14"
+                Margin="14"
+                SnapsToDevicePixels="True">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="280"
+                                      MinWidth="250"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"
+                                      MinWidth="420"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="350"
+                                      MinWidth="300"/>
+                </Grid.ColumnDefinitions>
 
-        <!-- Left Panel - Saved Requests with modern styling -->
-        <Border Grid.Column="0"
-                Background="#F8F9FA"
-                BorderBrush="#E9ECEF"
-                BorderThickness="0,0,1,0">
-            <api:SavedRequestsPanel DataContext="{Binding}"/>
-        </Border>
+                <!-- Left Panel - Saved Requests with modern styling -->
+                <Border Grid.Column="0"
+                        Background="{StaticResource PanelBackground}"
+                        BorderBrush="{StaticResource MutedBorder}"
+                        BorderThickness="0,0,1,0"
+                        CornerRadius="10"
+                        Padding="4">
+                    <api:SavedRequestsPanel DataContext="{Binding}"/>
+                </Border>
 
-        <!-- Splitter 1 -->
-        <GridSplitter Grid.Column="1"
-                      HorizontalAlignment="Center"
-                      VerticalAlignment="Stretch"
-                      Width="1"
-                      Background="#E9ECEF"
-                      ShowsPreview="False"/>
+                <!-- Splitter 1 -->
+                <GridSplitter Grid.Column="1"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Stretch"
+                              Width="10"
+                              Background="Transparent"
+                              ShowsPreview="False"
+                              Cursor="SizeWE">
+                    <GridSplitter.Template>
+                        <ControlTemplate TargetType="GridSplitter">
+                            <Border Background="Transparent">
+                                <Rectangle Width="2"
+                                           Fill="{StaticResource MutedBorder}"
+                                           HorizontalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </GridSplitter.Template>
+                </GridSplitter>
 
-        <!-- Middle Panel - Request with modern styling -->
-        <Border Grid.Column="2"
-                Background="White"
-                Padding="20">
-            <api:RequestPanel DataContext="{Binding}"/>
-        </Border>
+                <!-- Middle Panel - Request with modern styling -->
+                <Border Grid.Column="2"
+                        Background="{StaticResource PanelBackground}"
+                        Padding="10,0">
+                    <api:RequestPanel DataContext="{Binding}"/>
+                </Border>
 
-        <!-- Splitter 2 -->
-        <GridSplitter Grid.Column="3"
-                      HorizontalAlignment="Center"
-                      VerticalAlignment="Stretch"
-                      Width="1"
-                      Background="#E9ECEF"
-                      ShowsPreview="False"/>
+                <!-- Splitter 2 -->
+                <GridSplitter Grid.Column="3"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Stretch"
+                              Width="10"
+                              Background="Transparent"
+                              ShowsPreview="False"
+                              Cursor="SizeWE">
+                    <GridSplitter.Template>
+                        <ControlTemplate TargetType="GridSplitter">
+                            <Border Background="Transparent">
+                                <Rectangle Width="2"
+                                           Fill="{StaticResource MutedBorder}"
+                                           HorizontalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </GridSplitter.Template>
+                </GridSplitter>
 
-        <!-- Right Panel - Response with modern styling -->
-        <Border Grid.Column="4"
-                Background="#F8F9FA"
-                BorderBrush="#E9ECEF"
-                BorderThickness="1,0,0,0"
-                Padding="20">
-            <api:ResponsePanel DataContext="{Binding}"/>
+                <!-- Right Panel - Response with modern styling -->
+                <Border Grid.Column="4"
+                        Background="{StaticResource PanelBackground}"
+                        BorderBrush="{StaticResource MutedBorder}"
+                        BorderThickness="1,0,0,0"
+                        CornerRadius="10"
+                        Padding="10,0,6,0">
+                    <api:ResponsePanel DataContext="{Binding}"/>
+                </Border>
+            </Grid>
         </Border>
     </Grid>
 </UserControl>

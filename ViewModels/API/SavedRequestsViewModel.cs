@@ -92,7 +92,7 @@ namespace MMG.ViewModels.API
 
                 if (args.CurrentRequest == null || args.ResponseSchema == null)
                 {
-                    MessageBox.Show("저장할 요청 데이터가 없습니다.", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ModernMessageDialog.ShowError("저장할 요청 데이터가 없습니다.", "오류");
                     return;
                 }
 
@@ -108,7 +108,7 @@ namespace MMG.ViewModels.API
                                             "|" + _databaseService.SerializeDataFields(args.ResponseSchema.Payload);
 
                     await _databaseService.SaveRequestAsync(_currentLoadedRequest);
-                    MessageBox.Show($"요청 '{_currentLoadedRequest.Name}'이 업데이트되었습니다.", "저장 완료", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ModernMessageDialog.ShowSuccess($"요청 '{_currentLoadedRequest.Name}'이 업데이트되었습니다.", "저장 완료");
                 }
                 else
                 {
@@ -132,7 +132,7 @@ namespace MMG.ViewModels.API
 
                         await _databaseService.SaveRequestAsync(savedRequest);
                         CurrentLoadedRequest = savedRequest;
-                        MessageBox.Show($"요청 '{dialog.RequestName}'이 저장되었습니다.", "저장 완료", MessageBoxButton.OK, MessageBoxImage.Information);
+                        ModernMessageDialog.ShowSuccess($"요청 '{dialog.RequestName}'이 저장되었습니다.", "저장 완료");
                     }
                 }
 
@@ -140,7 +140,7 @@ namespace MMG.ViewModels.API
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"저장 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"저장 중 오류가 발생했습니다: {ex.Message}", "오류");
             }
         }
 
@@ -152,7 +152,7 @@ namespace MMG.ViewModels.API
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"저장된 요청을 불러오는 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"저장된 요청을 불러오는 중 오류가 발생했습니다: {ex.Message}", "오류");
             }
         }
 
@@ -168,7 +168,7 @@ namespace MMG.ViewModels.API
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"요청 로드 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"요청 로드 중 오류가 발생했습니다: {ex.Message}", "오류");
             }
         }
 
@@ -182,7 +182,7 @@ namespace MMG.ViewModels.API
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"새 요청 생성 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"새 요청 생성 중 오류가 발생했습니다: {ex.Message}", "오류");
             }
         }
 
@@ -218,12 +218,12 @@ namespace MMG.ViewModels.API
                     // 저장된 요청 로드
                     RequestLoaded?.Invoke(this, savedRequest);
 
-                    MessageBox.Show($"요청 '{dialog.RequestName}'이 저장되었습니다.", "저장 완료", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ModernMessageDialog.ShowSuccess($"요청 '{dialog.RequestName}'이 저장되었습니다.", "저장 완료");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Spec에서 저장 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                ModernMessageDialog.ShowError($"Spec에서 저장 중 오류가 발생했습니다: {ex.Message}", "오류");
             }
         }
 
@@ -232,10 +232,10 @@ namespace MMG.ViewModels.API
             if (SelectedSavedRequest == null)
                 return;
 
-            var result = MessageBox.Show($"'{SelectedSavedRequest.Name}' 요청을 삭제하시겠습니까?",
-                                       "삭제 확인", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var result = ModernMessageDialog.ShowConfirm($"'{SelectedSavedRequest.Name}' 요청을 삭제하시겠습니까?",
+                                       "삭제 확인");
 
-            if (result == MessageBoxResult.Yes)
+            if (result == true)
             {
                 try
                 {
@@ -253,7 +253,7 @@ namespace MMG.ViewModels.API
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"삭제 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ModernMessageDialog.ShowError($"삭제 중 오류가 발생했습니다: {ex.Message}", "오류");
                 }
             }
         }
