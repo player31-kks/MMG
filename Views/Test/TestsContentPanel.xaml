@@ -20,13 +20,13 @@
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="360"
-                            MinWidth="300"/>
+                                      MinWidth="300"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"
-                            MinWidth="420"/>
+                                      MinWidth="420"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="350"
-                            MinWidth="300"/>
+                                      MinWidth="300"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- Left Panel - Saved Scenarios -->

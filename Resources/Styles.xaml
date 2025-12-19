@@ -52,17 +52,17 @@
 
         <!-- View Toggle Radio Button Style -->
         <Style x:Key="ViewToggleRadioStyle"
-                        TargetType="RadioButton">
+               TargetType="RadioButton">
                 <Setter Property="Background"
-                                Value="Transparent"/>
+                        Value="Transparent"/>
                 <Setter Property="Foreground"
-                                Value="#495057"/>
+                        Value="#495057"/>
                 <Setter Property="FontSize"
-                                Value="12"/>
+                        Value="12"/>
                 <Setter Property="Padding"
-                                Value="10,5"/>
+                        Value="10,5"/>
                 <Setter Property="Cursor"
-                                Value="Hand"/>
+                        Value="Hand"/>
                 <Setter Property="Template">
                         <Setter.Value>
                                 <ControlTemplate TargetType="RadioButton">
@@ -75,18 +75,18 @@
                                         </Border>
                                         <ControlTemplate.Triggers>
                                                 <Trigger Property="IsChecked"
-                                                                Value="True">
+                                                         Value="True">
                                                         <Setter TargetName="border"
-                                                                        Property="Background"
-                                                                        Value="White"/>
+                                                                Property="Background"
+                                                                Value="White"/>
                                                         <Setter Property="Foreground"
-                                                                        Value="#333"/>
+                                                                Value="#333"/>
                                                 </Trigger>
                                                 <Trigger Property="IsMouseOver"
-                                                                Value="True">
+                                                         Value="True">
                                                         <Setter TargetName="border"
-                                                                        Property="Background"
-                                                                        Value="#F8F9FA"/>
+                                                                Property="Background"
+                                                                Value="#F8F9FA"/>
                                                 </Trigger>
                                         </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -632,23 +632,23 @@
                 <Setter Property="Background"
                         Value="White"/>
                 <Setter Property="BorderBrush"
-                        Value="#E0E0E0"/>
+                        Value="{StaticResource MutedBorder}"/>
                 <Setter Property="BorderThickness"
-                        Value="1"/>
+                        Value="0"/>
                 <Setter Property="GridLinesVisibility"
                         Value="Horizontal"/>
                 <Setter Property="HorizontalGridLinesBrush"
-                        Value="#F0F0F0"/>
+                        Value="#F3F4F6"/>
                 <Setter Property="VerticalGridLinesBrush"
-                        Value="#F0F0F0"/>
+                        Value="Transparent"/>
                 <Setter Property="RowBackground"
                         Value="White"/>
                 <Setter Property="AlternatingRowBackground"
-                        Value="#FAFAFA"/>
+                        Value="#FAFBFC"/>
                 <Setter Property="RowHeight"
-                        Value="40"/>
+                        Value="38"/>
                 <Setter Property="ColumnHeaderHeight"
-                        Value="45"/>
+                        Value="42"/>
                 <Setter Property="FontSize"
                         Value="{DynamicResource text-sm}"/>
                 <Setter Property="CanUserResizeRows"
@@ -658,15 +658,15 @@
         <!-- DataGrid Column Header Style -->
         <Style TargetType="DataGridColumnHeader">
                 <Setter Property="Background"
-                        Value="#F8F9FA"/>
+                        Value="{StaticResource SoftAccent}"/>
                 <Setter Property="Foreground"
-                        Value="#2C3E50"/>
+                        Value="#374151"/>
                 <Setter Property="FontWeight"
                         Value="SemiBold"/>
                 <Setter Property="FontSize"
-                        Value="{DynamicResource text-sm}"/>
+                        Value="12"/>
                 <Setter Property="Padding"
-                        Value="12,8"/>
+                        Value="10,10"/>
                 <Setter Property="BorderBrush"
                         Value="#E0E0E0"/>
                 <Setter Property="BorderThickness"
@@ -691,7 +691,7 @@
                                                          Value="True">
                                                         <Setter TargetName="Border"
                                                                 Property="Background"
-                                                                Value="#ECF0F1"/>
+                                                                Value="#E0E7FF"/>
                                                 </Trigger>
                                         </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -743,13 +743,13 @@
                                                          Value="True">
                                                         <Setter TargetName="DGR_Border"
                                                                 Property="Background"
-                                                                Value="#F0F8FF"/>
+                                                                Value="#F5F3FF"/>
                                                 </Trigger>
                                                 <Trigger Property="IsSelected"
                                                          Value="True">
                                                         <Setter TargetName="DGR_Border"
                                                                 Property="Background"
-                                                                Value="#E3F2FD"/>
+                                                                Value="{StaticResource SoftAccent}"/>
                                                 </Trigger>
                                                 <Trigger Property="IsSelected"
                                                          Value="False">
@@ -766,7 +766,7 @@
                                                         </MultiTrigger.Conditions>
                                                         <Setter TargetName="DGR_Border"
                                                                 Property="Background"
-                                                                Value="#BBDEFB"/>
+                                                                Value="#E0E7FF"/>
                                                 </MultiTrigger>
                                         </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -779,11 +779,11 @@
                 <Setter Property="Background"
                         Value="Transparent"/>
                 <Setter Property="Foreground"
-                        Value="#2C3E50"/>
+                        Value="#1F2937"/>
                 <Setter Property="BorderThickness"
                         Value="0"/>
                 <Setter Property="Padding"
-                        Value="12,8"/>
+                        Value="10,8"/>
                 <Setter Property="VerticalContentAlignment"
                         Value="Center"/>
                 <Setter Property="Template">
@@ -811,7 +811,7 @@
                                                                 Value="{StaticResource PrimaryColor}"/>
                                                         <Setter TargetName="CellBorder"
                                                                 Property="BorderThickness"
-                                                                Value="2"/>
+                                                                Value="1"/>
                                                 </Trigger>
                                         </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -824,6 +824,8 @@
                TargetType="TextBox">
                 <Setter Property="Background"
                         Value="White"/>
+                <Setter Property="Foreground"
+                        Value="#1F2937"/>
                 <Setter Property="BorderBrush"
                         Value="{StaticResource PrimaryColor}"/>
                 <Setter Property="BorderThickness"
@@ -831,7 +833,7 @@
                 <Setter Property="Padding"
                         Value="8,6"/>
                 <Setter Property="FontSize"
-                        Value="{DynamicResource text-sm}"/>
+                        Value="13"/>
                 <Setter Property="VerticalContentAlignment"
                         Value="Center"/>
                 <Setter Property="Template">
@@ -856,7 +858,7 @@
                                                                 Value="{StaticResource PrimaryColor}"/>
                                                         <Setter TargetName="border"
                                                                 Property="Background"
-                                                                Value="#F0F8FF"/>
+                                                                Value="#FEFEFE"/>
                                                 </Trigger>
                                         </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -868,11 +870,13 @@
         <Style x:Key="DataGridTextBlockStyle"
                TargetType="TextBlock">
                 <Setter Property="Foreground"
-                        Value="#2C3E50"/>
+                        Value="#1F2937"/>
                 <Setter Property="VerticalAlignment"
                         Value="Center"/>
                 <Setter Property="Padding"
                         Value="4"/>
+                <Setter Property="FontSize"
+                        Value="13"/>
         </Style>
 
 </ResourceDictionary>

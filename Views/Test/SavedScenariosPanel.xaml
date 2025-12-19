@@ -59,9 +59,12 @@
                  x:Name="ScenariosListBox">
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                    <Setter Property="Padding" Value="0"/>
-                    <Setter Property="Margin" Value="0"/>
+                    <Setter Property="HorizontalContentAlignment"
+                            Value="Stretch"/>
+                    <Setter Property="Padding"
+                            Value="0"/>
+                    <Setter Property="Margin"
+                            Value="0"/>
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="ListBoxItem">
@@ -81,7 +84,7 @@
                                           CommandParameter="{Binding}">
                                     <MenuItem.Icon>
                                         <TextBlock Text="🗑️"
-                                                FontSize="12"/>
+                                                   FontSize="12"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
                             </ContextMenu>
