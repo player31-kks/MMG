@@ -1,128 +1,51 @@
 using System.Collections.ObjectModel;
-using System.Windows.Input;
 using MMG.Models;
 using MMG.Services;
 using MMG.Views.Common;
-using MMG.ViewModels.Base;
 using System.Windows;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace MMG.ViewModels.API
 {
-    public class TreeViewViewModel : ViewModelBase
+    public partial class TreeViewViewModel : ObservableObject
     {
         private readonly DatabaseService _databaseService;
-        private ObservableCollection<TreeViewItemModel> _treeItems = new();
-        private TreeViewItemModel? _selectedTreeItem;
-        private ObservableCollection<Folder> _folders = new();
-        private bool _hasSelectedItem;
+
+        [ObservableProperty]
+        private ObservableCollection<TreeViewItemModel> treeItems = new();
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HasSelectedItem))]
+        [NotifyCanExecuteChangedFor(nameof(LoadSelectedRequestCommand), nameof(DeleteSelectedCommand), nameof(RenameSelectedItemCommand))]
+        private TreeViewItemModel? selectedTreeItem;
+
+        [ObservableProperty]
+        private ObservableCollection<Folder> folders = new();
+
+        public bool HasSelectedItem => SelectedTreeItem != null;
 
         public TreeViewViewModel()
         {
             _databaseService = new DatabaseService();
-
-            LoadSelectedRequestCommand = new RelayCommand(() => LoadSelectedTreeRequest(), () => HasSelectedItem);
-            DeleteSelectedCommand = new RelayCommand(async () => await DeleteSelectedItem(), () => HasSelectedItem);
-            NewFolderCommand = new RelayCommand(async () => await CreateNewFolder());
-            DeleteItemCommand = new RelayCommand<TreeViewItemModel>(async (item) => await DeleteSpecificItem(item));
-            RenameItemCommand = new RelayCommand<TreeViewItemModel>((item) => { if (item != null) StartRenaming(item); });
-            SaveRenameCommand = new RelayCommand<TreeViewItemModel>(async (item) => { if (item != null) await SaveRename(item); });
-            CancelRenameCommand = new RelayCommand<TreeViewItemModel>((item) => { if (item != null) CancelRename(item); });
-            CopyItemCommand = new RelayCommand<TreeViewItemModel>(async (item) => await CopyItem(item));
-            RenameSelectedItemCommand = new RelayCommand(() => RenameSelectedItem(), () => HasSelectedItem && SelectedTreeItem?.ItemType == TreeViewItemType.Request);
-
             _ = BuildTreeView();
         }
 
-        public ObservableCollection<TreeViewItemModel> TreeItems
+        partial void OnSelectedTreeItemChanged(TreeViewItemModel? value)
         {
-            get => _treeItems;
-            set
+            if (value?.ItemType == TreeViewItemType.Request && value.Tag is SavedRequest request)
             {
-                _treeItems = value;
-                OnPropertyChanged(nameof(TreeItems));
+                RequestSelected?.Invoke(this, request);
             }
         }
-
-        public TreeViewItemModel? SelectedTreeItem
-        {
-            get => _selectedTreeItem;
-            set
-            {
-                _selectedTreeItem = value;
-                OnPropertyChanged(nameof(SelectedTreeItem));
-                HasSelectedItem = _selectedTreeItem != null;
-
-                if (_selectedTreeItem?.ItemType == TreeViewItemType.Request && _selectedTreeItem.Tag is SavedRequest request)
-                {
-                    RequestSelected?.Invoke(this, request);
-                }
-            }
-        }
-
-        public ObservableCollection<Folder> Folders
-        {
-            get => _folders;
-            set
-            {
-                _folders = value;
-                OnPropertyChanged(nameof(Folders));
-            }
-        }
-
-        public bool HasSelectedItem
-        {
-            get => _hasSelectedItem;
-            set
-            {
-                _hasSelectedItem = value;
-                OnPropertyChanged(nameof(HasSelectedItem));
-                ((RelayCommand)LoadSelectedRequestCommand).RaiseCanExecuteChanged();
-                ((RelayCommand)DeleteSelectedCommand).RaiseCanExecuteChanged();
-                ((RelayCommand)RenameSelectedItemCommand).CanExecute(null);
-            }
-        }
-
-        public ICommand LoadSelectedRequestCommand { get; }
-        public ICommand DeleteSelectedCommand { get; }
-        public ICommand NewFolderCommand { get; }
-        public ICommand DeleteItemCommand { get; }
-        public ICommand RenameItemCommand { get; }
-        public ICommand SaveRenameCommand { get; }
-        public ICommand CancelRenameCommand { get; }
-        public ICommand CopyItemCommand { get; }
-        public ICommand RenameSelectedItemCommand { get; }
 
         public event EventHandler<SavedRequest>? RequestSelected;
         public event EventHandler? NewRequestCreated;
 
-        /// <summary>
-        /// Request를 다른 폴더로 이동
-        /// </summary>
-        public async Task<bool> MoveRequestToFolder(SavedRequest request, int? targetFolderId)
-        {
-            try
-            {
-                var result = await _databaseService.MoveRequestToFolderAsync(request.Id, targetFolderId);
-                if (result)
-                {
-                    request.FolderId = targetFolderId;
-                    await BuildTreeView();
-                }
-                return result;
-            }
-            catch (Exception ex)
-            {
-                ModernMessageDialog.ShowError($"이동 중 오류가 발생했습니다: {ex.Message}", "오류");
-                return false;
-            }
-        }
+        #region Commands
 
-        public async Task RefreshTreeView()
-        {
-            await BuildTreeView();
-        }
-
-        private void LoadSelectedTreeRequest()
+        [RelayCommand(CanExecute = nameof(HasSelectedItem))]
+        private void LoadSelectedRequest()
         {
             if (SelectedTreeItem?.ItemType == TreeViewItemType.Request && SelectedTreeItem.Tag is SavedRequest request)
             {
@@ -130,7 +53,8 @@ namespace MMG.ViewModels.API
             }
         }
 
-        private async Task DeleteSelectedItem()
+        [RelayCommand(CanExecute = nameof(HasSelectedItem))]
+        private async Task DeleteSelected()
         {
             if (SelectedTreeItem == null) return;
 
@@ -173,7 +97,8 @@ namespace MMG.ViewModels.API
             }
         }
 
-        private async Task CreateNewFolder()
+        [RelayCommand]
+        private async Task NewFolder()
         {
             try
             {
@@ -196,6 +121,208 @@ namespace MMG.ViewModels.API
             {
                 ModernMessageDialog.ShowError($"폴더 생성 중 오류가 발생했습니다: {ex.Message}", "오류");
             }
+        }
+
+        [RelayCommand]
+        private async Task DeleteItem(TreeViewItemModel? item)
+        {
+            if (item == null) return;
+
+            var result = ModernMessageDialog.ShowConfirm(
+                $"'{item.Name}'을(를) 삭제하시겠습니까?",
+                "삭제 확인");
+
+            if (result != true) return;
+
+            try
+            {
+                bool success = false;
+
+                if (item.ItemType == TreeViewItemType.Folder && item.Tag is Folder folder)
+                {
+                    success = await _databaseService.DeleteFolderAsync(folder.Id);
+                }
+                else if (item.ItemType == TreeViewItemType.Request && item.Tag is SavedRequest request)
+                {
+                    success = await _databaseService.DeleteRequestAsync(request.Id);
+
+                    if (success)
+                    {
+                        NewRequestCreated?.Invoke(this, EventArgs.Empty);
+                    }
+                }
+
+                if (success)
+                {
+                    await BuildTreeView();
+                }
+                else
+                {
+                    ModernMessageDialog.ShowError("삭제에 실패했습니다.", "오류");
+                }
+            }
+            catch (Exception ex)
+            {
+                ModernMessageDialog.ShowError($"삭제 중 오류가 발생했습니다: {ex.Message}", "오류");
+            }
+        }
+
+        [RelayCommand]
+        private async Task CopyItem(TreeViewItemModel? item)
+        {
+            if (item == null) return;
+
+            try
+            {
+                if (item.ItemType == TreeViewItemType.Request && item.Tag is SavedRequest originalRequest)
+                {
+                    string copyName = GenerateCopyName(originalRequest.Name);
+
+                    var copiedRequest = new SavedRequest
+                    {
+                        Name = copyName,
+                        IpAddress = originalRequest.IpAddress,
+                        Port = originalRequest.Port,
+                        RequestSchemaJson = originalRequest.RequestSchemaJson,
+                        ResponseSchemaJson = originalRequest.ResponseSchemaJson,
+                        FolderId = originalRequest.FolderId
+                    };
+
+                    int newId = await _databaseService.SaveRequestAsync(copiedRequest);
+
+                    if (newId > 0)
+                    {
+                        await BuildTreeView();
+                    }
+                    else
+                    {
+                        ModernMessageDialog.ShowError("복사에 실패했습니다.", "오류");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ModernMessageDialog.ShowError($"복사 중 오류가 발생했습니다: {ex.Message}", "오류");
+            }
+        }
+
+        private string GenerateCopyName(string originalName)
+        {
+            return originalName + " Copy";
+        }
+
+        [RelayCommand]
+        private void RenameItem(TreeViewItemModel? item)
+        {
+            if (item != null)
+                StartRenaming(item);
+        }
+
+        [RelayCommand]
+        private async Task SaveRename(TreeViewItemModel? item)
+        {
+            if (item == null || string.IsNullOrWhiteSpace(item.Name))
+            {
+                ModernMessageDialog.ShowWarning("이름을 입력해주세요.", "알림");
+                return;
+            }
+
+            try
+            {
+                if (item.ItemType == TreeViewItemType.Request && item.Tag is SavedRequest request)
+                {
+                    request.Name = item.Name;
+                    await _databaseService.SaveRequestAsync(request);
+                }
+                else if (item.ItemType == TreeViewItemType.Folder && item.Tag is Folder folder)
+                {
+                    folder.Name = item.Name;
+                    await _databaseService.SaveFolderAsync(folder);
+                }
+
+                item.IsEditing = false;
+                await BuildTreeView();
+            }
+            catch (Exception ex)
+            {
+                ModernMessageDialog.ShowError($"이름 변경 중 오류가 발생했습니다: {ex.Message}", "오류");
+            }
+        }
+
+        [RelayCommand]
+        private void CancelRename(TreeViewItemModel? item)
+        {
+            if (item == null) return;
+
+            item.IsEditing = false;
+
+            if (item.Tag is SavedRequest request)
+            {
+                item.Name = request.Name;
+            }
+            else if (item.Tag is Folder folder)
+            {
+                item.Name = folder.Name;
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanRenameSelectedItem))]
+        private void RenameSelectedItem()
+        {
+            if (SelectedTreeItem != null && SelectedTreeItem.ItemType == TreeViewItemType.Request)
+            {
+                StartRenaming(SelectedTreeItem);
+            }
+        }
+
+        private bool CanRenameSelectedItem() => HasSelectedItem && SelectedTreeItem?.ItemType == TreeViewItemType.Request;
+
+        #endregion
+
+        #region Public Methods
+
+        /// <summary>
+        /// Request를 다른 폴더로 이동
+        /// </summary>
+        public async Task<bool> MoveRequestToFolder(SavedRequest request, int? targetFolderId)
+        {
+            try
+            {
+                var result = await _databaseService.MoveRequestToFolderAsync(request.Id, targetFolderId);
+                if (result)
+                {
+                    request.FolderId = targetFolderId;
+                    await BuildTreeView();
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                ModernMessageDialog.ShowError($"이동 중 오류가 발생했습니다: {ex.Message}", "오류");
+                return false;
+            }
+        }
+
+        public async Task RefreshTreeView()
+        {
+            await BuildTreeView();
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private void StartRenaming(TreeViewItemModel item)
+        {
+            foreach (var treeItem in GetAllTreeItems())
+            {
+                if (treeItem.IsEditing)
+                {
+                    treeItem.IsEditing = false;
+                }
+            }
+
+            item.IsEditing = true;
         }
 
         private async Task BuildTreeView()
@@ -261,167 +388,16 @@ namespace MMG.ViewModels.API
             var folderRequests = allRequests.Where(r => r.FolderId == folder.Id).OrderBy(r => r.Name);
             foreach (var request in folderRequests)
             {
-                var requestTreeItem = new TreeViewItemModel
+                var requestItem = new TreeViewItemModel
                 {
                     Name = request.Name,
                     ItemType = TreeViewItemType.Request,
                     Tag = request
                 };
-                treeItem.Children.Add(requestTreeItem);
+                treeItem.Children.Add(requestItem);
             }
 
             return treeItem;
-        }
-
-        private async Task DeleteSpecificItem(TreeViewItemModel? item)
-        {
-            if (item == null) return;
-
-            var result = ModernMessageDialog.ShowConfirm(
-                $"'{item.Name}'을(를) 삭제하시겠습니까?",
-                "삭제 확인");
-
-            if (result != true) return;
-
-            try
-            {
-                bool success = false;
-
-                if (item.ItemType == TreeViewItemType.Folder && item.Tag is Folder folder)
-                {
-                    success = await _databaseService.DeleteFolderAsync(folder.Id);
-                }
-                else if (item.ItemType == TreeViewItemType.Request && item.Tag is SavedRequest request)
-                {
-                    success = await _databaseService.DeleteRequestAsync(request.Id);
-
-                    if (success)
-                    {
-                        NewRequestCreated?.Invoke(this, EventArgs.Empty);
-                    }
-                }
-
-                if (success)
-                {
-                    await BuildTreeView();
-                }
-                else
-                {
-                    ModernMessageDialog.ShowError("삭제에 실패했습니다.", "오류");
-                }
-            }
-            catch (Exception ex)
-            {
-                ModernMessageDialog.ShowError($"삭제 중 오류가 발생했습니다: {ex.Message}", "오류");
-            }
-        }
-
-        private async Task CopyItem(TreeViewItemModel? item)
-        {
-            if (item == null) return;
-
-            try
-            {
-                if (item.ItemType == TreeViewItemType.Request && item.Tag is SavedRequest originalRequest)
-                {
-                    string copyName = GenerateCopyName(originalRequest.Name);
-
-                    var copiedRequest = new SavedRequest
-                    {
-                        Name = copyName,
-                        IpAddress = originalRequest.IpAddress,
-                        Port = originalRequest.Port,
-                        RequestSchemaJson = originalRequest.RequestSchemaJson,
-                        ResponseSchemaJson = originalRequest.ResponseSchemaJson,
-                        FolderId = originalRequest.FolderId
-                    };
-
-                    int newId = await _databaseService.SaveRequestAsync(copiedRequest);
-
-                    if (newId > 0)
-                    {
-                        await BuildTreeView();
-                    }
-                    else
-                    {
-                        ModernMessageDialog.ShowError("복사에 실패했습니다.", "오류");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ModernMessageDialog.ShowError($"복사 중 오류가 발생했습니다: {ex.Message}", "오류");
-            }
-        }
-
-        private string GenerateCopyName(string originalName)
-        {
-            return originalName + " Copy";
-        }
-
-        private void StartRenaming(TreeViewItemModel item)
-        {
-            foreach (var treeItem in GetAllTreeItems())
-            {
-                if (treeItem.IsEditing)
-                {
-                    treeItem.IsEditing = false;
-                }
-            }
-
-            item.IsEditing = true;
-        }
-
-        private async Task SaveRename(TreeViewItemModel item)
-        {
-            if (string.IsNullOrWhiteSpace(item.Name))
-            {
-                ModernMessageDialog.ShowWarning("이름을 입력해주세요.", "알림");
-                return;
-            }
-
-            try
-            {
-                if (item.ItemType == TreeViewItemType.Request && item.Tag is SavedRequest request)
-                {
-                    request.Name = item.Name;
-                    await _databaseService.SaveRequestAsync(request);
-                }
-                else if (item.ItemType == TreeViewItemType.Folder && item.Tag is Folder folder)
-                {
-                    folder.Name = item.Name;
-                    await _databaseService.SaveFolderAsync(folder);
-                }
-
-                item.IsEditing = false;
-                await BuildTreeView();
-            }
-            catch (Exception ex)
-            {
-                ModernMessageDialog.ShowError($"이름 변경 중 오류가 발생했습니다: {ex.Message}", "오류");
-            }
-        }
-
-        private void CancelRename(TreeViewItemModel item)
-        {
-            item.IsEditing = false;
-
-            if (item.Tag is SavedRequest request)
-            {
-                item.Name = request.Name;
-            }
-            else if (item.Tag is Folder folder)
-            {
-                item.Name = folder.Name;
-            }
-        }
-
-        private void RenameSelectedItem()
-        {
-            if (SelectedTreeItem != null && SelectedTreeItem.ItemType == TreeViewItemType.Request)
-            {
-                StartRenaming(SelectedTreeItem);
-            }
         }
 
         private IEnumerable<TreeViewItemModel> GetAllTreeItems()
@@ -445,5 +421,7 @@ namespace MMG.ViewModels.API
             }
             return children;
         }
+
+        #endregion
     }
 }

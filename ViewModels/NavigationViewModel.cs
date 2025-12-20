@@ -1,15 +1,20 @@
-using System.ComponentModel;
-using System.Windows.Input;
 using System.Threading.Tasks;
 using MMG.Models;
 using MMG.ViewModels.Spec;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace MMG.ViewModels
 {
-    public class NavigationViewModel : INotifyPropertyChanged
+    public partial class NavigationViewModel : ObservableObject
     {
-        private string _selectedTab = "API";
-        private object? _currentContent;
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CurrentContent))]
+        private string selectedTab = "API";
+
+        [ObservableProperty]
+        private object? currentContent;
+
         private readonly MainViewModel _mainViewModel;
         private readonly TestsViewModel _testsViewModel;
         private readonly SpecViewModel _specViewModel;
@@ -20,10 +25,6 @@ namespace MMG.ViewModels
             _testsViewModel = new TestsViewModel();
             _specViewModel = new SpecViewModel();
 
-            ApiTabCommand = new RelayCommand(() => SelectedTab = "API");
-            TestsTabCommand = new RelayCommand(() => SelectedTab = "Tests");
-            SpecTabCommand = new RelayCommand(() => SelectedTab = "Spec");
-
             // SpecViewModel 이벤트 연결
             _specViewModel.CreateApiRequestRequested += OnCreateApiRequestRequested;
 
@@ -31,40 +32,29 @@ namespace MMG.ViewModels
             CurrentContent = _mainViewModel;
         }
 
-        public string SelectedTab
+        partial void OnSelectedTabChanged(string value)
         {
-            get => _selectedTab;
-            set
-            {
-                if (_selectedTab != value)
-                {
-                    _selectedTab = value;
-                    OnPropertyChanged();
-                    UpdateCurrentContent();
-                }
-            }
+            UpdateCurrentContent();
         }
 
-        public object? CurrentContent
-        {
-            get => _currentContent;
-            set
-            {
-                if (_currentContent != value)
-                {
-                    _currentContent = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
+        #region Commands
 
-        public ICommand ApiTabCommand { get; }
-        public ICommand TestsTabCommand { get; }
-        public ICommand SpecTabCommand { get; }
+        [RelayCommand]
+        private void ApiTab() => SelectedTab = "API";
+
+        [RelayCommand]
+        private void TestsTab() => SelectedTab = "Tests";
+
+        [RelayCommand]
+        private void SpecTab() => SelectedTab = "Spec";
+
+        #endregion
+
+        #region Private Methods
 
         private void UpdateCurrentContent()
         {
-            CurrentContent = _selectedTab switch
+            CurrentContent = SelectedTab switch
             {
                 "API" => _mainViewModel,
                 "Tests" => _testsViewModel,
@@ -73,7 +63,7 @@ namespace MMG.ViewModels
             };
 
             // Tests 탭으로 전환할 때 자동으로 새로고침
-            if (_selectedTab == "Tests")
+            if (SelectedTab == "Tests")
             {
                 RefreshTestsData();
             }
@@ -105,10 +95,6 @@ namespace MMG.ViewModels
             SelectedTab = "API";
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-        protected virtual void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+        #endregion
     }
 }

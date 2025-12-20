@@ -1,54 +1,37 @@
 using System.ComponentModel;
-using System.Windows.Input;
 using System.Collections.ObjectModel;
 using MMG.Models;
 using MMG.Services;
-using MMG.ViewModels.Base;
 using MMG.ViewModels.Spec;
 using MMG.Core.Utilities;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace MMG.ViewModels.API
 {
     /// <summary>
     /// UDP 응답 관리 ViewModel
     /// </summary>
-    public class ResponseViewModel : ViewModelBase
+    public partial class ResponseViewModel : ObservableObject
     {
-        private ResponseSchema _responseSchema;
-        private UdpResponse? _lastResponse;
-        private string _responseText = "";
+        [ObservableProperty]
+        private ResponseSchema responseSchema;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(ResponseText))]
+        private UdpResponse? lastResponse;
+
+        [ObservableProperty]
+        private string responseText = "";
 
         public ResponseViewModel()
         {
-            _responseSchema = new ResponseSchema();
+            responseSchema = new ResponseSchema();
 
-            InitializeCommands();
             InitializeDefaultFields();
         }
 
         #region Properties
-
-        public ResponseSchema ResponseSchema
-        {
-            get => _responseSchema;
-            set => SetProperty(ref _responseSchema, value);
-        }
-
-        public UdpResponse? LastResponse
-        {
-            get => _lastResponse;
-            set
-            {
-                if (SetProperty(ref _lastResponse, value))
-                    UpdateResponseText();
-            }
-        }
-
-        public string ResponseText
-        {
-            get => _responseText;
-            set => SetProperty(ref _responseText, value);
-        }
 
         public int ResponseHeaderBytes => ByteCalculator.CalculateBytes(ResponseSchema.Headers);
         public int ResponsePayloadBytes => ByteCalculator.CalculateBytes(ResponseSchema.Payload);
@@ -57,27 +40,11 @@ namespace MMG.ViewModels.API
 
         #endregion
 
-        #region Commands
-
-        public ICommand AddResponseHeaderCommand { get; private set; } = null!;
-        public ICommand RemoveResponseHeaderCommand { get; private set; } = null!;
-        public ICommand AddResponsePayloadFieldCommand { get; private set; } = null!;
-        public ICommand RemoveResponsePayloadFieldCommand { get; private set; } = null!;
-        public ICommand ClearAllResponseHeadersCommand { get; private set; } = null!;
-        public ICommand ClearAllResponsePayloadFieldsCommand { get; private set; } = null!;
-
-        #endregion
-
         #region Initialization
 
-        private void InitializeCommands()
+        partial void OnLastResponseChanged(UdpResponse? value)
         {
-            AddResponseHeaderCommand = new RelayCommand<object>(AddResponseHeader);
-            RemoveResponseHeaderCommand = new RelayCommand<DataField>(RemoveResponseHeader);
-            AddResponsePayloadFieldCommand = new RelayCommand<object>(AddResponsePayloadField);
-            RemoveResponsePayloadFieldCommand = new RelayCommand<DataField>(RemoveResponsePayloadField);
-            ClearAllResponseHeadersCommand = new RelayCommand(ClearAllResponseHeaders);
-            ClearAllResponsePayloadFieldsCommand = new RelayCommand(ClearAllResponsePayloadFields);
+            UpdateResponseText();
         }
 
         private void InitializeDefaultFields()
@@ -149,24 +116,29 @@ namespace MMG.ViewModels.API
 
         #endregion
 
-        #region Private Methods
+        #region Commands
 
+        [RelayCommand]
         private void AddResponseHeader(object? selectedIndexObj = null)
         {
             var name = $"ResponseHeader{ResponseSchema.Headers.Count + 1}";
             InsertField(ResponseSchema.Headers, name, DataType.Byte, selectedIndexObj);
         }
 
+        [RelayCommand]
         private void RemoveResponseHeader(DataField? header) => RemoveFieldWithHandler(ResponseSchema.Headers, header);
 
+        [RelayCommand]
         private void AddResponsePayloadField(object? selectedIndexObj = null)
         {
             var name = $"ResponseField{ResponseSchema.Payload.Count + 1}";
             InsertField(ResponseSchema.Payload, name, DataType.Int, selectedIndexObj);
         }
 
+        [RelayCommand]
         private void RemoveResponsePayloadField(DataField? field) => RemoveFieldWithHandler(ResponseSchema.Payload, field);
 
+        [RelayCommand]
         private void ClearAllResponseHeaders()
         {
             if (ConfirmClear("모든 Response Header 필드를 삭제하시겠습니까?"))
@@ -176,6 +148,7 @@ namespace MMG.ViewModels.API
             }
         }
 
+        [RelayCommand]
         private void ClearAllResponsePayloadFields()
         {
             if (ConfirmClear("모든 Response Payload 필드를 삭제하시겠습니까?"))
@@ -184,6 +157,10 @@ namespace MMG.ViewModels.API
                 NotifyBytesChanged();
             }
         }
+
+        #endregion
+
+        #region Private Methods
 
         private void UpdateResponseText()
         {

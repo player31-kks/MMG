@@ -1,14 +1,12 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
-using System.Windows;
-using System.Windows.Input;
 using MMG.Core.Models.Schema;
 using MMG.Core.Services;
 using MMG.Models;
-using MMG.ViewModels.Base;
 using MMG.Views.Common;
 using Microsoft.Win32;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace MMG.ViewModels.Spec
 {
@@ -16,83 +14,49 @@ namespace MMG.ViewModels.Spec
     /// UDP API Spec 관리 ViewModel
     /// YAML 스펙 파일 Import/Export 및 편집 기능 제공
     /// </summary>
-    public class SpecViewModel : ViewModelBase
+    public partial class SpecViewModel : ObservableObject
     {
         private readonly UdpApiSpecParser _specParser;
-        private UdpApiSpec? _currentSpec;
-        private string _currentFilePath = "";
-        private string _specYamlContent = "";
-        private bool _hasUnsavedChanges;
-        private string _statusMessage = "스펙 파일을 불러오거나 새로 만드세요";
-        private ObservableCollection<MessageItem> _messages = new();
-        private MessageItem? _selectedMessage;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HasSpec), nameof(SpecInfo))]
+        private UdpApiSpec? currentSpec;
+
+        [ObservableProperty]
+        private string currentFilePath = "";
+
+        [ObservableProperty]
+        private string specYamlContent = "";
+
+        [ObservableProperty]
+        private bool hasUnsavedChanges;
+
+        [ObservableProperty]
+        private string statusMessage = "스펙 파일을 불러오거나 새로 만드세요";
+
+        [ObservableProperty]
+        private ObservableCollection<MessageItem> messages = new();
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HasSelectedMessage))]
+        private MessageItem? selectedMessage;
 
         public SpecViewModel()
         {
             _specParser = new UdpApiSpecParser();
+        }
 
-            InitializeCommands();
+        partial void OnCurrentSpecChanged(UdpApiSpec? value)
+        {
+            UpdateMessagesCollection();
+        }
+
+        partial void OnSpecYamlContentChanged(string value)
+        {
+            HasUnsavedChanges = true;
         }
 
         #region Properties
-
-        public UdpApiSpec? CurrentSpec
-        {
-            get => _currentSpec;
-            set
-            {
-                if (SetProperty(ref _currentSpec, value))
-                {
-                    UpdateMessagesCollection();
-                    OnPropertyChanged(nameof(HasSpec));
-                    OnPropertyChanged(nameof(SpecInfo));
-                }
-            }
-        }
-
-        public string CurrentFilePath
-        {
-            get => _currentFilePath;
-            set => SetProperty(ref _currentFilePath, value);
-        }
-
-        public string SpecYamlContent
-        {
-            get => _specYamlContent;
-            set
-            {
-                if (SetProperty(ref _specYamlContent, value))
-                    HasUnsavedChanges = true;
-            }
-        }
-
-        public bool HasUnsavedChanges
-        {
-            get => _hasUnsavedChanges;
-            set => SetProperty(ref _hasUnsavedChanges, value);
-        }
-
-        public string StatusMessage
-        {
-            get => _statusMessage;
-            set => SetProperty(ref _statusMessage, value);
-        }
-
-        public ObservableCollection<MessageItem> Messages
-        {
-            get => _messages;
-            set => SetProperty(ref _messages, value);
-        }
-
-        public MessageItem? SelectedMessage
-        {
-            get => _selectedMessage;
-            set
-            {
-                if (SetProperty(ref _selectedMessage, value))
-                    OnPropertyChanged(nameof(HasSelectedMessage));
-            }
-        }
 
         public bool HasSpec => CurrentSpec != null;
         public bool HasSelectedMessage => SelectedMessage != null;
@@ -110,14 +74,31 @@ namespace MMG.ViewModels.Spec
 
         #region Commands
 
-        public ICommand NewSpecCommand { get; private set; } = null!;
-        public ICommand ImportSpecCommand { get; private set; } = null!;
-        public ICommand ExportSpecCommand { get; private set; } = null!;
-        public ICommand SaveSpecCommand { get; private set; } = null!;
-        public ICommand RefreshFromYamlCommand { get; private set; } = null!;
-        public ICommand CreateApiRequestCommand { get; private set; } = null!;
+        [RelayCommand]
+        private void NewSpec() => CreateNewSpecInternal();
 
-        #endregion
+        [RelayCommand]
+        private void ImportSpec() => ImportSpecInternal();
+
+        [RelayCommand(CanExecute = nameof(HasSpec))]
+        private void ExportSpec() => ExportSpecInternal();
+
+        [RelayCommand(CanExecute = nameof(CanSaveSpec))]
+        private void SaveSpec() => SaveSpecInternal();
+
+        private bool CanSaveSpec() => HasSpec && !string.IsNullOrEmpty(CurrentFilePath);
+
+        [RelayCommand(CanExecute = nameof(CanRefreshFromYaml))]
+        private void RefreshFromYaml() => RefreshFromYamlInternal();
+
+        private bool CanRefreshFromYaml() => !string.IsNullOrEmpty(SpecYamlContent);
+
+        [RelayCommand]
+        private void CreateApiRequest(MessageItem? msg)
+        {
+            if (msg != null)
+                CreateApiRequestInternal(msg);
+        }
 
         #region Events
 
@@ -128,23 +109,9 @@ namespace MMG.ViewModels.Spec
 
         #endregion
 
-        #region Initialization
-
-        private void InitializeCommands()
-        {
-            NewSpecCommand = new RelayCommand(CreateNewSpec);
-            ImportSpecCommand = new RelayCommand(ImportSpec);
-            ExportSpecCommand = new RelayCommand(ExportSpec, () => HasSpec);
-            SaveSpecCommand = new RelayCommand(SaveSpec, () => HasSpec && !string.IsNullOrEmpty(CurrentFilePath));
-            RefreshFromYamlCommand = new RelayCommand(RefreshFromYaml, () => !string.IsNullOrEmpty(SpecYamlContent));
-            CreateApiRequestCommand = new RelayCommand<MessageItem>(CreateApiRequest, msg => msg != null);
-        }
-
-        #endregion
-
         #region Command Methods
 
-        private void CreateNewSpec()
+        private void CreateNewSpecInternal()
         {
             if (HasUnsavedChanges && !ConfirmDiscardChanges()) return;
 
@@ -155,7 +122,7 @@ namespace MMG.ViewModels.Spec
             StatusMessage = "새 스펙이 생성되었습니다";
         }
 
-        private void ImportSpec()
+        private void ImportSpecInternal()
         {
             if (HasUnsavedChanges && !ConfirmDiscardChanges()) return;
 
@@ -185,7 +152,7 @@ namespace MMG.ViewModels.Spec
             }
         }
 
-        private void ExportSpec()
+        private void ExportSpecInternal()
         {
             if (CurrentSpec == null) return;
 
@@ -216,11 +183,11 @@ namespace MMG.ViewModels.Spec
             }
         }
 
-        private void SaveSpec()
+        private void SaveSpecInternal()
         {
             if (string.IsNullOrEmpty(CurrentFilePath))
             {
-                ExportSpec();
+                ExportSpecInternal();
                 return;
             }
 
@@ -237,7 +204,7 @@ namespace MMG.ViewModels.Spec
             }
         }
 
-        private void RefreshFromYaml()
+        private void RefreshFromYamlInternal()
         {
             try
             {
@@ -252,7 +219,7 @@ namespace MMG.ViewModels.Spec
             }
         }
 
-        private void CreateApiRequest(MessageItem? messageItem)
+        private void CreateApiRequestInternal(MessageItem? messageItem)
         {
             if (messageItem?.Definition == null) return;
 
@@ -441,6 +408,8 @@ namespace MMG.ViewModels.Spec
                 "저장하지 않은 변경사항이 있습니다. 계속하시겠습니까?",
                 "확인") == true;
         }
+
+        #endregion
 
         #endregion
     }

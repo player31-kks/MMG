@@ -149,7 +149,7 @@ namespace MMG.ViewModels
 
             TreeViewViewModel.NewRequestCreated += (sender, e) =>
             {
-                SavedRequestsViewModel.CreateNewRequest();
+                SavedRequestsViewModel.NewRequest();
             };
 
             SavedRequestsViewModel.SaveRequested += (sender, args) =>
@@ -191,8 +191,8 @@ namespace MMG.ViewModels
 
         // 레거시 호환성을 위한 Command들
         public ICommand SendCommand => RequestViewModel.SendCommand;
-        public ICommand SaveCommand => SavedRequestsViewModel.SaveCommand;
-        public ICommand RefreshCommand => SavedRequestsViewModel.RefreshCommand;
+        public ICommand SaveCommand => SavedRequestsViewModel.SaveRequestCommand;
+        public ICommand RefreshCommand => SavedRequestsViewModel.LoadSavedRequestsCommand;
         public ICommand LoadSelectedCommand => SavedRequestsViewModel.LoadSelectedCommand;
         public ICommand LoadSelectedRequestCommand => TreeViewViewModel.LoadSelectedRequestCommand;
         public ICommand DeleteSelectedCommand => TreeViewViewModel.DeleteSelectedCommand;

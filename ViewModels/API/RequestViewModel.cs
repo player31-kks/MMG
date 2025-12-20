@@ -1,70 +1,42 @@
 using System.ComponentModel;
-using System.Windows.Input;
 using System.Collections.ObjectModel;
 using MMG.Models;
 using MMG.Services;
-using MMG.ViewModels.Base;
 using MMG.ViewModels.Spec;
 using MMG.Core.Utilities;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace MMG.ViewModels.API
 {
     /// <summary>
     /// UDP 요청 관리 ViewModel
     /// </summary>
-    public class RequestViewModel : ViewModelBase
+    public partial class RequestViewModel : ObservableObject
     {
         private readonly UdpClientService _udpClientService;
-        private UdpRequest _currentRequest;
-        private bool _isSending;
+
+        [ObservableProperty]
+        private UdpRequest currentRequest;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(SendCommand))]
+        private bool isSending;
 
         public RequestViewModel()
         {
             _udpClientService = new UdpClientService();
-            _currentRequest = new UdpRequest();
+            currentRequest = new UdpRequest();
 
-            InitializeCommands();
             InitializeDefaultFields();
         }
 
         #region Properties
 
-        public UdpRequest CurrentRequest
-        {
-            get => _currentRequest;
-            set
-            {
-                if (SetProperty(ref _currentRequest, value))
-                    NotifyBytesChanged();
-            }
-        }
-
-        public bool IsSending
-        {
-            get => _isSending;
-            set
-            {
-                if (SetProperty(ref _isSending, value))
-                    ((RelayCommand)SendCommand).RaiseCanExecuteChanged();
-            }
-        }
-
         public int HeaderBytes => ByteCalculator.CalculateBytes(CurrentRequest.Headers);
         public int PayloadBytes => ByteCalculator.CalculateBytes(CurrentRequest.Payload);
         public string HeaderBytesText => ByteCalculator.FormatBytesText(HeaderBytes);
         public string PayloadBytesText => ByteCalculator.FormatBytesText(PayloadBytes);
-
-        #endregion
-
-        #region Commands
-
-        public ICommand SendCommand { get; private set; } = null!;
-        public ICommand AddHeaderCommand { get; private set; } = null!;
-        public ICommand RemoveHeaderCommand { get; private set; } = null!;
-        public ICommand AddPayloadFieldCommand { get; private set; } = null!;
-        public ICommand RemovePayloadFieldCommand { get; private set; } = null!;
-        public ICommand ClearAllHeadersCommand { get; private set; } = null!;
-        public ICommand ClearAllPayloadFieldsCommand { get; private set; } = null!;
 
         #endregion
 
@@ -77,15 +49,9 @@ namespace MMG.ViewModels.API
 
         #region Initialization
 
-        private void InitializeCommands()
+        partial void OnCurrentRequestChanged(UdpRequest value)
         {
-            SendCommand = new RelayCommand(async () => await SendRequest(), () => !IsSending);
-            AddHeaderCommand = new RelayCommand<object>(AddHeader);
-            RemoveHeaderCommand = new RelayCommand<DataField>(RemoveHeader);
-            AddPayloadFieldCommand = new RelayCommand<object>(AddPayloadField);
-            RemovePayloadFieldCommand = new RelayCommand<DataField>(RemovePayloadField);
-            ClearAllHeadersCommand = new RelayCommand(ClearAllHeaders);
-            ClearAllPayloadFieldsCommand = new RelayCommand(ClearAllPayloadFields);
+            NotifyBytesChanged();
         }
 
         private void InitializeDefaultFields()
@@ -160,7 +126,8 @@ namespace MMG.ViewModels.API
 
         #region Private Methods
 
-        private async Task SendRequest()
+        [RelayCommand(CanExecute = nameof(CanSend))]
+        private async Task Send()
         {
             IsSending = true;
             try
@@ -180,22 +147,29 @@ namespace MMG.ViewModels.API
             }
         }
 
+        private bool CanSend() => !IsSending;
+
+        [RelayCommand]
         private void AddHeader(object? selectedIndexObj = null)
         {
             var name = $"Header{CurrentRequest.Headers.Count + 1}";
             InsertField(CurrentRequest.Headers, name, DataType.Byte, "0", selectedIndexObj);
         }
 
+        [RelayCommand]
         private void RemoveHeader(DataField? header) => RemoveFieldWithHandler(CurrentRequest.Headers, header);
 
+        [RelayCommand]
         private void AddPayloadField(object? selectedIndexObj = null)
         {
             var name = $"Field{CurrentRequest.Payload.Count + 1}";
             InsertField(CurrentRequest.Payload, name, DataType.Int, "0", selectedIndexObj);
         }
 
+        [RelayCommand]
         private void RemovePayloadField(DataField? field) => RemoveFieldWithHandler(CurrentRequest.Payload, field);
 
+        [RelayCommand]
         private void ClearAllHeaders()
         {
             if (ConfirmClear("모든 Header 필드를 삭제하시겠습니까?"))
@@ -205,6 +179,7 @@ namespace MMG.ViewModels.API
             }
         }
 
+        [RelayCommand]
         private void ClearAllPayloadFields()
         {
             if (ConfirmClear("모든 Payload 필드를 삭제하시겠습니까?"))

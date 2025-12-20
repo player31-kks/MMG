@@ -1,73 +1,51 @@
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Windows;
-using System.Windows.Input;
 using MMG.Core.Models.Schema;
 using MMG.Core.Services;
-using MMG.ViewModels.Base;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace MMG.ViewModels.Spec
 {
     /// <summary>
     /// ReDoc 스타일 문서 뷰어 ViewModel
     /// </summary>
-    public class DocViewerViewModel : ViewModelBase
+    public partial class DocViewerViewModel : ObservableObject
     {
         private readonly UdpApiSpecParser _specParser;
-        private UdpApiSpec? _currentSpec;
-        private string _htmlContent = "";
-        private string _selectedMessageId = "";
-        private ObservableCollection<DocMenuItem> _menuItems = new();
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HtmlContent), nameof(MenuItems))]
+        private UdpApiSpec? currentSpec;
+
+        [ObservableProperty]
+        private string htmlContent = "";
+
+        [ObservableProperty]
+        private string selectedMessageId = "";
+
+        [ObservableProperty]
+        private ObservableCollection<DocMenuItem> menuItems = new();
 
         public DocViewerViewModel()
         {
             _specParser = new UdpApiSpecParser();
-
-            RefreshDocCommand = new RelayCommand(RefreshDocumentation);
         }
 
-        #region Properties
-
-        public UdpApiSpec? CurrentSpec
+        partial void OnCurrentSpecChanged(UdpApiSpec? value)
         {
-            get => _currentSpec;
-            set
-            {
-                if (SetProperty(ref _currentSpec, value))
-                {
-                    GenerateDocumentation();
-                    UpdateMenuItems();
-                }
-            }
+            GenerateDocumentation();
+            UpdateMenuItems();
         }
 
-        public string HtmlContent
+        partial void OnSelectedMessageIdChanged(string value)
         {
-            get => _htmlContent;
-            set => SetProperty(ref _htmlContent, value);
+            ScrollToMessage(value);
         }
-
-        public string SelectedMessageId
-        {
-            get => _selectedMessageId;
-            set
-            {
-                if (SetProperty(ref _selectedMessageId, value))
-                    ScrollToMessage(value);
-            }
-        }
-
-        public ObservableCollection<DocMenuItem> MenuItems
-        {
-            get => _menuItems;
-            set => SetProperty(ref _menuItems, value);
-        }
-
-        #endregion
 
         #region Commands
 
-        public ICommand RefreshDocCommand { get; }
+        [RelayCommand]
+        private void RefreshDoc() => GenerateDocumentation();
 
         #endregion
 
@@ -94,11 +72,6 @@ namespace MMG.ViewModels.Spec
         #endregion
 
         #region Private Methods
-
-        private void RefreshDocumentation()
-        {
-            GenerateDocumentation();
-        }
 
         private void GenerateDocumentation()
         {

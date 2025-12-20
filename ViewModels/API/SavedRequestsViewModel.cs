@@ -1,88 +1,54 @@
 using System.Collections.ObjectModel;
-using System.Windows.Input;
 using MMG.Models;
 using MMG.Services;
 using MMG.Views.Common;
-using MMG.ViewModels.Base;
 using MMG.ViewModels.Spec;
 using System.Windows;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace MMG.ViewModels.API
 {
-    public class SavedRequestsViewModel : ViewModelBase
+    public partial class SavedRequestsViewModel : ObservableObject
     {
         private readonly DatabaseService _databaseService;
-        private ObservableCollection<SavedRequest> _savedRequests = new();
-        private SavedRequest? _selectedSavedRequest;
-        private SavedRequest? _currentLoadedRequest;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(LoadSelectedCommand), nameof(DeleteSelectedCommand))]
+        private SavedRequest? selectedSavedRequest;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CurrentLoadedRequestName), nameof(CanSave))]
+        private SavedRequest? currentLoadedRequest;
+
+        [ObservableProperty]
+        private ObservableCollection<SavedRequest> savedRequests = new();
 
         public SavedRequestsViewModel()
         {
             _databaseService = new DatabaseService();
-
-            SaveCommand = new RelayCommand(async () => await SaveRequest());
-            RefreshCommand = new RelayCommand(async () => await LoadSavedRequests());
-            LoadSelectedCommand = new RelayCommand(() => LoadSelectedRequest(), () => SelectedSavedRequest != null);
-            DeleteSelectedCommand = new RelayCommand(async () => await DeleteSelectedRequest(), () => SelectedSavedRequest != null);
-            NewRequestCommand = new RelayCommand(() => CreateNewRequest());
-
             _ = LoadSavedRequests();
         }
 
-        public ObservableCollection<SavedRequest> SavedRequests
+        partial void OnSelectedSavedRequestChanged(SavedRequest? value)
         {
-            get => _savedRequests;
-            set
+            // 선택된 요청이 있으면 자동으로 로드
+            if (value != null)
             {
-                _savedRequests = value;
-                OnPropertyChanged(nameof(SavedRequests));
+                LoadSelected();
             }
         }
 
-        public SavedRequest? SelectedSavedRequest
-        {
-            get => _selectedSavedRequest;
-            set
-            {
-                _selectedSavedRequest = value;
-                OnPropertyChanged(nameof(SelectedSavedRequest));
-                ((RelayCommand)LoadSelectedCommand).RaiseCanExecuteChanged();
-                ((RelayCommand)DeleteSelectedCommand).RaiseCanExecuteChanged();
-
-                // 선택된 요청이 있으면 자동으로 로드
-                if (_selectedSavedRequest != null)
-                {
-                    LoadSelectedRequest();
-                }
-            }
-        }
-
-        public SavedRequest? CurrentLoadedRequest
-        {
-            get => _currentLoadedRequest;
-            set
-            {
-                _currentLoadedRequest = value;
-                OnPropertyChanged(nameof(CurrentLoadedRequest));
-                OnPropertyChanged(nameof(CurrentLoadedRequestName));
-                OnPropertyChanged(nameof(CanSave));
-                ((RelayCommand)SaveCommand).CanExecute(null);
-            }
-        }
-
-        public string CurrentLoadedRequestName => _currentLoadedRequest?.Name ?? "새 요청";
+        public string CurrentLoadedRequestName => CurrentLoadedRequest?.Name ?? "새 요청";
         public bool CanSave => true; // 항상 저장 가능하도록 설정
-
-        public ICommand SaveCommand { get; }
-        public ICommand RefreshCommand { get; }
-        public ICommand LoadSelectedCommand { get; }
-        public ICommand DeleteSelectedCommand { get; }
-        public ICommand NewRequestCommand { get; }
 
         public event EventHandler<SavedRequest>? RequestLoaded;
         public event EventHandler? NewRequestCreated;
         public event EventHandler<SaveRequestEventArgs>? SaveRequested;
 
+        #region Commands
+
+        [RelayCommand]
         public async Task SaveRequest()
         {
             try
@@ -96,19 +62,19 @@ namespace MMG.ViewModels.API
                     return;
                 }
 
-                if (_currentLoadedRequest != null)
+                if (CurrentLoadedRequest != null)
                 {
                     // 기존 요청 업데이트
-                    _currentLoadedRequest.IpAddress = args.CurrentRequest.IpAddress;
-                    _currentLoadedRequest.Port = args.CurrentRequest.Port;
-                    _currentLoadedRequest.IsBigEndian = args.CurrentRequest.IsBigEndian;
-                    _currentLoadedRequest.RequestSchemaJson = _databaseService.SerializeDataFields(args.CurrentRequest.Headers) +
+                    CurrentLoadedRequest.IpAddress = args.CurrentRequest.IpAddress;
+                    CurrentLoadedRequest.Port = args.CurrentRequest.Port;
+                    CurrentLoadedRequest.IsBigEndian = args.CurrentRequest.IsBigEndian;
+                    CurrentLoadedRequest.RequestSchemaJson = _databaseService.SerializeDataFields(args.CurrentRequest.Headers) +
                                            "|" + _databaseService.SerializeDataFields(args.CurrentRequest.Payload);
-                    _currentLoadedRequest.ResponseSchemaJson = _databaseService.SerializeDataFields(args.ResponseSchema.Headers) +
+                    CurrentLoadedRequest.ResponseSchemaJson = _databaseService.SerializeDataFields(args.ResponseSchema.Headers) +
                                             "|" + _databaseService.SerializeDataFields(args.ResponseSchema.Payload);
 
-                    await _databaseService.SaveRequestAsync(_currentLoadedRequest);
-                    ModernMessageDialog.ShowSuccess($"요청 '{_currentLoadedRequest.Name}'이 업데이트되었습니다.", "저장 완료");
+                    await _databaseService.SaveRequestAsync(CurrentLoadedRequest);
+                    ModernMessageDialog.ShowSuccess($"요청 '{CurrentLoadedRequest.Name}'이 업데이트되었습니다.", "저장 완료");
                 }
                 else
                 {
@@ -144,6 +110,7 @@ namespace MMG.ViewModels.API
             }
         }
 
+        [RelayCommand]
         public async Task LoadSavedRequests()
         {
             try
@@ -156,7 +123,8 @@ namespace MMG.ViewModels.API
             }
         }
 
-        private void LoadSelectedRequest()
+        [RelayCommand(CanExecute = nameof(CanLoadSelected))]
+        private void LoadSelected()
         {
             if (SelectedSavedRequest == null)
                 return;
@@ -172,7 +140,45 @@ namespace MMG.ViewModels.API
             }
         }
 
-        public void CreateNewRequest()
+        private bool CanLoadSelected() => SelectedSavedRequest != null;
+
+        [RelayCommand(CanExecute = nameof(CanDeleteSelected))]
+        private async Task DeleteSelected()
+        {
+            if (SelectedSavedRequest == null)
+                return;
+
+            var result = MessageBox.Show(
+                $"'{SelectedSavedRequest.Name}' 요청을 삭제하시겠습니까?",
+                "삭제 확인",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    await _databaseService.DeleteRequestAsync(SelectedSavedRequest.Id);
+                    await LoadSavedRequests();
+
+                    if (CurrentLoadedRequest?.Id == SelectedSavedRequest.Id)
+                    {
+                        CurrentLoadedRequest = null;
+                        NewRequestCreated?.Invoke(this, EventArgs.Empty);
+                    }
+                    SelectedSavedRequest = null;
+                }
+                catch (Exception ex)
+                {
+                    ModernMessageDialog.ShowError($"요청 삭제 중 오류가 발생했습니다: {ex.Message}", "오류");
+                }
+            }
+        }
+
+        private bool CanDeleteSelected() => SelectedSavedRequest != null;
+
+        [RelayCommand]
+        public void NewRequest()
         {
             try
             {
@@ -185,6 +191,10 @@ namespace MMG.ViewModels.API
                 ModernMessageDialog.ShowError($"새 요청 생성 중 오류가 발생했습니다: {ex.Message}", "오류");
             }
         }
+
+        #endregion
+
+        #region Public Methods
 
         /// <summary>
         /// Spec에서 새 요청을 생성하고 저장
@@ -227,36 +237,7 @@ namespace MMG.ViewModels.API
             }
         }
 
-        private async Task DeleteSelectedRequest()
-        {
-            if (SelectedSavedRequest == null)
-                return;
-
-            var result = ModernMessageDialog.ShowConfirm($"'{SelectedSavedRequest.Name}' 요청을 삭제하시겠습니까?",
-                                       "삭제 확인");
-
-            if (result == true)
-            {
-                try
-                {
-                    bool isCurrentlyLoaded = _currentLoadedRequest?.Id == SelectedSavedRequest.Id;
-
-                    await _databaseService.DeleteRequestAsync(SelectedSavedRequest.Id);
-
-                    if (isCurrentlyLoaded)
-                    {
-                        CreateNewRequest();
-                    }
-
-                    await LoadSavedRequests();
-                    SelectedSavedRequest = null;
-                }
-                catch (Exception ex)
-                {
-                    ModernMessageDialog.ShowError($"삭제 중 오류가 발생했습니다: {ex.Message}", "오류");
-                }
-            }
-        }
+        #endregion
     }
 
     public class SaveRequestEventArgs : EventArgs

@@ -1,34 +1,58 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Windows.Input;
-using System.Threading.Tasks;
-using System.Linq;
 using MMG.Models;
 using MMG.Services;
 using System.Windows;
 using MMG.Views.Common;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace MMG.ViewModels
 {
-    public class TestsViewModel : INotifyPropertyChanged
+    public partial class TestsViewModel : ObservableObject
     {
         private readonly TestDatabaseService _testDatabaseService;
         private readonly TestExecutionService _testExecutionService;
         private readonly DatabaseService _databaseService;
 
-        private ObservableCollection<TestScenario> _scenarios = new();
-        private TestScenario? _selectedScenario;
-        private ObservableCollection<TestStep> _currentSteps = new();
-        private TestStep? _selectedStep;
-        private ObservableCollection<SavedRequest> _savedRequests = new();
-        private ObservableCollection<ReceivedDataItem> _receivedDataItems = new();
-        private ObservableCollection<TestLogItem> _logItems = new();
+        [ObservableProperty]
+        private ObservableCollection<TestScenario> scenarios = new();
 
-        private bool _isTestRunning = false;
-        private string _testProgress = "";
-        private int _progressPercentage = 0;
-        private bool _isStopping = false;
-        private bool _autoScrollLog = true;
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(RunScenarioCommand), nameof(AddStepCommand), nameof(AddTestStepCommand), nameof(RunSelectedScenarioCommand))]
+        private TestScenario? selectedScenario;
+
+        [ObservableProperty]
+        private ObservableCollection<TestStep> currentSteps = new();
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(DeleteStepCommand), nameof(SaveStepCommand))]
+        private TestStep? selectedStep;
+
+        [ObservableProperty]
+        private ObservableCollection<SavedRequest> savedRequests = new();
+
+        [ObservableProperty]
+        private ObservableCollection<ReceivedDataItem> receivedDataItems = new();
+
+        [ObservableProperty]
+        private ObservableCollection<TestLogItem> logItems = new();
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(DeleteScenarioCommand), nameof(RunScenarioCommand), nameof(StopTestCommand), nameof(AddStepCommand), nameof(DeleteStepCommand), nameof(SaveStepCommand), nameof(AddTestStepCommand), nameof(RunSelectedScenarioCommand), nameof(RunTestStepCommand), nameof(DeleteTestStepCommand))]
+        private bool isTestRunning = false;
+
+        [ObservableProperty]
+        private string testProgress = "";
+
+        [ObservableProperty]
+        private int progressPercentage = 0;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(DeleteScenarioCommand), nameof(RunScenarioCommand), nameof(StopTestCommand), nameof(AddStepCommand), nameof(DeleteStepCommand), nameof(SaveStepCommand), nameof(AddTestStepCommand), nameof(RunSelectedScenarioCommand), nameof(RunTestStepCommand), nameof(DeleteTestStepCommand))]
+        private bool isStopping = false;
+
+        [ObservableProperty]
+        private bool autoScrollLog = true;
 
         public TestsViewModel()
         {
@@ -45,198 +69,16 @@ namespace MMG.ViewModels
             _testExecutionService.DataReceived += OnDataReceived;
             _testExecutionService.LogAdded += OnLogAdded;
 
-            // Commands
-            OpenCreateScenarioDialogCommand = new RelayCommand(() => OpenCreateScenarioDialog());
-            DeleteScenarioCommand = new RelayCommand<TestScenario>(async (scenario) =>
-            {
-                if (scenario != null) await DeleteScenario(scenario);
-            }, (scenario) => scenario != null && !IsTestRunning && !IsStopping);
-            RunScenarioCommand = new RelayCommand(async () => await RunScenario(), () => SelectedScenario != null && !IsTestRunning && !IsStopping);
-            StopTestCommand = new RelayCommand(async () => await StopTest(), () => IsTestRunning && !IsStopping);
-            AddStepCommand = new RelayCommand(async () => await AddStep(), () => SelectedScenario != null && !IsTestRunning && !IsStopping);
-            DeleteStepCommand = new RelayCommand(async () => await DeleteStep(), () => SelectedStep != null && !IsTestRunning && !IsStopping);
-            SaveStepCommand = new RelayCommand(async () => await SaveStep(), () => SelectedStep != null && !IsTestRunning && !IsStopping);
-            RefreshScenariosCommand = new RelayCommand(async () => await RefreshAll());
-            RenameScenarioCommand = new RelayCommand<TestScenario>((scenario) => StartRenaming(scenario));
-            SaveScenarioRenameCommand = new RelayCommand<TestScenario>(async (scenario) => await SaveRename(scenario));
-            CancelScenarioRenameCommand = new RelayCommand<TestScenario>((scenario) => CancelRename(scenario));
-
-            // 새로 추가된 Command들
-            AddTestStepCommand = new RelayCommand(async () => await AddStep(), () => SelectedScenario != null && !IsTestRunning && !IsStopping);
-            RunSelectedScenarioCommand = new RelayCommand(async () => await RunScenario(), () => SelectedScenario != null && !IsTestRunning && !IsStopping);
-            RunTestStepCommand = new RelayCommand<TestStep>(async (step) => { if (step != null) await RunSingleStep(step); }, (step) => step != null && !IsTestRunning && !IsStopping);
-            DeleteTestStepCommand = new RelayCommand<TestStep>(async (step) => { if (step != null) await DeleteSingleStep(step); }, (step) => step != null && !IsTestRunning && !IsStopping);
-            OpenDetailedResultsCommand = new RelayCommand(() => OpenDetailedResults());
-            RefreshResultsCommand = new RelayCommand(async () => await RefreshResults());
-            SelectStepCommand = new RelayCommand<TestStep>((step) => { if (step != null) SelectedStep = step; });
-            ClearLogCommand = new RelayCommand(() => ClearLog());
-
             // Initial data loading
             _ = RefreshAll();
         }
 
+        partial void OnSelectedScenarioChanged(TestScenario? value)
+        {
+            _ = LoadSteps();
+        }
+
         #region Properties
-
-        public ObservableCollection<TestScenario> Scenarios
-        {
-            get => _scenarios;
-            set
-            {
-                if (_scenarios != value)
-                {
-                    _scenarios = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public TestScenario? SelectedScenario
-        {
-            get => _selectedScenario;
-            set
-            {
-                if (_selectedScenario != value)
-                {
-                    _selectedScenario = value;
-                    OnPropertyChanged();
-                    _ = LoadSteps();
-                    CommandManager.InvalidateRequerySuggested();
-                }
-            }
-        }
-
-        public ObservableCollection<TestLogItem> LogItems
-        {
-            get => _logItems;
-            set
-            {
-                if (_logItems != value)
-                {
-                    _logItems = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public bool AutoScrollLog
-        {
-            get => _autoScrollLog;
-            set
-            {
-                if (_autoScrollLog != value)
-                {
-                    _autoScrollLog = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public ObservableCollection<TestStep> CurrentSteps
-        {
-            get => _currentSteps;
-            set
-            {
-                if (_currentSteps != value)
-                {
-                    _currentSteps = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public TestStep? SelectedStep
-        {
-            get => _selectedStep;
-            set
-            {
-                if (_selectedStep != value)
-                {
-                    _selectedStep = value;
-                    OnPropertyChanged();
-                    CommandManager.InvalidateRequerySuggested();
-                }
-            }
-        }
-
-        public ObservableCollection<SavedRequest> SavedRequests
-        {
-            get => _savedRequests;
-            set
-            {
-                if (_savedRequests != value)
-                {
-                    _savedRequests = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public ObservableCollection<ReceivedDataItem> ReceivedDataItems
-        {
-            get => _receivedDataItems;
-            set
-            {
-                if (_receivedDataItems != value)
-                {
-                    _receivedDataItems = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public bool IsTestRunning
-        {
-            get => _isTestRunning;
-            set
-            {
-                if (_isTestRunning != value)
-                {
-                    _isTestRunning = value;
-                    OnPropertyChanged();
-                    CommandManager.InvalidateRequerySuggested();
-                }
-            }
-        }
-
-        public string TestProgress
-        {
-            get => _testProgress;
-            set
-            {
-                if (_testProgress != value)
-                {
-                    _testProgress = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public int ProgressPercentage
-        {
-            get => _progressPercentage;
-            set
-            {
-                if (_progressPercentage != value)
-                {
-                    _progressPercentage = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public bool IsStopping
-        {
-            get => _isStopping;
-            set
-            {
-                if (_isStopping != value)
-                {
-                    _isStopping = value;
-                    OnPropertyChanged();
-                    CommandManager.InvalidateRequerySuggested();
-                }
-            }
-        }
 
         // 테스트 결과 관련 속성들
         public int TotalScenarios => Scenarios?.Count ?? 0;
@@ -250,27 +92,106 @@ namespace MMG.ViewModels
 
         #region Commands
 
-        public ICommand OpenCreateScenarioDialogCommand { get; }
-        public ICommand DeleteScenarioCommand { get; }
-        public ICommand RunScenarioCommand { get; }
-        public ICommand StopTestCommand { get; }
-        public ICommand AddStepCommand { get; }
-        public ICommand DeleteStepCommand { get; }
-        public ICommand SaveStepCommand { get; }
-        public ICommand RefreshScenariosCommand { get; }
-        public ICommand RenameScenarioCommand { get; }
-        public ICommand SaveScenarioRenameCommand { get; }
-        public ICommand CancelScenarioRenameCommand { get; }
+        [RelayCommand]
+        private void OpenCreateScenarioDialog() => OpenCreateScenarioDialogInternal();
 
-        // 새로 추가된 Command들
-        public ICommand AddTestStepCommand { get; }
-        public ICommand RunSelectedScenarioCommand { get; }
-        public ICommand RunTestStepCommand { get; }
-        public ICommand DeleteTestStepCommand { get; }
-        public ICommand OpenDetailedResultsCommand { get; }
-        public ICommand RefreshResultsCommand { get; }
-        public ICommand SelectStepCommand { get; }
-        public ICommand ClearLogCommand { get; }
+        [RelayCommand(CanExecute = nameof(CanDeleteScenario))]
+        private async Task DeleteScenario(TestScenario? scenario)
+        {
+            if (scenario != null)
+                await DeleteScenarioInternal(scenario);
+        }
+
+        private bool CanDeleteScenario(TestScenario? scenario) => scenario != null && !IsTestRunning && !IsStopping;
+
+        [RelayCommand(CanExecute = nameof(CanRunScenario))]
+        private async Task RunScenario() => await RunScenarioInternal();
+
+        private bool CanRunScenario() => SelectedScenario != null && !IsTestRunning && !IsStopping;
+
+        [RelayCommand(CanExecute = nameof(CanStopTest))]
+        private async Task StopTest() => await StopTestInternal();
+
+        private bool CanStopTest() => IsTestRunning && !IsStopping;
+
+        [RelayCommand(CanExecute = nameof(CanAddStep))]
+        private async Task AddStep() => await AddStepInternal();
+
+        private bool CanAddStep() => SelectedScenario != null && !IsTestRunning && !IsStopping;
+
+        [RelayCommand(CanExecute = nameof(CanDeleteStep))]
+        private async Task DeleteStep() => await DeleteStepInternal();
+
+        private bool CanDeleteStep() => SelectedStep != null && !IsTestRunning && !IsStopping;
+
+        [RelayCommand(CanExecute = nameof(CanSaveStep))]
+        private async Task SaveStep() => await SaveStepInternal();
+
+        private bool CanSaveStep() => SelectedStep != null && !IsTestRunning && !IsStopping;
+
+        [RelayCommand]
+        private async Task RefreshScenarios() => await RefreshAll();
+
+        [RelayCommand]
+        private void RenameScenario(TestScenario? scenario)
+        {
+            if (scenario != null)
+                StartRenaming(scenario);
+        }
+
+        [RelayCommand]
+        private async Task SaveScenarioRename(TestScenario? scenario)
+        {
+            if (scenario != null)
+                await SaveRename(scenario);
+        }
+
+        [RelayCommand]
+        private void CancelScenarioRename(TestScenario? scenario)
+        {
+            if (scenario != null)
+                CancelRename(scenario);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanAddStep))]
+        private async Task AddTestStep() => await AddStepInternal();
+
+        [RelayCommand(CanExecute = nameof(CanRunScenario))]
+        private async Task RunSelectedScenario() => await RunScenarioInternal();
+
+        [RelayCommand(CanExecute = nameof(CanRunTestStep))]
+        private async Task RunTestStep(TestStep? step)
+        {
+            if (step != null)
+                await RunSingleStep(step);
+        }
+
+        private bool CanRunTestStep(TestStep? step) => step != null && !IsTestRunning && !IsStopping;
+
+        [RelayCommand(CanExecute = nameof(CanDeleteTestStep))]
+        private async Task DeleteTestStep(TestStep? step)
+        {
+            if (step != null)
+                await DeleteSingleStep(step);
+        }
+
+        private bool CanDeleteTestStep(TestStep? step) => step != null && !IsTestRunning && !IsStopping;
+
+        [RelayCommand]
+        private void OpenDetailedResults() => OpenDetailedResultsInternal();
+
+        [RelayCommand]
+        private async Task RefreshResults() => await RefreshResultsInternal();
+
+        [RelayCommand]
+        private void SelectStep(TestStep? step)
+        {
+            if (step != null)
+                SelectedStep = step;
+        }
+
+        [RelayCommand]
+        private void ClearLog() => ClearLogInternal();
 
         #endregion
 
@@ -336,9 +257,6 @@ namespace MMG.ViewModels
                 {
                     CurrentSteps.Add(step);
                 }
-
-                // Command 상태 업데이트
-                CommandManager.InvalidateRequerySuggested();
             }
             catch (System.Exception ex)
             {
@@ -346,7 +264,7 @@ namespace MMG.ViewModels
             }
         }
 
-        private void OpenCreateScenarioDialog()
+        private void OpenCreateScenarioDialogInternal()
         {
             var dialog = new CreateScenarioDialog();
             if (dialog.ShowDialog() == true)
@@ -381,13 +299,7 @@ namespace MMG.ViewModels
             }
         }
 
-        private async Task DeleteScenario()
-        {
-            if (SelectedScenario == null) return;
-            await DeleteScenario(SelectedScenario);
-        }
-
-        private async Task DeleteScenario(TestScenario scenario)
+        private async Task DeleteScenarioInternal(TestScenario scenario)
         {
             if (scenario == null) return;
 
@@ -413,7 +325,7 @@ namespace MMG.ViewModels
             }
         }
 
-        private async Task RunScenario()
+        private async Task RunScenarioInternal()
         {
             if (SelectedScenario == null) return;
 
@@ -447,7 +359,7 @@ namespace MMG.ViewModels
             }
         }
 
-        private async Task StopTest()
+        private async Task StopTestInternal()
         {
             if (!IsTestRunning || IsStopping) return;
 
@@ -468,7 +380,7 @@ namespace MMG.ViewModels
             TestProgress = "테스트가 중지되었습니다.";
         }
 
-        private async Task AddStep()
+        private async Task AddStepInternal()
         {
             if (SelectedScenario == null) return;
 
@@ -494,7 +406,7 @@ namespace MMG.ViewModels
             }
         }
 
-        private async Task SaveStep()
+        private async Task SaveStepInternal()
         {
             if (SelectedStep == null) return;
 
@@ -523,7 +435,7 @@ namespace MMG.ViewModels
             }
         }
 
-        private async Task DeleteStep()
+        private async Task DeleteStepInternal()
         {
             if (SelectedStep == null) return;
 
@@ -547,9 +459,6 @@ namespace MMG.ViewModels
 
                 // 선택 해제
                 SelectedStep = null;
-
-                // Command의 CanExecute 상태 업데이트
-                CommandManager.InvalidateRequerySuggested();
             }
             catch (System.Exception ex)
             {
@@ -687,7 +596,7 @@ namespace MMG.ViewModels
             });
         }
 
-        private void ClearLog()
+        private void ClearLogInternal()
         {
             LogItems.Clear();
         }
@@ -759,7 +668,7 @@ namespace MMG.ViewModels
             {
                 // 기존 DeleteStep 로직 사용
                 SelectedStep = step;
-                await DeleteStep();
+                await DeleteStepInternal();
             }
             catch (Exception ex)
             {
@@ -767,13 +676,13 @@ namespace MMG.ViewModels
             }
         }
 
-        private void OpenDetailedResults()
+        private void OpenDetailedResultsInternal()
         {
             // 상세 결과 창 열기 로직
             ModernMessageDialog.ShowInfo("상세 결과 창을 구현해야 합니다.", "정보");
         }
 
-        private Task RefreshResults()
+        private Task RefreshResultsInternal()
         {
             try
             {
@@ -804,11 +713,5 @@ namespace MMG.ViewModels
         }
 
         #endregion
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-        protected virtual void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
     }
 }
