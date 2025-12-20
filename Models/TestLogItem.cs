@@ -1,5 +1,5 @@
 using System;
-using System.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace MMG.Models
 {
@@ -18,27 +18,28 @@ namespace MMG.Models
     /// <summary>
     /// 테스트 실행 로그 아이템
     /// </summary>
-    public class TestLogItem : INotifyPropertyChanged
+    public partial class TestLogItem : ObservableObject
     {
-        private DateTime _timestamp;
-        private LogLevel _level;
-        private string _message = string.Empty;
-        private string _stepName = string.Empty;
-        private string _details = string.Empty;
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(TimestampText))]
+        private DateTime timestamp;
 
-        public DateTime Timestamp
-        {
-            get => _timestamp;
-            set { _timestamp = value; OnPropertyChanged(nameof(Timestamp)); OnPropertyChanged(nameof(TimestampText)); }
-        }
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(LevelText))]
+        [NotifyPropertyChangedFor(nameof(LevelColor))]
+        private LogLevel level;
+
+        [ObservableProperty]
+        private string message = string.Empty;
+
+        [ObservableProperty]
+        private string stepName = string.Empty;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HasDetails))]
+        private string details = string.Empty;
 
         public string TimestampText => Timestamp.ToString("HH:mm:ss.fff");
-
-        public LogLevel Level
-        {
-            get => _level;
-            set { _level = value; OnPropertyChanged(nameof(Level)); OnPropertyChanged(nameof(LevelText)); OnPropertyChanged(nameof(LevelColor)); }
-        }
 
         public string LevelText => Level switch
         {
@@ -60,32 +61,7 @@ namespace MMG.Models
             _ => "#495057"
         };
 
-        public string Message
-        {
-            get => _message;
-            set { _message = value; OnPropertyChanged(nameof(Message)); }
-        }
-
-        public string StepName
-        {
-            get => _stepName;
-            set { _stepName = value; OnPropertyChanged(nameof(StepName)); }
-        }
-
-        public string Details
-        {
-            get => _details;
-            set { _details = value; OnPropertyChanged(nameof(Details)); OnPropertyChanged(nameof(HasDetails)); }
-        }
-
         public bool HasDetails => !string.IsNullOrEmpty(Details);
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
 
         public static TestLogItem Create(LogLevel level, string message, string stepName = "", string details = "")
         {

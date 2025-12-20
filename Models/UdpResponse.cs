@@ -1,32 +1,15 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace MMG.Models
 {
-    public class ResponseSchema : INotifyPropertyChanged
+    public partial class ResponseSchema : ObservableObject
     {
-        private ObservableCollection<DataField> _headers = new();
-        private ObservableCollection<DataField> _payload = new();
+        [ObservableProperty]
+        private ObservableCollection<DataField> headers = new();
 
-        public ObservableCollection<DataField> Headers
-        {
-            get => _headers;
-            set
-            {
-                _headers = value;
-                OnPropertyChanged(nameof(Headers));
-            }
-        }
-
-        public ObservableCollection<DataField> Payload
-        {
-            get => _payload;
-            set
-            {
-                _payload = value;
-                OnPropertyChanged(nameof(Payload));
-            }
-        }
+        [ObservableProperty]
+        private ObservableCollection<DataField> payload = new();
 
         // Backward compatibility - combines Headers and Payload
         public ObservableCollection<DataField> Fields
@@ -40,13 +23,6 @@ namespace MMG.Models
                     combined.Add(payload);
                 return combined;
             }
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 

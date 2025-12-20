@@ -1,105 +1,33 @@
-using System.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 
 namespace MMG.Models
 {
-    public class Folder : INotifyPropertyChanged
+    public partial class Folder : ObservableObject
     {
-        private int _id;
-        private string _name = "";
-        private int? _parentId;
-        private DateTime _createdAt;
-        private DateTime _lastModified;
-        private bool _isExpanded = true;
-        private ObservableCollection<Folder> _subFolders = new();
-        private ObservableCollection<SavedRequest> _requests = new();
+        [ObservableProperty]
+        private int id;
 
-        public int Id
-        {
-            get => _id;
-            set
-            {
-                _id = value;
-                OnPropertyChanged(nameof(Id));
-            }
-        }
+        [ObservableProperty]
+        private string name = "";
 
-        public string Name
-        {
-            get => _name;
-            set
-            {
-                _name = value;
-                OnPropertyChanged(nameof(Name));
-            }
-        }
+        [ObservableProperty]
+        private int? parentId;
 
-        public int? ParentId
-        {
-            get => _parentId;
-            set
-            {
-                _parentId = value;
-                OnPropertyChanged(nameof(ParentId));
-            }
-        }
+        [ObservableProperty]
+        private DateTime createdAt;
 
-        public DateTime CreatedAt
-        {
-            get => _createdAt;
-            set
-            {
-                _createdAt = value;
-                OnPropertyChanged(nameof(CreatedAt));
-            }
-        }
+        [ObservableProperty]
+        private DateTime lastModified;
 
-        public DateTime LastModified
-        {
-            get => _lastModified;
-            set
-            {
-                _lastModified = value;
-                OnPropertyChanged(nameof(LastModified));
-            }
-        }
+        [ObservableProperty]
+        private bool isExpanded = true;
 
-        public bool IsExpanded
-        {
-            get => _isExpanded;
-            set
-            {
-                _isExpanded = value;
-                OnPropertyChanged(nameof(IsExpanded));
-            }
-        }
+        [ObservableProperty]
+        private ObservableCollection<Folder> subFolders = new();
 
-        public ObservableCollection<Folder> SubFolders
-        {
-            get => _subFolders;
-            set
-            {
-                _subFolders = value;
-                OnPropertyChanged(nameof(SubFolders));
-            }
-        }
-
-        public ObservableCollection<SavedRequest> Requests
-        {
-            get => _requests;
-            set
-            {
-                _requests = value;
-                OnPropertyChanged(nameof(Requests));
-            }
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+        [ObservableProperty]
+        private ObservableCollection<SavedRequest> requests = new();
 
         public Folder()
         {

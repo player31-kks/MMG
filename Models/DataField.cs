@@ -1,4 +1,4 @@
-using System.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace MMG.Models
 {
@@ -12,76 +12,43 @@ namespace MMG.Models
         Padding
     }
 
-    public class DataField : INotifyPropertyChanged
+    public partial class DataField : ObservableObject
     {
-        private string _name = "";
-        private DataType _type = DataType.Byte;
-        private string _value = "";
-        private int _paddingSize = 1;
+        [ObservableProperty]
+        private string name = "";
 
-        public string Name
-        {
-            get => _name;
-            set
-            {
-                _name = value;
-                OnPropertyChanged(nameof(Name));
-            }
-        }
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsPadding))]
+        [NotifyPropertyChangedFor(nameof(Value))]
+        private DataType type = DataType.Byte;
 
-        public DataType Type
-        {
-            get => _type;
-            set
-            {
-                if (_type != value)
-                {
-                    _type = value;
-                    OnPropertyChanged(nameof(Type));
-                    OnPropertyChanged(nameof(IsPadding));
-                    OnPropertyChanged(nameof(Value)); // Type 변경 시 Value도 업데이트
-                }
-            }
-        }
+        [ObservableProperty]
+        private string valueString = "";
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(Value))]
+        private int paddingSize = 1;
 
         public string Value
         {
-            get => _type == DataType.Padding ? _paddingSize.ToString() : _value;
+            get => Type == DataType.Padding ? PaddingSize.ToString() : ValueString;
             set
             {
-                if (_type == DataType.Padding)
+                if (Type == DataType.Padding)
                 {
                     if (int.TryParse(value, out int paddingValue))
                     {
-                        _paddingSize = paddingValue;
-                        OnPropertyChanged(nameof(PaddingSize));
+                        PaddingSize = paddingValue;
                     }
                 }
                 else
                 {
-                    _value = value;
+                    ValueString = value;
                 }
                 OnPropertyChanged(nameof(Value));
             }
         }
 
-        public int PaddingSize
-        {
-            get => _paddingSize;
-            set
-            {
-                _paddingSize = value;
-                OnPropertyChanged(nameof(PaddingSize));
-            }
-        }
-
         public bool IsPadding => Type == DataType.Padding;
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
     }
 }

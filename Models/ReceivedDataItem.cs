@@ -1,63 +1,23 @@
 using System;
-using System.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace MMG.Models
 {
-    public class ReceivedDataItem : INotifyPropertyChanged
+    public partial class ReceivedDataItem : ObservableObject
     {
-        private DateTime _timestamp;
-        private string _ipAddress = string.Empty;
-        private int _port;
-        private string _data = string.Empty;
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(TimeString))]
+        private DateTime timestamp;
 
-        public DateTime Timestamp
-        {
-            get => _timestamp;
-            set
-            {
-                _timestamp = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(TimeString));
-            }
-        }
+        [ObservableProperty]
+        private string ipAddress = string.Empty;
 
-        public string IpAddress
-        {
-            get => _ipAddress;
-            set
-            {
-                _ipAddress = value;
-                OnPropertyChanged();
-            }
-        }
+        [ObservableProperty]
+        private int port;
 
-        public int Port
-        {
-            get => _port;
-            set
-            {
-                _port = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string Data
-        {
-            get => _data;
-            set
-            {
-                _data = value;
-                OnPropertyChanged();
-            }
-        }
+        [ObservableProperty]
+        private string data = string.Empty;
 
         public string TimeString => Timestamp.ToString("HH:mm:ss.fff");
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
     }
 }

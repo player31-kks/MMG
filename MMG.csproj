@@ -24,6 +24,10 @@
     <Reference Include="YamlDotNet">
       <HintPath>Libraries\YamlDotNet.dll</HintPath>
     </Reference>
+    <Reference Include="CommunityToolkit.Mvvm">
+      <HintPath>Libraries\CommunityToolkit.Mvvm.dll</HintPath>
+    </Reference>
+      <Analyzer Include="Libraries\CommunityToolkit.Mvvm.SourceGenerators.dll" />
   </ItemGroup>
 
   <ItemGroup>

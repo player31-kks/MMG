@@ -1,74 +1,38 @@
 using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace MMG.Models
 {
-    public class TestScenario : INotifyPropertyChanged
+    public partial class TestScenario : ObservableObject
     {
-        private int _id;
-        private string _name = string.Empty;
-        private string _description = string.Empty;
-        private DateTime _createdAt;
-        private DateTime? _lastRunAt;
-        private bool _isEnabled = true;
-        private bool _isRunning = false;
-        private bool _isEditing = false;
-        private double _progress = 0;
+        [ObservableProperty]
+        private int id;
 
-        public int Id
-        {
-            get => _id;
-            set { _id = value; OnPropertyChanged(nameof(Id)); }
-        }
+        [ObservableProperty]
+        private string name = string.Empty;
 
-        public string Name
-        {
-            get => _name;
-            set { _name = value; OnPropertyChanged(nameof(Name)); }
-        }
+        [ObservableProperty]
+        private string description = string.Empty;
 
-        public string Description
-        {
-            get => _description;
-            set { _description = value; OnPropertyChanged(nameof(Description)); }
-        }
+        [ObservableProperty]
+        private DateTime createdAt;
 
-        public DateTime CreatedAt
-        {
-            get => _createdAt;
-            set { _createdAt = value; OnPropertyChanged(nameof(CreatedAt)); }
-        }
+        [ObservableProperty]
+        private DateTime? lastRunAt;
 
-        public DateTime? LastRunAt
-        {
-            get => _lastRunAt;
-            set { _lastRunAt = value; OnPropertyChanged(nameof(LastRunAt)); }
-        }
+        [ObservableProperty]
+        private bool isEnabled = true;
 
-        public bool IsEnabled
-        {
-            get => _isEnabled;
-            set { _isEnabled = value; OnPropertyChanged(nameof(IsEnabled)); }
-        }
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(StatusText))]
+        private bool isRunning = false;
 
-        public bool IsRunning
-        {
-            get => _isRunning;
-            set { _isRunning = value; OnPropertyChanged(nameof(IsRunning)); OnPropertyChanged(nameof(StatusText)); }
-        }
+        [ObservableProperty]
+        private bool isEditing = false;
 
-        public bool IsEditing
-        {
-            get => _isEditing;
-            set { _isEditing = value; OnPropertyChanged(nameof(IsEditing)); }
-        }
-
-        public double Progress
-        {
-            get => _progress;
-            set { _progress = value; OnPropertyChanged(nameof(Progress)); }
-        }
+        [ObservableProperty]
+        private double progress = 0;
 
         public string StatusText => IsRunning ? "실행중" : "준비됨";
 
@@ -76,12 +40,5 @@ namespace MMG.Models
 
         // 호환성을 위한 별칭
         public ObservableCollection<TestStep> TestSteps => Steps;
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
     }
 }

@@ -1,74 +1,26 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace MMG.Models
 {
-    public class UdpRequest : INotifyPropertyChanged
+    public partial class UdpRequest : ObservableObject
     {
-        private string _ipAddress = "127.0.0.1";
-        private int _port = 8080;
-        private bool _isBigEndian = true;
-        private ObservableCollection<DataField> _headers = new();
-        private ObservableCollection<DataField> _payload = new();
+        [ObservableProperty]
+        private string ipAddress = "127.0.0.1";
 
-        public string IpAddress
-        {
-            get => _ipAddress;
-            set
-            {
-                _ipAddress = value;
-                OnPropertyChanged(nameof(IpAddress));
-            }
-        }
+        [ObservableProperty]
+        private int port = 8080;
 
-        public int Port
-        {
-            get => _port;
-            set
-            {
-                _port = value;
-                OnPropertyChanged(nameof(Port));
-            }
-        }
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(EndianText))]
+        private bool isBigEndian = true;
 
-        public bool IsBigEndian
-        {
-            get => _isBigEndian;
-            set
-            {
-                _isBigEndian = value;
-                OnPropertyChanged(nameof(IsBigEndian));
-                OnPropertyChanged(nameof(EndianText));
-            }
-        }
+        [ObservableProperty]
+        private ObservableCollection<DataField> headers = new();
+
+        [ObservableProperty]
+        private ObservableCollection<DataField> payload = new();
 
         public string EndianText => IsBigEndian ? "Big Endian" : "Little Endian";
-
-        public ObservableCollection<DataField> Headers
-        {
-            get => _headers;
-            set
-            {
-                _headers = value;
-                OnPropertyChanged(nameof(Headers));
-            }
-        }
-
-        public ObservableCollection<DataField> Payload
-        {
-            get => _payload;
-            set
-            {
-                _payload = value;
-                OnPropertyChanged(nameof(Payload));
-            }
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
     }
 }

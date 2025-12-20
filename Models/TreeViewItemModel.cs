@@ -1,4 +1,4 @@
-using System.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 
 namespace MMG.Models
@@ -9,91 +9,27 @@ namespace MMG.Models
         Request
     }
 
-    public class TreeViewItemModel : INotifyPropertyChanged
+    public partial class TreeViewItemModel : ObservableObject
     {
-        private string _name = "";
-        private TreeViewItemType _itemType;
-        private bool _isExpanded = true;
-        private bool _isSelected;
-        private bool _isEditing;
-        private ObservableCollection<TreeViewItemModel> _children = new();
-        private object? _tag; // Folder 또는 SavedRequest 객체 저장
+        [ObservableProperty]
+        private string name = "";
 
-        public string Name
-        {
-            get => _name;
-            set
-            {
-                _name = value;
-                OnPropertyChanged(nameof(Name));
-            }
-        }
+        [ObservableProperty]
+        private TreeViewItemType itemType;
 
-        public TreeViewItemType ItemType
-        {
-            get => _itemType;
-            set
-            {
-                _itemType = value;
-                OnPropertyChanged(nameof(ItemType));
-            }
-        }
+        [ObservableProperty]
+        private bool isExpanded = true;
 
-        public bool IsExpanded
-        {
-            get => _isExpanded;
-            set
-            {
-                _isExpanded = value;
-                OnPropertyChanged(nameof(IsExpanded));
-            }
-        }
+        [ObservableProperty]
+        private bool isSelected;
 
-        public bool IsSelected
-        {
-            get => _isSelected;
-            set
-            {
-                _isSelected = value;
-                OnPropertyChanged(nameof(IsSelected));
-            }
-        }
+        [ObservableProperty]
+        private bool isEditing;
 
-        public bool IsEditing
-        {
-            get => _isEditing;
-            set
-            {
-                _isEditing = value;
-                OnPropertyChanged(nameof(IsEditing));
-            }
-        }
+        [ObservableProperty]
+        private ObservableCollection<TreeViewItemModel> children = new();
 
-        public ObservableCollection<TreeViewItemModel> Children
-        {
-            get => _children;
-            set
-            {
-                _children = value;
-                OnPropertyChanged(nameof(Children));
-            }
-        }
-
-        public object? Tag
-        {
-            get => _tag;
-            set
-            {
-                _tag = value;
-                OnPropertyChanged(nameof(Tag));
-            }
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+        [ObservableProperty]
+        private object? tag; // Folder 또는 SavedRequest 객체 저장
     }
 }
