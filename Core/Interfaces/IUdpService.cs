@@ -23,9 +23,9 @@ namespace MMG.Core.Interfaces
     /// </summary>
     public class UdpDataReceivedEventArgs : EventArgs
     {
-        public required string RemoteAddress { get; init; }
-        public required int RemotePort { get; init; }
-        public required byte[] Data { get; init; }
+        public string RemoteAddress { get; init; }
+        public int RemotePort { get; init; }
+        public byte[] Data { get; init; }
         public DateTime Timestamp { get; init; } = DateTime.Now;
     }
 }

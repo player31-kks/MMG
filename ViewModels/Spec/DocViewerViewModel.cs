@@ -26,9 +26,9 @@ namespace MMG.ViewModels.Spec
         [ObservableProperty]
         private ObservableCollection<DocMenuItem> menuItems = new();
 
-        public DocViewerViewModel()
+        public DocViewerViewModel(UdpApiSpecParser specParser)
         {
-            _specParser = new UdpApiSpecParser();
+            _specParser = specParser;
         }
 
         partial void OnCurrentSpecChanged(UdpApiSpec? value)

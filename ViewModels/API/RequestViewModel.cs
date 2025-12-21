@@ -23,9 +23,9 @@ namespace MMG.ViewModels.API
         [NotifyCanExecuteChangedFor(nameof(SendCommand))]
         private bool isSending;
 
-        public RequestViewModel()
+        public RequestViewModel(UdpClientService udpClientService)
         {
-            _udpClientService = new UdpClientService();
+            _udpClientService = udpClientService;
             currentRequest = new UdpRequest();
 
             InitializeDefaultFields();

@@ -24,9 +24,9 @@ namespace MMG.ViewModels.API
         [ObservableProperty]
         private ObservableCollection<SavedRequest> savedRequests = new();
 
-        public SavedRequestsViewModel()
+        public SavedRequestsViewModel(DatabaseService databaseService)
         {
-            _databaseService = new DatabaseService();
+            _databaseService = databaseService;
             _ = LoadSavedRequests();
         }
 

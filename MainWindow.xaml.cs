@@ -10,6 +10,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using MMG.ViewModels;
 using MMG.Views.Common;
+using CommunityToolkit.Mvvm.DependencyInjection;
 
 namespace MMG
 {
@@ -21,7 +22,7 @@ namespace MMG
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new NavigationViewModel();
+            DataContext = Ioc.Default.GetService<NavigationViewModel>();
         }
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)

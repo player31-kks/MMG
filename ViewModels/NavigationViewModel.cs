@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-using MMG.Models;
 using MMG.ViewModels.Spec;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -19,11 +17,14 @@ namespace MMG.ViewModels
         private readonly TestsViewModel _testsViewModel;
         private readonly SpecViewModel _specViewModel;
 
-        public NavigationViewModel()
+        public NavigationViewModel(
+            MainViewModel mainViewModel,
+            TestsViewModel testsViewModel,
+            SpecViewModel specViewModel)
         {
-            _mainViewModel = new MainViewModel();
-            _testsViewModel = new TestsViewModel();
-            _specViewModel = new SpecViewModel();
+            _mainViewModel = mainViewModel;
+            _testsViewModel = testsViewModel;
+            _specViewModel = specViewModel;
 
             // SpecViewModel 이벤트 연결
             _specViewModel.CreateApiRequestRequested += OnCreateApiRequestRequested;

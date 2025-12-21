@@ -27,6 +27,15 @@
     <Reference Include="CommunityToolkit.Mvvm">
       <HintPath>Libraries\CommunityToolkit.Mvvm.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection">
+      <HintPath>Libraries\Microsoft.Extensions.DependencyInjection.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
+      <HintPath>Libraries\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Hosting">
+      <HintPath>Libraries\Microsoft.Extensions.Hosting.dll</HintPath>
+    </Reference>
       <Analyzer Include="Libraries\CommunityToolkit.Mvvm.SourceGenerators.dll" />
   </ItemGroup>
 

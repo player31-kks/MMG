@@ -135,8 +135,8 @@ namespace MMG.Core.Services
     /// </summary>
     public class ParsedValue
     {
-        public required byte[] RawBytes { get; init; }
-        public required string DisplayValue { get; init; }
+        public byte[] RawBytes { get; init; }
+        public string DisplayValue { get; init; } = string.Empty;
         public string FieldName { get; init; } = string.Empty;
         public string FieldType { get; init; } = string.Empty;
 

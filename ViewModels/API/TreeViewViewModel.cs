@@ -25,9 +25,9 @@ namespace MMG.ViewModels.API
 
         public bool HasSelectedItem => SelectedTreeItem != null;
 
-        public TreeViewViewModel()
+        public TreeViewViewModel(DatabaseService databaseService)
         {
-            _databaseService = new DatabaseService();
+            _databaseService = databaseService;
             _ = BuildTreeView();
         }
 

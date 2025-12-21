@@ -12,12 +12,16 @@ namespace MMG.ViewModels
         public SavedRequestsViewModel SavedRequestsViewModel { get; }
         public TreeViewViewModel TreeViewViewModel { get; }
 
-        public MainViewModel()
+        public MainViewModel(
+            RequestViewModel requestViewModel,
+            ResponseViewModel responseViewModel,
+            SavedRequestsViewModel savedRequestsViewModel,
+            TreeViewViewModel treeViewViewModel)
         {
-            RequestViewModel = new RequestViewModel();
-            ResponseViewModel = new ResponseViewModel();
-            SavedRequestsViewModel = new SavedRequestsViewModel();
-            TreeViewViewModel = new TreeViewViewModel();
+            RequestViewModel = requestViewModel;
+            ResponseViewModel = responseViewModel;
+            SavedRequestsViewModel = savedRequestsViewModel;
+            TreeViewViewModel = treeViewViewModel;
 
             SetupViewModelConnections();
         }

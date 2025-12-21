@@ -1,5 +1,6 @@
 using System.Windows.Controls;
 using MMG.ViewModels.Spec;
+using CommunityToolkit.Mvvm.DependencyInjection;
 
 namespace MMG.Views.Spec
 {
@@ -59,7 +60,7 @@ namespace MMG.Views.Spec
                 // DocViewerViewModel은 SpecViewModel에서 관리하도록 변경
                 if (_docViewModel == null)
                 {
-                    _docViewModel = new DocViewerViewModel();
+                    _docViewModel = Ioc.Default.GetService<DocViewerViewModel>();
                     _docViewModel.PropertyChanged += OnDocViewModelPropertyChanged;
                 }
 

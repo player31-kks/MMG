@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
@@ -15,8 +14,8 @@ namespace MMG.Converters
             var enumValue = value.ToString();
             var targetValue = parameter.ToString();
 
-            return string.Equals(enumValue, targetValue, StringComparison.OrdinalIgnoreCase) 
-                ? Visibility.Visible 
+            return string.Equals(enumValue, targetValue, StringComparison.OrdinalIgnoreCase)
+                ? Visibility.Visible
                 : Visibility.Collapsed;
         }
 

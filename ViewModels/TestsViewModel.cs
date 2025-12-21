@@ -54,14 +54,11 @@ namespace MMG.ViewModels
         [ObservableProperty]
         private bool autoScrollLog = true;
 
-        public TestsViewModel()
+        public TestsViewModel(DatabaseService databaseService, TestDatabaseService testDatabaseService, TestExecutionService testExecutionService)
         {
-            _databaseService = new DatabaseService();
-            _testDatabaseService = new TestDatabaseService();
-
-            // UdpClientService 인스턴스 생성 필요
-            var udpClientService = new UdpClientService();
-            _testExecutionService = new TestExecutionService(udpClientService, _databaseService, _testDatabaseService);
+            _databaseService = databaseService;
+            _testDatabaseService = testDatabaseService;
+            _testExecutionService = testExecutionService;
 
             // 이벤트 구독
             _testExecutionService.ProgressChanged += OnTestProgress;

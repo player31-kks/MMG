@@ -41,9 +41,9 @@ namespace MMG.ViewModels.Spec
         [NotifyPropertyChangedFor(nameof(HasSelectedMessage))]
         private MessageItem? selectedMessage;
 
-        public SpecViewModel()
+        public SpecViewModel(UdpApiSpecParser specParser)
         {
-            _specParser = new UdpApiSpecParser();
+            _specParser = specParser;
         }
 
         partial void OnCurrentSpecChanged(UdpApiSpec? value)
