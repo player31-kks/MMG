@@ -21,8 +21,8 @@ namespace MMG.Services
 
             try
             {
-                // Build message bytes
-                var messageBytes = BuildMessage(request.Headers, request.Payload);
+                // Build message bytes with BigEndian setting
+                var messageBytes = BuildMessage(request.Headers, request.Payload, request.IsBigEndian);
 
                 // Determine local port
                 var localPort = GetLocalPort(request.IpAddress, request.Port);
@@ -92,30 +92,30 @@ namespace MMG.Services
             }
         }
 
-        private byte[] BuildMessage(IEnumerable<DataField> headers, IEnumerable<DataField> payload)
+        private byte[] BuildMessage(IEnumerable<DataField> headers, IEnumerable<DataField> payload, bool isBigEndian)
         {
             var messageBytes = new List<byte>();
 
             // Add headers
             foreach (var header in headers)
             {
-                messageBytes.AddRange(ConvertValueToBytes(header));
+                messageBytes.AddRange(ConvertValueToBytes(header, isBigEndian));
             }
 
             // Add payload
             foreach (var field in payload)
             {
-                messageBytes.AddRange(ConvertValueToBytes(field));
+                messageBytes.AddRange(ConvertValueToBytes(field, isBigEndian));
             }
 
             return messageBytes.ToArray();
         }
 
-        private byte[] ConvertValueToBytes(DataField field)
+        private byte[] ConvertValueToBytes(DataField field, bool isBigEndian)
         {
             try
             {
-                return field.Type switch
+                byte[] bytes = field.Type switch
                 {
                     DataType.Byte => new[] { ParseValue<byte>(field.Value) },
                     DataType.UInt16 => BitConverter.GetBytes(ParseValue<ushort>(field.Value)),
@@ -125,6 +125,14 @@ namespace MMG.Services
                     DataType.Padding => new byte[field.PaddingSize], // Creates array of zeros
                     _ => Array.Empty<byte>()
                 };
+
+                // BigEndian 처리: 1바이트 초과하는 타입만 바이트 순서 변환
+                if (isBigEndian && bytes.Length > 1 && field.Type != DataType.Padding)
+                {
+                    Array.Reverse(bytes);
+                }
+
+                return bytes;
             }
             catch
             {
