@@ -134,99 +134,407 @@ namespace MMG.ViewModels.Spec
 
         private static string GenerateReDocStyleHtml(UdpApiSpec spec)
         {
+            var sidebarHtml = GenerateSidebarHtml(spec);
+            var contentHtml = GenerateContentHtml(spec);
+
             var html = $@"
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <title>{spec.Info.Title}</title>
     <style>
         * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #fafafa; color: #333; line-height: 1.6; }}
-        .container {{ max-width: 1200px; margin: 0 auto; padding: 20px; }}
+        html, body {{ height: 100%; width: 100%; overflow: hidden; }}
+        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #fff; color: #333; line-height: 1.7; font-size: 16px; }}
         
-        /* Header */
-        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 20px; margin-bottom: 30px; border-radius: 8px; }}
-        .header h1 {{ font-size: 2.5em; margin-bottom: 10px; color: #333; }}
-        .header .version {{ background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.9em; display: inline-block; color: #333; }}
-        .header .description {{ margin-top: 15px; opacity: 0.9; color: #333; }}
+        /* Layout */
+        .layout {{ display: flex; width: 100%; height: 100%; }}
         
-        /* Servers */
-        .servers {{ background: white; border-radius: 8px; padding: 20px; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
-        .servers h2 {{ color: #667eea; margin-bottom: 15px; font-size: 1.3em; }}
-        .server-item {{ display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 4px; margin-bottom: 8px; }}
-        .server-name {{ font-weight: 600; color: #495057; min-width: 120px; }}
-        .server-url {{ font-family: 'Consolas', monospace; color: #28a745; }}
+        /* Sidebar */
+        .sidebar {{ width: 400px; min-width: 400px; background: #1e1e2e; border-right: 1px solid #313244; display: flex; flex-direction: column; height: 100%; }}
+        .sidebar-header {{ padding: 28px; border-bottom: 1px solid #313244; background: #181825; }}
+        .sidebar-title {{ font-size: 24px; font-weight: 700; color: #cdd6f4; margin-bottom: 8px; }}
+        .sidebar-version {{ font-size: 16px; color: #6c7086; }}
         
-        /* Messages */
-        .message {{ background: white; border-radius: 8px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
-        .message-header {{ background: #f8f9fa; padding: 15px 20px; border-bottom: 1px solid #e9ecef; display: flex; align-items: center; }}
-        .message-name {{ font-size: 1.2em; font-weight: 600; color: #333; font-family: 'Consolas', monospace; }}
-        .message-group {{ background: #667eea; color: white; padding: 2px 8px; border-radius: 3px; font-size: 0.75em; margin-left: 10px; }}
-        .message-body {{ padding: 20px; }}
-        .message-description {{ color: #666; margin-bottom: 15px; }}
+        /* Search */
+        .search-box {{ padding: 20px; border-bottom: 1px solid #313244; }}
+        .search-input {{ width: 100%; padding: 14px 18px; border: 1px solid #45475a; border-radius: 10px; font-size: 16px; background: #313244; color: #cdd6f4; }}
+        .search-input:focus {{ outline: none; border-color: #89b4fa; }}
+        .search-input::placeholder {{ color: #6c7086; }}
         
-        /* Schema */
-        .schema {{ margin-top: 15px; }}
-        .schema-title {{ font-weight: 600; color: #495057; margin-bottom: 10px; display: flex; align-items: center; }}
-        .schema-title .badge {{ background: #17a2b8; color: white; padding: 2px 8px; border-radius: 3px; font-size: 0.75em; margin-left: 8px; }}
+        /* Menu */
+        .menu {{ flex: 1; overflow-y: auto; padding: 16px 0; }}
+        .menu-group {{ margin-bottom: 12px; }}
+        .menu-group-header {{ display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; font-size: 15px; font-weight: 600; color: #a6adc8; cursor: pointer; user-select: none; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .menu-group-header:hover {{ background: #313244; }}
+        .menu-group-header .arrow {{ font-size: 14px; color: #6c7086; transition: transform 0.2s; }}
+        .menu-group.collapsed .arrow {{ transform: rotate(-90deg); }}
+        .menu-group.collapsed .menu-items {{ display: none; }}
         
-        /* Fields Table */
-        .fields-table {{ width: 100%; border-collapse: collapse; }}
-        .fields-table th {{ background: #f8f9fa; padding: 10px; text-align: left; font-weight: 600; color: #495057; border-bottom: 2px solid #dee2e6; }}
-        .fields-table td {{ padding: 10px; border-bottom: 1px solid #e9ecef; }}
-        .fields-table tr:hover {{ background: #f8f9fa; }}
-        .field-name {{ font-family: 'Consolas', monospace; color: #d63384; }}
-        .field-type {{ font-family: 'Consolas', monospace; color: #0d6efd; }}
-        .field-size {{ color: #6c757d; font-size: 0.9em; }}
-        .bit-badge {{ background: #ffc107; color: #212529; padding: 1px 5px; border-radius: 3px; font-size: 0.7em; margin-left: 5px; }}
+        .menu-item {{ display: flex; align-items: center; padding: 14px 24px 14px 36px; cursor: pointer; font-size: 16px; color: #bac2de; text-decoration: none; border-left: 4px solid transparent; transition: all 0.15s; }}
+        .menu-item:hover {{ background: #313244; color: #cdd6f4; }}
+        .menu-item.active {{ background: #45475a; border-left-color: #89b4fa; color: #89b4fa; }}
+        .menu-item .msg-name {{ flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
         
-        /* Bit Field Styles */
-        .bitfield-row {{ background: #f8f9fa !important; }}
-        .bitfield-row:hover {{ background: #f0f0f0 !important; }}
-        .bitfield-container {{ padding: 15px; background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; margin: 5px 0; }}
-        .bitfield-header {{ font-weight: 600; color: #495057; margin-bottom: 12px; font-size: 0.9em; }}
-        .bitfield-visual {{ margin-bottom: 15px; overflow-x: auto; }}
-        .bit-grid {{ display: inline-block; min-width: 100%; }}
-        .bit-numbers {{ display: flex; margin-bottom: 2px; }}
-        .bit-num {{ width: 28px; text-align: center; font-size: 10px; color: #888; font-family: 'Consolas', monospace; }}
-        .bit-fields {{ display: flex; }}
-        .bit-cell {{ width: 28px; height: 24px; text-align: center; font-size: 9px; border: 1px solid #ddd; display: inline-flex; align-items: center; justify-content: center; font-family: 'Consolas', monospace; }}
-        .bit-cell.unused {{ background: #f5f5f5; color: #ccc; }}
-        .byte-sep {{ width: 8px; }}
-        .bitfield-table {{ width: 100%; border-collapse: collapse; font-size: 0.85em; }}
-        .bitfield-table th {{ background: #e9ecef; padding: 6px 8px; text-align: left; font-weight: 600; color: #495057; border: 1px solid #dee2e6; }}
-        .bitfield-table td {{ padding: 6px 8px; border: 1px solid #e9ecef; }}
-        .bitfield-name {{ font-family: 'Consolas', monospace; color: #6f42c1; font-weight: 500; }}
-        .bitfield-pos {{ font-family: 'Consolas', monospace; color: #fd7e14; }}
-        .bitfield-size {{ color: #20c997; }}
-        .enum-cell {{ font-size: 0.85em; }}
-        .enum-val {{ background: #e7f1ff; padding: 1px 4px; border-radius: 2px; margin-right: 4px; font-size: 0.9em; white-space: nowrap; }}
+        /* Message ID Badge - 색상 구분 */
+        .msg-id {{ font-size: 13px; font-weight: 600; padding: 5px 12px; border-radius: 6px; margin-left: 12px; font-family: 'Consolas', 'Courier New', monospace; }}
+        .msg-id.req {{ background: #1e66f5; color: #fff; }}
+        .msg-id.res {{ background: #40a02b; color: #fff; }}
+        .msg-id.cmd {{ background: #df8e1d; color: #fff; }}
+        .msg-id.default {{ background: #6c7086; color: #fff; }}
         
-        /* Footer */
-        .footer {{ text-align: center; padding: 30px; color: #adb5bd; font-size: 0.9em; }}
+        /* Content Area */
+        .content {{ flex: 1; overflow-y: auto; background: #fff; height: 100%; }}
+        .content-inner {{ max-width: 100%; padding: 40px 56px; }}
+        
+        /* Message Detail */
+        .message-detail {{ margin-bottom: 56px; padding: 36px; background: #fff; border: 1px solid #e1e4e8; border-radius: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }}
+        .message-detail:last-child {{ margin-bottom: 40px; }}
+        
+        .detail-header {{ margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid #e1e4e8; }}
+        .detail-title {{ display: flex; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }}
+        .detail-title h2 {{ font-size: 28px; font-weight: 700; color: #1e1e2e; font-family: 'Consolas', 'Courier New', monospace; }}
+        .detail-id {{ font-size: 15px; font-weight: 600; padding: 7px 16px; border-radius: 8px; }}
+        .detail-id.req {{ background: #1e66f5; color: #fff; }}
+        .detail-id.res {{ background: #40a02b; color: #fff; }}
+        .detail-id.cmd {{ background: #df8e1d; color: #fff; }}
+        .detail-id.default {{ background: #6c7086; color: #fff; }}
+        .detail-desc {{ color: #5c5f77; font-size: 17px; line-height: 1.8; }}
+        
+        /* Info Box */
+        .info-box {{ background: #f8f9fc; border: 1px solid #e1e4e8; border-radius: 14px; padding: 24px 28px; margin-bottom: 32px; }}
+        .info-row {{ display: flex; align-items: center; padding: 10px 0; font-size: 16px; }}
+        .info-label {{ width: 140px; color: #6c6f85; font-weight: 600; }}
+        .info-value {{ color: #1e1e2e; font-family: 'Consolas', 'Courier New', monospace; font-weight: 500; font-size: 16px; }}
+        
+        /* Schema Section */
+        .schema-section {{ margin-bottom: 32px; }}
+        .schema-header {{ display: flex; align-items: center; gap: 14px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 2px solid #e1e4e8; }}
+        .schema-title {{ font-size: 20px; font-weight: 700; color: #1e1e2e; }}
+        .schema-badge {{ font-size: 14px; padding: 5px 14px; border-radius: 14px; background: #1e66f5; color: #fff; font-weight: 600; }}
+        .schema-size {{ font-size: 15px; color: #6c6f85; margin-left: auto; font-weight: 500; }}
+        
+        /* Fields */
+        .field-list {{ border: 1px solid #e1e4e8; border-radius: 14px; overflow: hidden; }}
+        .field-item {{ display: flex; padding: 18px 24px; border-bottom: 1px solid #e1e4e8; background: #fff; }}
+        .field-item:last-child {{ border-bottom: none; }}
+        .field-item:hover {{ background: #f8f9fc; }}
+        .field-item.header-field {{ background: #eff6ff; }}
+        
+        .field-info {{ flex: 1; }}
+        .field-name-row {{ display: flex; align-items: center; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }}
+        .field-name {{ font-family: 'Consolas', 'Courier New', monospace; font-weight: 700; color: #1e66f5; font-size: 17px; }}
+        .field-type {{ font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; color: #8839ef; background: #f3e8ff; padding: 4px 12px; border-radius: 6px; font-weight: 500; }}
+        .field-desc {{ font-size: 15px; color: #6c6f85; line-height: 1.6; }}
+        
+        .field-meta {{ text-align: right; min-width: 110px; }}
+        .field-size {{ font-size: 15px; color: #5c5f77; font-weight: 600; }}
+        
+        /* Bitfield */
+        .bitfield-expand {{ margin-top: 18px; padding: 18px; background: #fef9c3; border: 1px solid #fde047; border-radius: 12px; }}
+        .bitfield-title {{ font-size: 15px; font-weight: 700; color: #854d0e; margin-bottom: 14px; }}
+        .bit-row {{ display: flex; align-items: center; padding: 8px 0; font-size: 15px; }}
+        .bit-name {{ font-family: 'Consolas', 'Courier New', monospace; color: #7c3aed; min-width: 180px; font-weight: 600; }}
+        .bit-pos {{ font-family: 'Consolas', 'Courier New', monospace; color: #ea580c; min-width: 90px; font-weight: 500; }}
+        .bit-desc {{ color: #5c5f77; }}
+        
+        /* Empty State */
+        .empty-state {{ display: flex; flex-direction: column; align-items: center; justify-content: center; height: 400px; color: #6c6f85; text-align: center; padding: 40px; }}
+        .empty-state h3 {{ margin-bottom: 16px; color: #1e1e2e; font-size: 24px; }}
+        .empty-state p {{ font-size: 17px; }}
+        
+        /* Server Info */
+        .server-section {{ margin-bottom: 40px; padding: 32px; background: #f8f9fc; border: 1px solid #e1e4e8; border-radius: 16px; }}
+        .server-title {{ font-size: 20px; font-weight: 700; color: #1e1e2e; margin-bottom: 20px; }}
+        .server-item {{ display: flex; align-items: center; gap: 20px; padding: 14px 0; font-size: 16px; border-bottom: 1px solid #e1e4e8; }}
+        .server-item:last-child {{ border-bottom: none; }}
+        .server-name {{ font-weight: 600; color: #1e1e2e; min-width: 160px; }}
+        .server-addr {{ font-family: 'Consolas', 'Courier New', monospace; color: #fff; background: #40a02b; padding: 6px 16px; border-radius: 8px; font-weight: 500; font-size: 15px; }}
+        
+        /* Scrollbar */
+        .menu::-webkit-scrollbar, .content::-webkit-scrollbar {{ width: 12px; }}
+        .menu::-webkit-scrollbar-track {{ background: #1e1e2e; }}
+        .menu::-webkit-scrollbar-thumb {{ background: #45475a; border-radius: 6px; }}
+        .content::-webkit-scrollbar-track {{ background: #f1f1f1; }}
+        .content::-webkit-scrollbar-thumb {{ background: #c1c1c1; border-radius: 6px; }}
+        
+        /* Color Legend */
+        .color-legend {{ padding: 16px 24px; border-top: 1px solid #313244; background: #181825; }}
+        .legend-title {{ font-size: 12px; color: #6c7086; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .legend-items {{ display: flex; flex-wrap: wrap; gap: 12px; }}
+        .legend-item {{ display: flex; align-items: center; gap: 6px; font-size: 13px; color: #a6adc8; }}
+        .legend-dot {{ width: 10px; height: 10px; border-radius: 3px; }}
+        .legend-dot.req {{ background: #1e66f5; }}
+        .legend-dot.res {{ background: #40a02b; }}
+        .legend-dot.cmd {{ background: #df8e1d; }}
     </style>
 </head>
 <body>
-    <div class='container'>
-        <div class='header'>
-            <h1>{spec.Info.Title}</h1>
-            <span class='version'>v{spec.Info.Version}</span>
-            <p class='description'>{spec.Info.Description}</p>
+    <div class='layout'>
+        <div class='sidebar'>
+            <div class='sidebar-header'>
+                <div class='sidebar-title'>{spec.Info.Title}</div>
+                <div class='sidebar-version'>v{spec.Info.Version}</div>
+            </div>
+            <div class='search-box'>
+                <input type='text' class='search-input' placeholder='Search messages...' id='searchInput'>
+            </div>
+            <div class='menu' id='menuList'>
+                {sidebarHtml}
+            </div>
+            <div class='color-legend'>
+                <div class='legend-title'>Color Legend</div>
+                <div class='legend-items'>
+                    <div class='legend-item'><span class='legend-dot req'></span>Request</div>
+                    <div class='legend-item'><span class='legend-dot res'></span>Response</div>
+                    <div class='legend-item'><span class='legend-dot cmd'></span>Command</div>
+                </div>
+            </div>
         </div>
-        
-        {GenerateServersHtml(spec.Servers)}
-        
-        <h2 style='color: #495057; margin-bottom: 20px;'>📨 Messages</h2>
-        {GenerateMessagesHtml(spec.Messages)}
-        
-        <div class='footer'>
-            Generated by MMG - UDP API Documentation
+        <div class='content' id='contentArea'>
+            <div class='content-inner'>
+                {contentHtml}
+            </div>
         </div>
     </div>
+    <script>
+        (function() {{
+            var searchInput = document.getElementById('searchInput');
+            if (searchInput) {{
+                searchInput.addEventListener('keyup', function() {{
+                    var filter = this.value.toLowerCase();
+                    var items = document.getElementsByClassName('menu-item');
+                    for (var i = 0; i < items.length; i++) {{
+                        var text = items[i].textContent.toLowerCase();
+                        items[i].style.display = text.indexOf(filter) > -1 ? 'flex' : 'none';
+                    }}
+                }});
+            }}
+            
+            var menuItems = document.getElementsByClassName('menu-item');
+            for (var i = 0; i < menuItems.length; i++) {{
+                menuItems[i].addEventListener('click', function(e) {{
+                    e.preventDefault();
+                    var targetId = this.getAttribute('data-target');
+                    var element = document.getElementById(targetId);
+                    if (element) {{
+                        element.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+                        var allItems = document.getElementsByClassName('menu-item');
+                        for (var j = 0; j < allItems.length; j++) {{
+                            allItems[j].classList.remove('active');
+                        }}
+                        this.classList.add('active');
+                    }}
+                }});
+            }}
+            
+            var groupHeaders = document.getElementsByClassName('menu-group-header');
+            for (var i = 0; i < groupHeaders.length; i++) {{
+                groupHeaders[i].addEventListener('click', function() {{
+                    this.parentElement.classList.toggle('collapsed');
+                }});
+            }}
+        }})();
+    </script>
 </body>
 </html>";
             return html;
+        }
+
+        private static string GenerateSidebarHtml(UdpApiSpec spec)
+        {
+            if (spec.Messages == null || spec.Messages.Count == 0)
+                return "<div class='empty-state'><p>메시지가 없습니다</p></div>";
+
+            var sb = new System.Text.StringBuilder();
+
+            // Group messages
+            var groups = spec.Messages
+                .GroupBy(m => string.IsNullOrEmpty(m.Value.Group) ? "Messages" : m.Value.Group)
+                .OrderBy(g => g.Key);
+
+            foreach (var group in groups)
+            {
+                sb.Append($@"
+                <div class='menu-group'>
+                    <div class='menu-group-header'>
+                        <span>{group.Key}</span>
+                        <span class='arrow'>▼</span>
+                    </div>
+                    <div class='menu-items'>");
+
+                foreach (var msg in group)
+                {
+                    var msgIdClass = GetMessageIdClass(msg.Key);
+                    var shortId = ExtractMessageId(msg.Value.Description);
+                    
+                    sb.Append($@"
+                        <div class='menu-item' data-target='{msg.Key}'>
+                            <span class='msg-name'>{msg.Key}</span>
+                            <span class='msg-id {msgIdClass}'>{shortId}</span>
+                        </div>");
+                }
+
+                sb.Append(@"
+                    </div>
+                </div>");
+            }
+
+            return sb.ToString();
+        }
+
+        private static string GenerateContentHtml(UdpApiSpec spec)
+        {
+            var sb = new System.Text.StringBuilder();
+
+            // Server info
+            if (spec.Servers != null && spec.Servers.Count > 0)
+            {
+                sb.Append(@"<div class='server-section'><div class='server-title'>🖥️ Servers</div>");
+                foreach (var server in spec.Servers)
+                {
+                    sb.Append($@"
+                    <div class='server-item'>
+                        <span class='server-name'>{server.Name}</span>
+                        <span class='server-addr'>{server.IpAddress}:{server.Port}</span>
+                        <span style='color: #6a737d;'>{server.Description}</span>
+                    </div>");
+                }
+                sb.Append("</div>");
+            }
+
+            // Messages
+            if (spec.Messages == null || spec.Messages.Count == 0)
+            {
+                return "<div class='empty-state'><h3>📄 정의된 메시지가 없습니다</h3><p>IDL 파일을 불러오면 메시지가 표시됩니다.</p></div>";
+            }
+
+            foreach (var kvp in spec.Messages)
+            {
+                var name = kvp.Key;
+                var msg = kvp.Value;
+                var msgId = ExtractMessageId(msg.Description);
+                var msgIdClass = GetMessageIdClass(name);
+
+                sb.Append($@"
+                <div class='message-detail' id='{name}'>
+                    <div class='detail-header'>
+                        <div class='detail-title'>
+                            <h2>{name}</h2>
+                            <span class='detail-id {msgIdClass}'>ID: {msgId}</span>
+                        </div>
+                        <p class='detail-desc'>{msg.Description}</p>
+                    </div>
+                    
+                    <div class='info-box'>
+                        <div class='info-row'>
+                            <span class='info-label'>Total Size</span>
+                            <span class='info-value'>{msg.Request?.TotalSize ?? 0} bytes</span>
+                        </div>
+                        <div class='info-row'>
+                            <span class='info-label'>Timeout</span>
+                            <span class='info-value'>{msg.TimeoutMs} ms</span>
+                        </div>
+                    </div>
+                    
+                    {GenerateSchemaSection("📋 Header Fields", msg.Request?.Header, true)}
+                    {GenerateSchemaSection("📦 Payload Fields", msg.Request?.Payload, false)}
+                </div>");
+            }
+
+            return sb.ToString();
+        }
+
+        private static string GenerateSchemaSection(string title, List<FieldDefinition>? fields, bool isHeader)
+        {
+            if (fields == null || fields.Count == 0) return "";
+
+            var totalSize = fields.Sum(f => f.ByteSize);
+            var sb = new System.Text.StringBuilder();
+
+            sb.Append($@"
+            <div class='schema-section'>
+                <div class='schema-header'>
+                    <span class='schema-title'>{title}</span>
+                    <span class='schema-badge'>{fields.Count} fields</span>
+                    <span class='schema-size'>{totalSize} bytes</span>
+                </div>
+                <div class='field-list'>");
+
+            foreach (var field in fields)
+            {
+                var typeDisplay = field.Type + (field.Size > 1 ? $"[{field.Size}]" : "");
+                var fieldClass = isHeader ? " header-field" : "";
+
+                sb.Append($@"
+                    <div class='field-item{fieldClass}'>
+                        <div class='field-info'>
+                            <div class='field-name-row'>
+                                <span class='field-name'>{field.Name}</span>
+                                <span class='field-type'>{typeDisplay}</span>
+                            </div>
+                            <div class='field-desc'>{field.Description}</div>
+                            {GenerateBitfieldHtml(field)}
+                        </div>
+                        <div class='field-meta'>
+                            <div class='field-size'>{field.ByteSize} bytes</div>
+                        </div>
+                    </div>");
+            }
+
+            sb.Append(@"
+                </div>
+            </div>");
+
+            return sb.ToString();
+        }
+
+        private static string GenerateBitfieldHtml(FieldDefinition field)
+        {
+            if (!field.HasBitFields || field.BitFields == null) return "";
+
+            var sb = new System.Text.StringBuilder();
+            sb.Append($@"
+                <div class='bitfield-expand'>
+                    <div class='bitfield-title'>⚡ Bit Fields ({field.ByteSize * 8} bits)</div>");
+
+            foreach (var bit in field.BitFields)
+            {
+                var bitPos = bit.SingleBit.HasValue ? $"[{bit.SingleBit}]" : $"[{bit.BitRange}]";
+                sb.Append($@"
+                    <div class='bit-row'>
+                        <span class='bit-name'>{bit.Name}</span>
+                        <span class='bit-pos'>{bitPos}</span>
+                        <span class='bit-desc'>{bit.Description}</span>
+                    </div>");
+            }
+
+            sb.Append("</div>");
+            return sb.ToString();
+        }
+
+        private static string GetMessageIdClass(string messageName)
+        {
+            var lower = messageName.ToLower();
+            if (lower.Contains("request") || lower.Contains("req")) return "req";
+            if (lower.Contains("response") || lower.Contains("res")) return "res";
+            if (lower.Contains("command") || lower.Contains("cmd")) return "cmd";
+            return "default";
+        }
+
+        private static string ExtractMessageId(string description)
+        {
+            // "Message ID: 0x0001 (Name)" 형식에서 ID 추출
+            if (string.IsNullOrEmpty(description)) return "N/A";
+            
+            var match = System.Text.RegularExpressions.Regex.Match(description, @"(?:ID[:\s]*)?(?:Message ID[:\s]*)?(0x[0-9A-Fa-f]+|\d+)");
+            if (match.Success) return match.Groups[1].Value;
+            
+            // 이름에서 숫자 추출 시도
+            match = System.Text.RegularExpressions.Regex.Match(description, @"(\d+)");
+            return match.Success ? match.Groups[1].Value : "MSG";
         }
 
         private static string GenerateServersHtml(List<ServerInfo>? servers)
@@ -247,132 +555,6 @@ namespace MMG.ViewModels.Spec
         </div>";
         }
 
-        private static string GenerateMessagesHtml(Dictionary<string, MessageDefinition>? messages)
-        {
-            if (messages == null || messages.Count == 0)
-                return "<p style='color: #6c757d;'>정의된 메시지가 없습니다.</p>";
-
-            var messageHtml = new System.Text.StringBuilder();
-
-            foreach (var kvp in messages)
-            {
-                var name = kvp.Key;
-                var message = kvp.Value;
-
-                var groupBadge = string.IsNullOrEmpty(message.Group) ? "" :
-                    $"<span class='message-group'>{message.Group}</span>";
-
-                var requestSchema = GenerateSchemaHtml("Request", message.Request);
-                var responseSchema = message.Response != null
-                    ? GenerateSchemaHtml("Response", message.Response)
-                    : "";
-
-                messageHtml.Append($@"
-        <div class='message' id='{name}'>
-            <div class='message-header'>
-                <span class='message-name'>{name}</span>
-                {groupBadge}
-            </div>
-            <div class='message-body'>
-                <p class='message-description'>{message.Description}</p>
-                {requestSchema}
-                {responseSchema}
-            </div>
-        </div>");
-            }
-
-            return messageHtml.ToString();
-        }
-
-        private static string GenerateSchemaHtml(string title, MessageSchema? schema)
-        {
-            if (schema == null) return "";
-
-            var headerRows = GenerateFieldRows(schema.Header, "Header");
-            var payloadRows = GenerateFieldRows(schema.Payload, "Payload");
-
-            var headerSection = schema.Header?.Count > 0 ? $@"
-                <div class='schema'>
-                    <div class='schema-title'>📋 Header <span class='badge'>{schema.Header.Count} fields</span></div>
-                    <table class='fields-table'>
-                        <thead><tr><th>Name</th><th>Type</th><th>Size</th><th>Description</th></tr></thead>
-                        <tbody>{headerRows}</tbody>
-                    </table>
-                </div>" : "";
-
-            var payloadSection = schema.Payload?.Count > 0 ? $@"
-                <div class='schema'>
-                    <div class='schema-title'>📦 Payload <span class='badge'>{schema.Payload.Count} fields</span></div>
-                    <table class='fields-table'>
-                        <thead><tr><th>Name</th><th>Type</th><th>Size</th><th>Description</th></tr></thead>
-                        <tbody>{payloadRows}</tbody>
-                    </table>
-                </div>" : "";
-
-            return $@"
-            <h4 style='margin-top: 20px; color: #333;'>{title} Schema (Total: {schema.TotalSize} bytes)</h4>
-            {headerSection}
-            {payloadSection}";
-        }
-
-        private static string GenerateFieldRows(List<FieldDefinition>? fields, string section)
-        {
-            if (fields == null || fields.Count == 0) return "";
-
-            var sb = new System.Text.StringBuilder();
-            foreach (var f in fields)
-            {
-                var typeDisplay = f.Type + (f.Size > 1 ? $"[{f.Size}]" : "");
-                var hasBits = f.HasBitFields;
-
-                sb.Append($@"
-                <tr>
-                    <td class='field-name'>{f.Name}</td>
-                    <td class='field-type'>{typeDisplay}{(hasBits ? " <span class='bit-badge'>bits</span>" : "")}</td>
-                    <td class='field-size'>{f.ByteSize} bytes</td>
-                    <td>{f.Description}</td>
-                </tr>");
-
-                // 비트 필드가 있으면 하위 행으로 표시
-                if (hasBits && f.BitFields != null)
-                {
-                    sb.Append($@"
-                <tr class='bitfield-row'>
-                    <td colspan='4'>
-                        <div class='bitfield-container'>
-                            <div class='bitfield-header'>비트 필드 구조 ({f.ByteSize * 8} bits)</div>
-                            <table class='bitfield-table'>
-                                <thead><tr><th>필드</th><th>비트</th><th>크기</th><th>설명</th><th>값</th></tr></thead>
-                                <tbody>");
-
-                    foreach (var bit in f.BitFields)
-                    {
-                        var bitPos = bit.SingleBit.HasValue ? $"[{bit.SingleBit}]" : $"[{bit.BitRange}]";
-                        var enumHtml = bit.EnumValues != null
-                            ? string.Join(", ", bit.EnumValues.Select(e => $"<span class='enum-val'>{e.Key}={e.Value}</span>"))
-                            : "";
-
-                        sb.Append($@"
-                                <tr>
-                                    <td class='bitfield-name'>{bit.Name}</td>
-                                    <td class='bitfield-pos'>{bitPos}</td>
-                                    <td class='bitfield-size'>{bit.BitSize} bit{(bit.BitSize > 1 ? "s" : "")}</td>
-                                    <td>{bit.Description}</td>
-                                    <td class='enum-cell'>{enumHtml}</td>
-                                </tr>");
-                    }
-
-                    sb.Append(@"
-                                </tbody>
-                            </table>
-                        </div>
-                    </td>
-                </tr>");
-                }
-            }
-            return sb.ToString();
-        }
-
         private static string GenerateEmptyHtml()
         {
             return @"
@@ -381,15 +563,19 @@ namespace MMG.ViewModels.Spec
 <head>
     <meta charset='utf-8'>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f8f9fa; color: #6c757d; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #fafbfc; color: #6a737d; }
         .empty { text-align: center; }
-        .empty h2 { color: #adb5bd; margin-bottom: 10px; }
+        .empty-icon { font-size: 64px; margin-bottom: 16px; }
+        .empty h2 { color: #24292e; margin-bottom: 8px; font-weight: 600; }
+        .empty p { color: #6a737d; }
     </style>
 </head>
 <body>
     <div class='empty'>
-        <h2>📄 문서가 없습니다</h2>
-        <p>YAML 스펙 파일을 불러오면 문서가 표시됩니다.</p>
+        <div class='empty-icon'>📄</div>
+        <h2>문서가 없습니다</h2>
+        <p>IDL 스펙 파일을 불러오면 문서가 표시됩니다.</p>
     </div>
 </body>
 </html>";
@@ -403,15 +589,21 @@ namespace MMG.ViewModels.Spec
 <head>
     <meta charset='utf-8'>
     <style>
+        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
         body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; background: #fff5f5; }}
-        .error {{ background: white; border-left: 4px solid #dc3545; padding: 20px; border-radius: 4px; }}
-        .error h3 {{ color: #dc3545; margin-bottom: 10px; }}
-        .error pre {{ background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; }}
+        .error {{ background: white; border-left: 4px solid #dc3545; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }}
+        .error-header {{ display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }}
+        .error-icon {{ font-size: 24px; }}
+        .error h3 {{ color: #dc3545; font-size: 18px; }}
+        .error pre {{ background: #f6f8fa; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 13px; color: #24292e; border: 1px solid #e1e4e8; }}
     </style>
 </head>
 <body>
     <div class='error'>
-        <h3>⚠️ 오류 발생</h3>
+        <div class='error-header'>
+            <span class='error-icon'>⚠️</span>
+            <h3>파싱 오류</h3>
+        </div>
         <pre>{error}</pre>
     </div>
 </body>
