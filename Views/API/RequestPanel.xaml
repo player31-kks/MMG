@@ -35,22 +35,11 @@
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
-
-                        <ColumnDefinition Width="*"
-                                          MinWidth="80"/>
-
+                        <ColumnDefinition Width="*" MinWidth="80"/>
                         <ColumnDefinition Width="Auto"/>
-
-                        <ColumnDefinition Width="Auto"
-                                          MinWidth="70"/>
-
-                        <ColumnDefinition Width="Auto"/>
-
-                        <ColumnDefinition Width="Auto"
-                                          MinWidth="60"/>
-
-                        <ColumnDefinition Width="Auto"
-                                          MinWidth="60"/>
+                        <ColumnDefinition Width="Auto" MinWidth="70"/>
+                        <ColumnDefinition Width="Auto" MinWidth="60"/>
+                        <ColumnDefinition Width="Auto" MinWidth="60"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- Request Name -->
@@ -64,7 +53,6 @@
                                HorizontalAlignment="Left"/>
 
                     <!-- Connection Controls -->
-
                     <Label Grid.Row="1"
                            Grid.Column="0"
                            Content="IP"
@@ -90,78 +78,19 @@
                              Style="{StaticResource ModernTextBox}"
                              Margin="0,0,12,0"/>
 
-                    <!-- Endian Toggle Button -->
-                    <ToggleButton Grid.Row="1"
-                                  Grid.Column="4"
-                                  IsChecked="{Binding CurrentRequest.IsBigEndian}"
-                                  ToolTip="바이트 순서 설정 (BigEndian/LittleEndian)"
-                                  Margin="0,0,12,0"
-                                  MinWidth="90"
-                                  Height="30">
-                        <ToggleButton.Style>
-                            <Style TargetType="ToggleButton">
-                                <Setter Property="Background"
-                                        Value="#FF5722"/>
-                                <Setter Property="Foreground"
-                                        Value="White"/>
-                                <Setter Property="FontSize"
-                                        Value="11"/>
-                                <Setter Property="FontWeight"
-                                        Value="Bold"/>
-                                <Setter Property="BorderThickness"
-                                        Value="0"/>
-                                <Setter Property="Cursor"
-                                        Value="Hand"/>
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="ToggleButton">
-                                            <Border Background="{TemplateBinding Background}"
-                                                    CornerRadius="14"
-                                                    Padding="12,6">
-                                                <ContentPresenter HorizontalAlignment="Center"
-                                                                  VerticalAlignment="Center"/>
-                                            </Border>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                                <Style.Triggers>
-                                    <Trigger Property="IsChecked"
-                                             Value="True">
-                                        <Setter Property="Background"
-                                                Value="#FF5722"/>
-                                        <Setter Property="Content"
-                                                Value="Big Endian"/>
-                                    </Trigger>
-                                    <Trigger Property="IsChecked"
-                                             Value="False">
-                                        <Setter Property="Background"
-                                                Value="#2196F3"/>
-                                        <Setter Property="Content"
-                                                Value="Little Endian"/>
-                                    </Trigger>
-                                    <Trigger Property="IsMouseOver"
-                                             Value="True">
-                                        <Setter Property="Opacity"
-                                                Value="0.94"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </ToggleButton.Style>
-                    </ToggleButton>
-
                     <Button Grid.Row="1"
-                            Grid.Column="5"
+                            Grid.Column="4"
                             Content="Send"
                             Command="{Binding SendCommand}"
                             Style="{StaticResource ModernButton}"
                             FontSize="{DynamicResource text-xs}"
                             FontWeight="Bold"
                             IsEnabled="{Binding IsSending, Converter={x:Static local:BooleanToInverseBooleanConverter.Instance}}"
-                            Margin="0,0,12,0"
+                            Margin="0,0,6,0"
                             Padding="14,8"/>
 
                     <Button Grid.Row="1"
-                            Grid.Column="6"
+                            Grid.Column="5"
                             Content="Save"
                             Command="{Binding SaveCommand}"
                             Style="{StaticResource ModernButton}"
@@ -189,6 +118,137 @@
                 <TabItem Header="Response Schema"
                          Style="{StaticResource ModernTabItem}">
                     <api:ResponseSchemaTabs Margin="10"/>
+                </TabItem>
+
+                <!-- Settings Tab -->
+                <TabItem Header="Settings"
+                         Style="{StaticResource ModernTabItem}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  Margin="10">
+                        <StackPanel>
+                            <!-- Big Endian Setting -->
+                            <Border Background="{StaticResource SoftAccent}"
+                                    CornerRadius="8"
+                                    Padding="16"
+                                    Margin="0,0,0,12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="Use Big Endian byte order"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="14"
+                                                   Foreground="{StaticResource TextPrimaryColor}"/>
+                                        <TextBlock Text="Enable Big Endian byte ordering for multi-byte data types. When disabled, Little Endian is used."
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource MutedText}"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,4,16,0"/>
+                                    </StackPanel>
+                                    <ToggleButton Grid.Column="1"
+                                                  IsChecked="{Binding CurrentRequest.IsBigEndian}"
+                                                  VerticalAlignment="Center"
+                                                  Width="50"
+                                                  Height="26">
+                                        <ToggleButton.Style>
+                                            <Style TargetType="ToggleButton">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="ToggleButton">
+                                                            <Border x:Name="Track"
+                                                                    Background="#E0E0E0"
+                                                                    CornerRadius="13"
+                                                                    Height="26"
+                                                                    Width="50">
+                                                                <Border x:Name="Thumb"
+                                                                        Background="White"
+                                                                        CornerRadius="11"
+                                                                        Height="22"
+                                                                        Width="22"
+                                                                        HorizontalAlignment="Left"
+                                                                        Margin="2,0,2,0"/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsChecked" Value="True">
+                                                                    <Setter TargetName="Track" Property="Background" Value="#4CAF50"/>
+                                                                    <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                                <Setter Property="Cursor" Value="Hand"/>
+                                            </Style>
+                                        </ToggleButton.Style>
+                                    </ToggleButton>
+                                </Grid>
+                            </Border>
+
+                            <!-- Wait for Response Setting -->
+                            <Border Background="{StaticResource SoftAccent}"
+                                    CornerRadius="8"
+                                    Padding="16"
+                                    Margin="0,0,0,12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="Wait for response"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="14"
+                                                   Foreground="{StaticResource TextPrimaryColor}"/>
+                                        <TextBlock Text="Wait for a response after sending the request. When disabled, the request is sent without waiting for a reply."
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource MutedText}"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,4,16,0"/>
+                                    </StackPanel>
+                                    <ToggleButton Grid.Column="1"
+                                                  IsChecked="{Binding CurrentRequest.WaitForResponse}"
+                                                  VerticalAlignment="Center"
+                                                  Width="50"
+                                                  Height="26">
+                                        <ToggleButton.Style>
+                                            <Style TargetType="ToggleButton">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="ToggleButton">
+                                                            <Border x:Name="Track"
+                                                                    Background="#E0E0E0"
+                                                                    CornerRadius="13"
+                                                                    Height="26"
+                                                                    Width="50">
+                                                                <Border x:Name="Thumb"
+                                                                        Background="White"
+                                                                        CornerRadius="11"
+                                                                        Height="22"
+                                                                        Width="22"
+                                                                        HorizontalAlignment="Left"
+                                                                        Margin="2,0,2,0"/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsChecked" Value="True">
+                                                                    <Setter TargetName="Track" Property="Background" Value="#4CAF50"/>
+                                                                    <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                                <Setter Property="Cursor" Value="Hand"/>
+                                            </Style>
+                                        </ToggleButton.Style>
+                                    </ToggleButton>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
                 </TabItem>
             </TabControl>
         </Grid>
