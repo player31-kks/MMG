@@ -10,6 +10,7 @@ namespace MMG.Views.Common
         public TestResultDialog(int totalSteps, int successSteps, int failedSteps, TimeSpan executionTime)
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
 
             SetupStats(totalSteps, successSteps, failedSteps, executionTime);
             SetupAppearance(failedSteps > 0);

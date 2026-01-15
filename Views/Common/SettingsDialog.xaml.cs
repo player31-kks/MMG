@@ -8,6 +8,7 @@ namespace MMG.Views.Common
         public SettingsDialog()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
             DataContext = SettingsService.Instance;
         }
 

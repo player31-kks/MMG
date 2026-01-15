@@ -16,11 +16,16 @@ namespace MMG.Models
         private bool isBigEndian = true;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(WaitForResponseText))]
+        private bool waitForResponse = true;
+
+        [ObservableProperty]
         private ObservableCollection<DataField> headers = new();
 
         [ObservableProperty]
         private ObservableCollection<DataField> payload = new();
 
         public string EndianText => IsBigEndian ? "Big Endian" : "Little Endian";
+        public string WaitForResponseText => WaitForResponse ? "Wait Response" : "No Wait";
     }
 }

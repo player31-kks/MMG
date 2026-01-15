@@ -30,6 +30,7 @@ namespace MMG.Views.Common
         public ModernMessageDialog(string title, string message, MessageDialogType type = MessageDialogType.Information, MessageDialogButtons buttons = MessageDialogButtons.OK)
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
 
             TitleText.Text = title;
             MessageText.Text = message;

@@ -34,6 +34,14 @@ namespace MMG.Services
                 // Send message
                 await udpClient.SendAsync(messageBytes, messageBytes.Length, endpoint);
 
+                // Check if we should wait for response
+                if (!request.WaitForResponse)
+                {
+                    response.Status = "Sent (No Wait)";
+                    response.ReceivedAt = DateTime.Now;
+                    return response;
+                }
+
                 // Wait for response (with timeout)
                 var receiveTask = udpClient.ReceiveAsync();
                 var timeoutTask = Task.Delay(5000); // 5 second timeout

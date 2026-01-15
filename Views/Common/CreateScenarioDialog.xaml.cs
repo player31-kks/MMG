@@ -9,6 +9,7 @@ namespace MMG.Views.Common
         public CreateScenarioDialog()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
             ScenarioNameTextBox.Focus();
         }
 

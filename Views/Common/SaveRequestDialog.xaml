@@ -4,7 +4,7 @@
         Title="요청 저장"
         Width="420"
         Height="320"
-        WindowStartupLocation="CenterScreen"
+        WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="White">
     <Border BorderBrush="#E0E0E0"
