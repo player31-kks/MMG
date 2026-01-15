@@ -12,6 +12,7 @@ namespace MMG.Views.Common
         public SaveRequestDialog(ObservableCollection<Folder> folders, string defaultName = "")
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
 
             // 기본 이름 설정
             if (!string.IsNullOrEmpty(defaultName))

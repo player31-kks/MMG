@@ -12,6 +12,7 @@ namespace MMG.Views.Common
         public CreateFolderDialog(ObservableCollection<Folder> availableFolders)
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
             FolderNameTextBox.Focus();
         }
 

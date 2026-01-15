@@ -10,7 +10,8 @@ namespace MMG.Views.Common
         public ConfirmDialog(string title, string message, string confirmButtonText = "삭제")
         {
             InitializeComponent();
-            
+            Owner = Application.Current.MainWindow;
+
             TitleText.Text = title;
             MessageText.Text = message;
             ConfirmButton.Content = confirmButtonText;
