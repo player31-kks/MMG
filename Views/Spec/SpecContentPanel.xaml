@@ -56,8 +56,8 @@
                             Command="{Binding SaveSpecCommand}"
                             Style="{StaticResource ToolbarButtonStyle}"
                             Margin="0,0,15,0"/>
-                    <Button Content="🔄 YAML 적용"
-                            Command="{Binding RefreshFromYamlCommand}"
+                    <Button Content="🔄 스펙 적용"
+                            Command="{Binding RefreshFromContentCommand}"
                             Style="{StaticResource ToolbarButtonStyle}"
                             Margin="0,0,15,0"/>
 
@@ -297,7 +297,7 @@
                             Background="#2D2D2D"
                             Padding="10">
                         <Grid>
-                            <TextBlock Text="YAML 스펙 편집기"
+                            <TextBlock Text="IDL 스펙 편집기"
                                        FontWeight="SemiBold"
                                        FontSize="14"
                                        Foreground="White"/>
@@ -308,9 +308,9 @@
                         </Grid>
                     </Border>
 
-                    <!-- YAML Editor -->
+                    <!-- IDL Editor -->
                     <TextBox Grid.Row="1"
-                             Text="{Binding SpecYamlContent, UpdateSourceTrigger=PropertyChanged}"
+                             Text="{Binding SpecContent, UpdateSourceTrigger=PropertyChanged}"
                              AcceptsReturn="True"
                              AcceptsTab="True"
                              TextWrapping="NoWrap"

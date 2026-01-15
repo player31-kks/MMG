@@ -1,0 +1,225 @@
+/******************************
+ * weapon-system-protocol.idl
+ * 무기체계 통신 프로토콜 예제
+ * GKS-IDL v1.0 규격
+ ******************************/
+
+//+PACK_SIZE=1
+//+MOST_BYTE=true
+
+/******************************
+ * 메시지 헤더 (필수, 1개)
+ * - IDL당 1개만 존재
+ * - 모든 메시지의 공통 Frame Header
+ ******************************/
+struct MsgHeader  //$()$
+{
+    unsigned short MsgID;     //$()$
+    unsigned short Length;
+};
+
+/******************************
+ * 사용자 정의 구조체
+ * - 메시지보다 위에 전방선언
+ ******************************/
+
+// 3D 위치 정보
+struct Position3D
+{
+    float x;
+    float y;
+    float z;
+};
+
+// 속도 벡터
+struct Velocity
+{
+    float vx;
+    float vy;
+    float vz;
+};
+
+// 장치 상태 (비트필드 예제)
+struct DeviceStatus
+{
+    unsigned char power_on : 1;
+    unsigned char comm_ok : 1;
+    unsigned char sensor_ok : 1;
+    unsigned char gps_lock : 1;
+    unsigned char reserved : 4;
+};
+
+// 센서 정보
+struct SensorInfo
+{
+    unsigned char sensor_id;
+    unsigned char sensor_type;
+    float value;
+    unsigned char quality;
+};
+
+// 타겟 정보
+struct TargetInfo
+{
+    unsigned int target_id;
+    Position3D position;
+    Velocity velocity;
+    unsigned short speed;
+    unsigned short heading;
+    unsigned char priority;
+    unsigned char threat_level;
+};
+
+// 웨이포인트
+struct Waypoint
+{
+    unsigned short wp_id;
+    Position3D position;
+    float altitude;
+    unsigned char action;
+};
+
+/******************************
+ * 메시지 정의
+ * - 메시지 ID는 10진수 또는 16진수
+ ******************************/
+
+// [0x0001] 시스템 상태 요청
+struct Msg_SystemStatusRequest  //$(0x0001)$
+{
+    MsgHeader header;
+    unsigned char request_type;
+    unsigned char subsystem_id;
+};
+
+// [0x0002] 시스템 상태 응답
+struct Msg_SystemStatusResponse  //$(0x0002)$
+{
+    MsgHeader header;
+    DeviceStatus status;
+    unsigned short uptime_minutes;
+    unsigned char cpu_usage;
+    unsigned char memory_usage;
+    float temperature;
+    unsigned int error_code;
+};
+
+// [0x0010] 타겟 데이터 (배열 예제)
+struct Msg_TargetData  //$(0x0010)$
+{
+    MsgHeader header;
+    unsigned int timestamp;
+    unsigned char target_count;
+    TargetInfo targets[8];
+};
+
+// [0x0011] 단일 타겟 업데이트
+struct Msg_TargetUpdate  //$(0x0011)$
+{
+    MsgHeader header;
+    unsigned int timestamp;
+    TargetInfo target;
+    unsigned char update_flags;
+};
+
+// [0x0020] 제어 명령
+struct Msg_ControlCommand  //$(0x0020)$
+{
+    MsgHeader header;
+    unsigned short command_id;
+    unsigned char version_major : 4;
+    unsigned char version_minor : 4;
+    unsigned int parameter1;
+    unsigned int parameter2;
+    unsigned char data[16];
+};
+
+// [0x0021] 제어 명령 응답
+struct Msg_ControlResponse  //$(0x0021)$
+{
+    MsgHeader header;
+    unsigned short command_id;
+    unsigned char result_code;
+    unsigned int error_detail;
+};
+
+// [100] 센서 데이터 (10진수 ID 예제)
+struct Msg_SensorData  //$(100)$
+{
+    MsgHeader header;
+    unsigned int timestamp;
+    unsigned char sensor_count;
+    SensorInfo sensors[4];
+};
+
+// [101] GPS 데이터
+struct Msg_GpsData  //$(101)$
+{
+    MsgHeader header;
+    unsigned int timestamp;
+    double latitude;
+    double longitude;
+    float altitude;
+    float hdop;
+    unsigned char satellites;
+    unsigned char fix_type;
+};
+
+// [102] IMU 데이터
+struct Msg_ImuData  //$(102)$
+{
+    MsgHeader header;
+    unsigned int timestamp;
+    float accel_x;
+    float accel_y;
+    float accel_z;
+    float gyro_x;
+    float gyro_y;
+    float gyro_z;
+    float mag_x;
+    float mag_y;
+    float mag_z;
+};
+
+// [0x0030] 경로 계획 요청
+struct Msg_PathPlanRequest  //$(0x0030)$
+{
+    MsgHeader header;
+    unsigned short mission_id;
+    Position3D start_position;
+    Position3D end_position;
+    unsigned char priority;
+    unsigned char constraints;
+};
+
+// [0x0031] 경로 계획 응답 (웨이포인트 배열)
+struct Msg_PathPlanResponse  //$(0x0031)$
+{
+    MsgHeader header;
+    unsigned short mission_id;
+    unsigned char result_code;
+    unsigned char waypoint_count;
+    Waypoint waypoints[16];
+    float total_distance;
+    unsigned int estimated_time;
+};
+
+// [200] 하트비트 메시지
+struct Msg_Heartbeat  //$(200)$
+{
+    MsgHeader header;
+    unsigned int sequence;
+    unsigned int timestamp;
+    DeviceStatus status;
+};
+
+// [0x00FF] 에러 리포트
+struct Msg_ErrorReport  //$(0x00FF)$
+{
+    MsgHeader header;
+    unsigned int timestamp;
+    unsigned int error_code;
+    unsigned char severity;
+    unsigned char source_module;
+    unsigned char description[64];
+};

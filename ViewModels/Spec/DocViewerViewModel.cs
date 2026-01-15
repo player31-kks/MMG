@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using MMG.Core.Models.Schema;
+using MMG.Core.Interfaces;
 using MMG.Core.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -11,7 +12,7 @@ namespace MMG.ViewModels.Spec
     /// </summary>
     public partial class DocViewerViewModel : ObservableObject
     {
-        private readonly UdpApiSpecParser _specParser;
+        private readonly ISpecParserFactory _parserFactory;
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(HtmlContent), nameof(MenuItems))]
@@ -26,9 +27,9 @@ namespace MMG.ViewModels.Spec
         [ObservableProperty]
         private ObservableCollection<DocMenuItem> menuItems = new();
 
-        public DocViewerViewModel(UdpApiSpecParser specParser)
+        public DocViewerViewModel(ISpecParserFactory parserFactory)
         {
-            _specParser = specParser;
+            _parserFactory = parserFactory;
         }
 
         partial void OnCurrentSpecChanged(UdpApiSpec? value)
@@ -56,11 +57,26 @@ namespace MMG.ViewModels.Spec
             CurrentSpec = spec;
         }
 
-        public void LoadFromYaml(string yamlContent)
+        public void LoadFromContent(string content, string filePath)
         {
             try
             {
-                var spec = _specParser.ParseYaml(yamlContent);
+                var parser = _parserFactory.CreateParser(filePath);
+                var spec = parser.Parse(content);
+                CurrentSpec = spec;
+            }
+            catch (Exception ex)
+            {
+                HtmlContent = GenerateErrorHtml(ex.Message);
+            }
+        }
+
+        public void LoadFromIdl(string idlContent)
+        {
+            try
+            {
+                var parser = _parserFactory.CreateParser(SpecParserType.Idl);
+                var spec = parser.Parse(idlContent);
                 CurrentSpec = spec;
             }
             catch (Exception ex)

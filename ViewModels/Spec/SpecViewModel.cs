@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using MMG.Core.Models.Schema;
+using MMG.Core.Interfaces;
 using MMG.Core.Services;
 using MMG.Models;
 using MMG.Views.Common;
@@ -12,11 +13,12 @@ namespace MMG.ViewModels.Spec
 {
     /// <summary>
     /// UDP API Spec 관리 ViewModel
-    /// YAML 스펙 파일 Import/Export 및 편집 기능 제공
+    /// IDL/XML 스펙 파일 Import/Export 및 편집 기능 제공
     /// </summary>
     public partial class SpecViewModel : ObservableObject
     {
-        private readonly UdpApiSpecParser _specParser;
+        private readonly ISpecParserFactory _parserFactory;
+        private ISpecParser? _currentParser;
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(HasSpec), nameof(SpecInfo))]
@@ -26,7 +28,7 @@ namespace MMG.ViewModels.Spec
         private string currentFilePath = "";
 
         [ObservableProperty]
-        private string specYamlContent = "";
+        private string specContent = "";
 
         [ObservableProperty]
         private bool hasUnsavedChanges;
@@ -41,9 +43,11 @@ namespace MMG.ViewModels.Spec
         [NotifyPropertyChangedFor(nameof(HasSelectedMessage))]
         private MessageItem? selectedMessage;
 
-        public SpecViewModel(UdpApiSpecParser specParser)
+        public SpecViewModel(ISpecParserFactory parserFactory)
         {
-            _specParser = specParser;
+            _parserFactory = parserFactory;
+            // 기본 파서 설정 (IDL)
+            _currentParser = parserFactory.CreateParser(SpecParserType.Idl);
         }
 
         partial void OnCurrentSpecChanged(UdpApiSpec? value)
@@ -51,7 +55,7 @@ namespace MMG.ViewModels.Spec
             UpdateMessagesCollection();
         }
 
-        partial void OnSpecYamlContentChanged(string value)
+        partial void OnSpecContentChanged(string value)
         {
             HasUnsavedChanges = true;
         }
@@ -88,10 +92,10 @@ namespace MMG.ViewModels.Spec
 
         private bool CanSaveSpec() => HasSpec && !string.IsNullOrEmpty(CurrentFilePath);
 
-        [RelayCommand(CanExecute = nameof(CanRefreshFromYaml))]
-        private void RefreshFromYaml() => RefreshFromYamlInternal();
+        [RelayCommand(CanExecute = nameof(CanRefreshFromContent))]
+        private void RefreshFromContent() => RefreshFromContentInternal();
 
-        private bool CanRefreshFromYaml() => !string.IsNullOrEmpty(SpecYamlContent);
+        private bool CanRefreshFromContent() => !string.IsNullOrEmpty(SpecContent) && _currentParser != null;
 
         [RelayCommand]
         private void CreateApiRequest(MessageItem? msg)
@@ -115,9 +119,11 @@ namespace MMG.ViewModels.Spec
         {
             if (HasUnsavedChanges && !ConfirmDiscardChanges()) return;
 
-            CurrentSpec = CreateDefaultSpec();
+            // 기본 IDL 파서 사용
+            _currentParser = _parserFactory.CreateParser(SpecParserType.Idl);
+            CurrentSpec = _currentParser.CreateDefaultSpec();
             CurrentFilePath = "";
-            SpecYamlContent = _specParser.ToYaml(CurrentSpec);
+            SpecContent = _currentParser.Serialize(CurrentSpec);
             HasUnsavedChanges = false;
             StatusMessage = "새 스펙이 생성되었습니다";
         }
@@ -128,7 +134,7 @@ namespace MMG.ViewModels.Spec
 
             var dialog = new OpenFileDialog
             {
-                Filter = "YAML 파일 (*.yaml;*.yml)|*.yaml;*.yml|모든 파일 (*.*)|*.*",
+                Filter = _parserFactory.FileFilter,
                 Title = "UDP API 스펙 파일 가져오기"
             };
 
@@ -136,12 +142,14 @@ namespace MMG.ViewModels.Spec
 
             try
             {
-                var yamlContent = File.ReadAllText(dialog.FileName);
-                var spec = _specParser.ParseYaml(yamlContent);
+                // 파일 확장자에 맞는 파서 생성
+                _currentParser = _parserFactory.CreateParser(dialog.FileName);
+                var content = File.ReadAllText(dialog.FileName);
+                var spec = _currentParser.Parse(content);
 
                 CurrentSpec = spec;
                 CurrentFilePath = dialog.FileName;
-                SpecYamlContent = yamlContent;
+                SpecContent = content;
                 HasUnsavedChanges = false;
                 StatusMessage = $"스펙을 불러왔습니다: {Path.GetFileName(dialog.FileName)}";
             }
@@ -154,24 +162,24 @@ namespace MMG.ViewModels.Spec
 
         private void ExportSpecInternal()
         {
-            if (CurrentSpec == null) return;
+            if (CurrentSpec == null || _currentParser == null) return;
 
             var dialog = new SaveFileDialog
             {
-                Filter = "YAML 파일 (*.yaml)|*.yaml|YML 파일 (*.yml)|*.yml",
+                Filter = "IDL 파일 (*.idl)|*.idl|GIDL 파일 (*.gidl)|*.gidl",
                 Title = "UDP API 스펙 파일 내보내기",
-                FileName = $"{CurrentSpec.Info.Title.Replace(" ", "-").ToLower()}-spec.yaml"
+                FileName = $"{CurrentSpec.Info.Title.Replace(" ", "-").ToLower()}-spec.idl"
             };
 
             if (dialog.ShowDialog() != true) return;
 
             try
             {
-                var yaml = string.IsNullOrEmpty(SpecYamlContent)
-                    ? _specParser.ToYaml(CurrentSpec)
-                    : SpecYamlContent;
+                var content = string.IsNullOrEmpty(SpecContent)
+                    ? _currentParser.Serialize(CurrentSpec)
+                    : SpecContent;
 
-                File.WriteAllText(dialog.FileName, yaml);
+                File.WriteAllText(dialog.FileName, content);
                 CurrentFilePath = dialog.FileName;
                 HasUnsavedChanges = false;
                 StatusMessage = $"스펙을 저장했습니다: {Path.GetFileName(dialog.FileName)}";
@@ -193,7 +201,7 @@ namespace MMG.ViewModels.Spec
 
             try
             {
-                File.WriteAllText(CurrentFilePath, SpecYamlContent);
+                File.WriteAllText(CurrentFilePath, SpecContent);
                 HasUnsavedChanges = false;
                 StatusMessage = $"저장됨: {Path.GetFileName(CurrentFilePath)}";
             }
@@ -204,17 +212,19 @@ namespace MMG.ViewModels.Spec
             }
         }
 
-        private void RefreshFromYamlInternal()
+        private void RefreshFromContentInternal()
         {
+            if (_currentParser == null) return;
+
             try
             {
-                var spec = _specParser.ParseYaml(SpecYamlContent);
+                var spec = _currentParser.Parse(SpecContent);
                 CurrentSpec = spec;
-                StatusMessage = "YAML에서 스펙을 새로고침했습니다";
+                StatusMessage = "스펙을 새로고침했습니다";
             }
             catch (Exception ex)
             {
-                ModernMessageDialog.ShowError($"YAML 파싱 오류:\n{ex.Message}",
+                ModernMessageDialog.ShowError($"스펙 파싱 오류:\n{ex.Message}",
                     "오류");
             }
         }
@@ -358,48 +368,6 @@ namespace MMG.ViewModels.Spec
                     Definition = message
                 });
             }
-        }
-
-        private static UdpApiSpec CreateDefaultSpec()
-        {
-            return new UdpApiSpec
-            {
-                Version = "1.0.0",
-                Info = new ApiInfo
-                {
-                    Title = "New UDP API",
-                    Version = "1.0.0",
-                    Description = "UDP API 스펙 설명"
-                },
-                Servers = new List<ServerInfo>
-                {
-                    new ServerInfo
-                    {
-                        Name = "default",
-                        IpAddress = "127.0.0.1",
-                        Port = 5000,
-                        Description = "기본 서버"
-                    }
-                },
-                Messages = new Dictionary<string, MessageDefinition>
-                {
-                    ["sample_request"] = new MessageDefinition
-                    {
-                        Description = "샘플 요청 메시지",
-                        Request = new MessageSchema
-                        {
-                            Header = new List<FieldDefinition>
-                            {
-                                new() { Name = "MessageType", Type = "byte", Description = "메시지 타입" }
-                            },
-                            Payload = new List<FieldDefinition>
-                            {
-                                new() { Name = "Data", Type = "int", Description = "데이터" }
-                            }
-                        }
-                    }
-                }
-            };
         }
 
         private static bool ConfirmDiscardChanges()
