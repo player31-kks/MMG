@@ -8,6 +8,7 @@ using MMG.ViewModels;
 using MMG.ViewModels.API;
 using MMG.ViewModels.Spec;
 using MMG.Core.Services;
+using MMG.Core.Interfaces;
 
 namespace MMG
 {
@@ -31,7 +32,7 @@ namespace MMG
             services.AddSingleton<TestDatabaseService>();
             services.AddSingleton<UdpClientService>();
             services.AddSingleton<SettingsService>();
-            services.AddSingleton<UdpApiSpecParser>();
+            services.AddSingleton<ISpecParserFactory, SpecParserFactory>();
             services.AddSingleton<SpecAdapterService>();
             services.AddSingleton<TestExecutionService>();
 

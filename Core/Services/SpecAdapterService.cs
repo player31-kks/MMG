@@ -11,27 +11,29 @@ namespace MMG.Core.Services
     /// </summary>
     public class SpecAdapterService
     {
-        private readonly UdpApiSpecParser _parser;
+        private readonly ISpecParserFactory _parserFactory;
 
-        public SpecAdapterService()
+        public SpecAdapterService(ISpecParserFactory parserFactory)
         {
-            _parser = new UdpApiSpecParser();
+            _parserFactory = parserFactory;
         }
 
         /// <summary>
-        /// YAML 파일에서 스펙 로드
+        /// 파일에서 스펙 로드
         /// </summary>
         public async Task<UdpApiSpec> LoadSpecAsync(string filePath)
         {
-            return await _parser.ParseFileAsync(filePath);
+            var parser = _parserFactory.CreateParser(filePath);
+            return await parser.ParseFileAsync(filePath);
         }
 
         /// <summary>
-        /// YAML 문자열에서 스펙 파싱
+        /// 문자열에서 스펙 파싱
         /// </summary>
-        public UdpApiSpec ParseSpec(string yamlContent)
+        public UdpApiSpec ParseSpec(string content, SpecParserType parserType = SpecParserType.Idl)
         {
-            return _parser.ParseYaml(yamlContent);
+            var parser = _parserFactory.CreateParser(parserType);
+            return parser.Parse(content);
         }
 
         /// <summary>
@@ -154,19 +156,21 @@ namespace MMG.Core.Services
         }
 
         /// <summary>
-        /// 스펙을 YAML로 내보내기
+        /// 스펙을 파일로 저장
         /// </summary>
         public async Task ExportSpecAsync(UdpApiSpec spec, string filePath)
         {
-            await _parser.SaveToFileAsync(spec, filePath);
+            var parser = _parserFactory.CreateParser(filePath);
+            await parser.SaveToFileAsync(spec, filePath);
         }
 
         /// <summary>
-        /// 스펙을 YAML 문자열로 변환
+        /// 스펙을 문자열로 변환
         /// </summary>
-        public string ToYaml(UdpApiSpec spec)
+        public string SerializeSpec(UdpApiSpec spec, SpecParserType parserType = SpecParserType.Idl)
         {
-            return _parser.ToYaml(spec);
+            var parser = _parserFactory.CreateParser(parserType);
+            return parser.Serialize(spec);
         }
 
         /// <summary>

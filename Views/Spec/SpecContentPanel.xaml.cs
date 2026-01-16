@@ -34,12 +34,12 @@ namespace MMG.Views.Spec
 
         private void OnDocViewRadioChecked(object sender, System.Windows.RoutedEventArgs e)
         {
-            // 문서 뷰로 전환 시 자동으로 YAML 적용
-            if (_viewModel != null && !string.IsNullOrEmpty(_viewModel.SpecYamlContent))
+            // 문서 뷰로 전환 시 자동으로 스펙 적용
+            if (_viewModel != null && !string.IsNullOrEmpty(_viewModel.SpecContent))
             {
-                if (_viewModel.RefreshFromYamlCommand.CanExecute(null))
+                if (_viewModel.RefreshFromContentCommand.CanExecute(null))
                 {
-                    _viewModel.RefreshFromYamlCommand.Execute(null);
+                    _viewModel.RefreshFromContentCommand.Execute(null);
                 }
             }
         }
