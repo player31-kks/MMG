@@ -183,6 +183,9 @@ namespace MMG.ViewModels.API
                         Name = copyName,
                         IpAddress = originalRequest.IpAddress,
                         Port = originalRequest.Port,
+                        IsBigEndian = originalRequest.IsBigEndian,
+                        UseCustomLocalPort = originalRequest.UseCustomLocalPort,
+                        CustomLocalPort = originalRequest.CustomLocalPort,
                         RequestSchemaJson = originalRequest.RequestSchemaJson,
                         ResponseSchemaJson = originalRequest.ResponseSchemaJson,
                         FolderId = originalRequest.FolderId

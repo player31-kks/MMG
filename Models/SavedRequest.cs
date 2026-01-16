@@ -20,6 +20,12 @@ namespace MMG.Models
         private bool isBigEndian = true;
 
         [ObservableProperty]
+        private bool useCustomLocalPort = false;
+
+        [ObservableProperty]
+        private int customLocalPort = 0;
+
+        [ObservableProperty]
         private int? folderId;
 
         [ObservableProperty]

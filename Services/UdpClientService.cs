@@ -24,8 +24,8 @@ namespace MMG.Services
                 // Build message bytes with BigEndian setting
                 var messageBytes = BuildMessage(request.Headers, request.Payload, request.IsBigEndian);
 
-                // Determine local port
-                var localPort = GetLocalPort(request.IpAddress, request.Port);
+                // Determine local port (request-specific port takes priority)
+                var localPort = GetLocalPort(request);
 
                 // Create UDP client with specific local port
                 using var udpClient = new UdpClient(localPort);
@@ -83,20 +83,26 @@ namespace MMG.Services
             return response;
         }
 
-        private int GetLocalPort(string ipAddress, int targetPort)
+        private int GetLocalPort(UdpRequest request)
         {
+            // Request-specific custom local port takes priority
+            if (request.UseCustomLocalPort && request.CustomLocalPort > 0)
+            {
+                return request.CustomLocalPort;
+            }
+
             var settings = SettingsService.Instance;
 
-            // Check if custom port is enabled
+            // Check if global custom port is enabled
             if (settings.UseCustomPort)
             {
-                // Use the custom port for all addresses
+                // Use the global custom port
                 return settings.CustomPort;
             }
             else
             {
                 // Use the same port as target when custom port is disabled
-                return targetPort;
+                return request.Port;
             }
         }
 

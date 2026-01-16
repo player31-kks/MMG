@@ -68,6 +68,8 @@ namespace MMG.ViewModels.API
                     CurrentLoadedRequest.IpAddress = args.CurrentRequest.IpAddress;
                     CurrentLoadedRequest.Port = args.CurrentRequest.Port;
                     CurrentLoadedRequest.IsBigEndian = args.CurrentRequest.IsBigEndian;
+                    CurrentLoadedRequest.UseCustomLocalPort = args.CurrentRequest.UseCustomLocalPort;
+                    CurrentLoadedRequest.CustomLocalPort = args.CurrentRequest.CustomLocalPort;
                     CurrentLoadedRequest.RequestSchemaJson = _databaseService.SerializeDataFields(args.CurrentRequest.Headers) +
                                            "|" + _databaseService.SerializeDataFields(args.CurrentRequest.Payload);
                     CurrentLoadedRequest.ResponseSchemaJson = _databaseService.SerializeDataFields(args.ResponseSchema.Headers) +
@@ -89,6 +91,8 @@ namespace MMG.ViewModels.API
                             IpAddress = args.CurrentRequest.IpAddress,
                             Port = args.CurrentRequest.Port,
                             IsBigEndian = args.CurrentRequest.IsBigEndian,
+                            UseCustomLocalPort = args.CurrentRequest.UseCustomLocalPort,
+                            CustomLocalPort = args.CurrentRequest.CustomLocalPort,
                             FolderId = dialog.SelectedFolderId,
                             RequestSchemaJson = _databaseService.SerializeDataFields(args.CurrentRequest.Headers) +
                                                "|" + _databaseService.SerializeDataFields(args.CurrentRequest.Payload),

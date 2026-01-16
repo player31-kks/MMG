@@ -20,6 +20,14 @@ namespace MMG.Models
         private bool waitForResponse = true;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(LocalPortText))]
+        private bool useCustomLocalPort = false;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(LocalPortText))]
+        private int customLocalPort = 0;
+
+        [ObservableProperty]
         private ObservableCollection<DataField> headers = new();
 
         [ObservableProperty]
@@ -27,5 +35,6 @@ namespace MMG.Models
 
         public string EndianText => IsBigEndian ? "Big Endian" : "Little Endian";
         public string WaitForResponseText => WaitForResponse ? "Wait Response" : "No Wait";
+        public string LocalPortText => UseCustomLocalPort ? $"Port: {CustomLocalPort}" : "Auto";
     }
 }

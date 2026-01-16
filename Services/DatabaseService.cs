@@ -65,6 +65,8 @@ namespace MMG.Services
 
             bool hasFolderId = false;
             bool hasIsBigEndian = false;
+            bool hasUseCustomLocalPort = false;
+            bool hasCustomLocalPort = false;
             while (reader.Read())
             {
                 var columnName = reader["name"].ToString();
@@ -75,6 +77,14 @@ namespace MMG.Services
                 if (columnName == "IsBigEndian")
                 {
                     hasIsBigEndian = true;
+                }
+                if (columnName == "UseCustomLocalPort")
+                {
+                    hasUseCustomLocalPort = true;
+                }
+                if (columnName == "CustomLocalPort")
+                {
+                    hasCustomLocalPort = true;
                 }
             }
             reader.Close();
@@ -92,6 +102,20 @@ namespace MMG.Services
                 alterTableCommand.CommandText = "ALTER TABLE SavedRequests ADD COLUMN IsBigEndian INTEGER NOT NULL DEFAULT 1";
                 alterTableCommand.ExecuteNonQuery();
             }
+
+            if (!hasUseCustomLocalPort)
+            {
+                var alterTableCommand = connection.CreateCommand();
+                alterTableCommand.CommandText = "ALTER TABLE SavedRequests ADD COLUMN UseCustomLocalPort INTEGER NOT NULL DEFAULT 0";
+                alterTableCommand.ExecuteNonQuery();
+            }
+
+            if (!hasCustomLocalPort)
+            {
+                var alterTableCommand = connection.CreateCommand();
+                alterTableCommand.CommandText = "ALTER TABLE SavedRequests ADD COLUMN CustomLocalPort INTEGER NOT NULL DEFAULT 0";
+                alterTableCommand.ExecuteNonQuery();
+            }
         }
 
         public async Task<int> SaveRequestAsync(SavedRequest request)
@@ -106,15 +130,15 @@ namespace MMG.Services
             if (request.Id == 0) // Insert
             {
                 command.CommandText = @"
-                    INSERT INTO SavedRequests (Name, IpAddress, Port, IsBigEndian, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified)
-                    VALUES (@name, @ipAddress, @port, @isBigEndian, @folderId, @requestSchemaJson, @responseSchemaJson, @createdAt, @lastModified);
+                    INSERT INTO SavedRequests (Name, IpAddress, Port, IsBigEndian, UseCustomLocalPort, CustomLocalPort, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified)
+                    VALUES (@name, @ipAddress, @port, @isBigEndian, @useCustomLocalPort, @customLocalPort, @folderId, @requestSchemaJson, @responseSchemaJson, @createdAt, @lastModified);
                     SELECT last_insert_rowid();";
             }
             else // Update
             {
                 command.CommandText = @"
                     UPDATE SavedRequests 
-                    SET Name = @name, IpAddress = @ipAddress, Port = @port, IsBigEndian = @isBigEndian, FolderId = @folderId,
+                    SET Name = @name, IpAddress = @ipAddress, Port = @port, IsBigEndian = @isBigEndian, UseCustomLocalPort = @useCustomLocalPort, CustomLocalPort = @customLocalPort, FolderId = @folderId,
                         RequestSchemaJson = @requestSchemaJson, ResponseSchemaJson = @responseSchemaJson, 
                         LastModified = @lastModified
                     WHERE Id = @id;
@@ -126,6 +150,8 @@ namespace MMG.Services
             command.Parameters.AddWithValue("@ipAddress", request.IpAddress);
             command.Parameters.AddWithValue("@port", request.Port);
             command.Parameters.AddWithValue("@isBigEndian", request.IsBigEndian ? 1 : 0);
+            command.Parameters.AddWithValue("@useCustomLocalPort", request.UseCustomLocalPort ? 1 : 0);
+            command.Parameters.AddWithValue("@customLocalPort", request.CustomLocalPort);
             command.Parameters.AddWithValue("@folderId", request.FolderId.HasValue ? (object)request.FolderId.Value : DBNull.Value);
             command.Parameters.AddWithValue("@requestSchemaJson", request.RequestSchemaJson);
             command.Parameters.AddWithValue("@responseSchemaJson", request.ResponseSchemaJson ?? "");
@@ -148,7 +174,7 @@ namespace MMG.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT Id, Name, IpAddress, Port, IsBigEndian, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
+                SELECT Id, Name, IpAddress, Port, IsBigEndian, UseCustomLocalPort, CustomLocalPort, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
                 FROM SavedRequests
                 ORDER BY LastModified DESC";
 
@@ -162,11 +188,13 @@ namespace MMG.Services
                     IpAddress = reader.GetString(2),
                     Port = reader.GetInt32(3),
                     IsBigEndian = reader.IsDBNull(4) ? true : reader.GetInt32(4) == 1,
-                    FolderId = reader.IsDBNull(5) ? null : reader.GetInt32(5),
-                    RequestSchemaJson = reader.GetString(6),
-                    ResponseSchemaJson = reader.GetString(7),
-                    CreatedAt = DateTime.Parse(reader.GetString(8)),
-                    LastModified = DateTime.Parse(reader.GetString(9))
+                    UseCustomLocalPort = reader.IsDBNull(5) ? false : reader.GetInt32(5) == 1,
+                    CustomLocalPort = reader.IsDBNull(6) ? 0 : reader.GetInt32(6),
+                    FolderId = reader.IsDBNull(7) ? null : reader.GetInt32(7),
+                    RequestSchemaJson = reader.GetString(8),
+                    ResponseSchemaJson = reader.GetString(9),
+                    CreatedAt = DateTime.Parse(reader.GetString(10)),
+                    LastModified = DateTime.Parse(reader.GetString(11))
                 };
                 requests.Add(request);
             }
@@ -181,7 +209,7 @@ namespace MMG.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT Id, Name, IpAddress, Port, IsBigEndian, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
+                SELECT Id, Name, IpAddress, Port, IsBigEndian, UseCustomLocalPort, CustomLocalPort, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
                 FROM SavedRequests
                 WHERE Id = @id";
             command.Parameters.AddWithValue("@id", id);
@@ -196,11 +224,13 @@ namespace MMG.Services
                     IpAddress = reader.GetString(2),
                     Port = reader.GetInt32(3),
                     IsBigEndian = reader.IsDBNull(4) ? true : reader.GetInt32(4) == 1,
-                    FolderId = reader.IsDBNull(5) ? null : reader.GetInt32(5),
-                    RequestSchemaJson = reader.GetString(6),
-                    ResponseSchemaJson = reader.GetString(7),
-                    CreatedAt = DateTime.Parse(reader.GetString(8)),
-                    LastModified = DateTime.Parse(reader.GetString(9))
+                    UseCustomLocalPort = reader.IsDBNull(5) ? false : reader.GetInt32(5) == 1,
+                    CustomLocalPort = reader.IsDBNull(6) ? 0 : reader.GetInt32(6),
+                    FolderId = reader.IsDBNull(7) ? null : reader.GetInt32(7),
+                    RequestSchemaJson = reader.GetString(8),
+                    ResponseSchemaJson = reader.GetString(9),
+                    CreatedAt = DateTime.Parse(reader.GetString(10)),
+                    LastModified = DateTime.Parse(reader.GetString(11))
                 };
             }
 
