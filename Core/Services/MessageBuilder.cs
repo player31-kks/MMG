@@ -91,6 +91,7 @@ namespace MMG.Core.Services
                 var bytes = field.FieldType switch
                 {
                     FieldType.Byte => new[] { ParseByte(value, field.Format) },
+                    FieldType.Int16 => BitConverter.GetBytes(ParseInt16(value, field.Format)),
                     FieldType.UInt16 => BitConverter.GetBytes(ParseUInt16(value, field.Format)),
                     FieldType.Int32 => BitConverter.GetBytes(ParseInt32(value, field.Format)),
                     FieldType.UInt32 => BitConverter.GetBytes(ParseUInt32(value, field.Format)),
@@ -124,6 +125,16 @@ namespace MMG.Core.Services
                 "hex" => Convert.ToByte(value.Replace("0x", ""), 16),
                 "binary" => Convert.ToByte(value.Replace("0b", ""), 2),
                 _ => byte.Parse(value)
+            };
+        }
+
+        private short ParseInt16(string value, string format)
+        {
+            return format.ToLowerInvariant() switch
+            {
+                "hex" => Convert.ToInt16(value.Replace("0x", ""), 16),
+                "binary" => Convert.ToInt16(value.Replace("0b", ""), 2),
+                _ => short.Parse(value)
             };
         }
 

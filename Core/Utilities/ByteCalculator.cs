@@ -29,6 +29,7 @@ namespace MMG.Core.Utilities
             return type switch
             {
                 DataType.Byte => 1,
+                DataType.Int16 => 2,
                 DataType.UInt16 => 2,
                 DataType.Int => 4,
                 DataType.UInt => 4,

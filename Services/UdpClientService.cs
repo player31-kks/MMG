@@ -126,6 +126,7 @@ namespace MMG.Services
                 byte[] bytes = field.Type switch
                 {
                     DataType.Byte => new[] { ParseValue<byte>(field.Value) },
+                    DataType.Int16 => BitConverter.GetBytes(ParseValue<short>(field.Value)),
                     DataType.UInt16 => BitConverter.GetBytes(ParseValue<ushort>(field.Value)),
                     DataType.Int => BitConverter.GetBytes(ParseValue<int>(field.Value)),
                     DataType.UInt => BitConverter.GetBytes(ParseValue<uint>(field.Value)),
@@ -185,6 +186,8 @@ namespace MMG.Services
                 var type = typeof(T);
                 if (type == typeof(byte))
                     return (T)(object)Convert.ToByte(hexValue, 16);
+                else if (type == typeof(short))
+                    return (T)(object)Convert.ToInt16(hexValue, 16);
                 else if (type == typeof(ushort))
                     return (T)(object)Convert.ToUInt16(hexValue, 16);
                 else if (type == typeof(int))
@@ -216,6 +219,8 @@ namespace MMG.Services
                 var type = typeof(T);
                 if (type == typeof(byte))
                     return (T)(object)Convert.ToByte(binaryValue, 2);
+                else if (type == typeof(short))
+                    return (T)(object)Convert.ToInt16(binaryValue, 2);
                 else if (type == typeof(ushort))
                     return (T)(object)Convert.ToUInt16(binaryValue, 2);
                 else if (type == typeof(int))
@@ -286,6 +291,7 @@ namespace MMG.Services
             int size = field.Type switch
             {
                 DataType.Byte => 1,
+                DataType.Int16 => 2,
                 DataType.UInt16 => 2,
                 DataType.Int => 4,
                 DataType.UInt => 4,
@@ -303,6 +309,7 @@ namespace MMG.Services
             object value = field.Type switch
             {
                 DataType.Byte => data[offset],
+                DataType.Int16 => BitConverter.ToInt16(data, offset),
                 DataType.UInt16 => BitConverter.ToUInt16(data, offset),
                 DataType.Int => BitConverter.ToInt32(data, offset),
                 DataType.UInt => BitConverter.ToUInt32(data, offset),

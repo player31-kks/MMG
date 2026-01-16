@@ -10,6 +10,9 @@ namespace MMG.Core.Models.Protocol
         [Description("1 byte (0-255)")]
         Byte,
 
+        [Description("2 bytes (signed)")]
+        Int16,
+
         [Description("2 bytes (0-65535)")]
         UInt16,
 

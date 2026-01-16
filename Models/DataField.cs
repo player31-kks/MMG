@@ -5,6 +5,7 @@ namespace MMG.Models
     public enum DataType
     {
         Byte,
+        Int16,
         UInt16,
         Int,
         UInt,

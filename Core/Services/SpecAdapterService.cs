@@ -209,6 +209,7 @@ namespace MMG.Core.Services
             return fieldType switch
             {
                 Models.Protocol.FieldType.Byte => DataType.Byte,
+                Models.Protocol.FieldType.Int16 => DataType.Int16,
                 Models.Protocol.FieldType.UInt16 => DataType.UInt16,
                 Models.Protocol.FieldType.Int32 => DataType.Int,
                 Models.Protocol.FieldType.UInt32 => DataType.UInt,
@@ -223,6 +224,7 @@ namespace MMG.Core.Services
             return dataType switch
             {
                 DataType.Byte => "byte",
+                DataType.Int16 => "int16",
                 DataType.UInt16 => "uint16",
                 DataType.Int => "int32",
                 DataType.UInt => "uint32",

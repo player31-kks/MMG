@@ -64,6 +64,7 @@
                                         <ComboBox.ItemsSource>
                                             <x:Array Type="models:DataType">
                                                 <models:DataType>Byte</models:DataType>
+                                                <models:DataType>Int16</models:DataType>
                                                 <models:DataType>UInt16</models:DataType>
                                                 <models:DataType>Int</models:DataType>
                                                 <models:DataType>UInt</models:DataType>
@@ -232,6 +233,7 @@
                                         <ComboBox.ItemsSource>
                                             <x:Array Type="models:DataType">
                                                 <models:DataType>Byte</models:DataType>
+                                                <models:DataType>Int16</models:DataType>
                                                 <models:DataType>UInt16</models:DataType>
                                                 <models:DataType>Int</models:DataType>
                                                 <models:DataType>UInt</models:DataType>

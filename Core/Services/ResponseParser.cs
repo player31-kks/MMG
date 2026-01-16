@@ -87,6 +87,7 @@ namespace MMG.Core.Services
                 var value = field.FieldType switch
                 {
                     FieldType.Byte => bytes[0].ToString(),
+                    FieldType.Int16 => BitConverter.ToInt16(bytes, 0).ToString(),
                     FieldType.UInt16 => BitConverter.ToUInt16(bytes, 0).ToString(),
                     FieldType.Int32 => BitConverter.ToInt32(bytes, 0).ToString(),
                     FieldType.UInt32 => BitConverter.ToUInt32(bytes, 0).ToString(),
@@ -123,7 +124,7 @@ namespace MMG.Core.Services
             return type switch
             {
                 FieldType.Byte => $"0x{bytes[0]:X2}",
-                FieldType.UInt16 => $"0x{BitConverter.ToUInt16(bytes, 0):X4}",
+                FieldType.Int16 or FieldType.UInt16 => $"0x{BitConverter.ToUInt16(bytes, 0):X4}",
                 FieldType.Int32 or FieldType.UInt32 => $"0x{BitConverter.ToUInt32(bytes, 0):X8}",
                 _ => BitConverter.ToString(bytes).Replace("-", " ")
             };
