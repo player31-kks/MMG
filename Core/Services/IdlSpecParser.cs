@@ -16,9 +16,10 @@ namespace MMG.Core.Services
     {
         // 정규식 패턴들
         private static readonly Regex DirectivePattern = new(@"//\+(\w+)=(\w+)", RegexOptions.Compiled);
-        private static readonly Regex StructPattern = new(@"struct\s+(\w+)\s*(//\$\(([^)]*)\)\$)?", RegexOptions.Compiled);
-        private static readonly Regex FieldPattern = new(@"^\s*([\w\s]+)\s+(\w+)\s*(?:\[(\d+)\])?\s*(?::\s*(\d+))?\s*;\s*(//\$\(([^)]*)\)\$)?(.*)$", RegexOptions.Compiled);
+        private static readonly Regex StructPattern = new(@"struct\s+(\w+)\s*(//\s*\$\(([^)]*)\)\$)?", RegexOptions.Compiled);
+        private static readonly Regex FieldPattern = new(@"^\s*([\w\s]+)\s+(\w+)\s*(?:\[(\d+)\])?\s*(?::\s*(\d+))?\s*;\s*(//\s*\$\(([^)]*)\)\$)?(.*)$", RegexOptions.Compiled);
         private static readonly Regex CommentPattern = new(@"//(.*)$", RegexOptions.Compiled);
+        private static readonly Regex MsgIdMarkerPattern = new(@"//\s*\$\(\)\$", RegexOptions.Compiled);
 
         public IReadOnlyList<string> SupportedExtensions => new[] { ".idl", ".gidl" };
 
@@ -270,11 +271,11 @@ namespace MMG.Core.Services
 
             var field = new IdlField();
 
-            // //$()$ 마커 체크
-            if (line.Contains("//$()$"))
+            // //$()$ 마커 체크 (공백 허용: // $()$ 또는 //$()$)
+            if (MsgIdMarkerPattern.IsMatch(line))
             {
                 field.IsMsgIdField = true;
-                line = line.Replace("//$()$", "").Trim();
+                line = MsgIdMarkerPattern.Replace(line, "").Trim();
             }
 
             // 주석 분리
