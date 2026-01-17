@@ -626,96 +626,69 @@ namespace MMG.Services
         }
 
         /// <summary>
-        /// 메시지 수신 대기 (서버 모드)
+        /// 메시지 수신 대기 (서버 모드) - 시나리오 포트 바인딩 필수
         /// </summary>
         private async Task ExecuteWaitForMessage(TestStep step, TestResult result, CancellationToken cancellationToken)
         {
+            // 시나리오 포트 바인딩 필수
+            if (_scenarioClient == null)
+            {
+                throw new Exception("수신 대기를 사용하려면 시나리오에서 포트 바인딩을 설정해야 합니다.");
+            }
+
             int timeoutMs = step.ReceiveTimeoutMs;
-
-            // 시나리오 클라이언트가 있으면 사용
-            if (_scenarioClient != null)
-            {
-                AddLog(LogLevel.Info, $"메시지 수신 대기 시작 (시나리오 포트: {_scenarioBindPort}), 타임아웃: {timeoutMs}ms", step.Name);
-                result.RequestSent = $"수신 대기 - 시나리오 포트: {_scenarioBindPort}";
-
-                var receiveResult = await _scenarioClient.WaitForResponseAsync(timeoutMs);
-
-                if (receiveResult != null)
-                {
-                    var responseText = BitConverter.ToString(receiveResult.Value.Data).Replace("-", " ");
-                    result.ResponseReceived = $"수신됨 from {receiveResult.Value.RemoteEndPoint}: {responseText}";
-                    AddLog(LogLevel.Success, $"메시지 수신 완료: {receiveResult.Value.Data.Length} bytes from {receiveResult.Value.RemoteEndPoint}", step.Name);
-
-                    DataReceived?.Invoke(this, new DataReceivedEventArgs
-                    {
-                        IpAddress = receiveResult.Value.RemoteEndPoint.Address.ToString(),
-                        Port = receiveResult.Value.RemoteEndPoint.Port,
-                        Data = receiveResult.Value.Data,
-                        Timestamp = DateTime.Now
-                    });
-                }
-                else
-                {
-                    throw new TimeoutException($"수신 타임아웃 ({timeoutMs}ms)");
-                }
-                return;
-            }
-
-            // 시나리오 클라이언트 없으면 스텝별 포트 사용
-            int listenPort = step.ListenPort;
-
-            if (listenPort <= 0)
-            {
-                throw new Exception("수신 대기 포트가 설정되지 않았습니다. 시나리오 포트 바인딩을 사용하거나 스텝에 수신 포트를 설정하세요.");
-            }
-
-            AddLog(LogLevel.Info, $"메시지 수신 대기 시작 - 포트: {listenPort}, 타임아웃: {timeoutMs}ms", step.Name);
-            result.RequestSent = $"수신 대기 - 포트: {listenPort}";
-
-            using var udpClient = new UdpClient(listenPort);
             
-            try
+            // 예상 패킷 크기 계산
+            var savedRequest = await GetSavedRequestAsync(step.SavedRequestId);
+            int expectedSize = CalculateExpectedPacketSize(savedRequest);
+
+            AddLog(LogLevel.Info, $"메시지 수신 대기 시작 (포트: {_scenarioBindPort}), 타임아웃: {timeoutMs}ms, 예상 크기: {expectedSize} bytes", step.Name);
+            result.RequestSent = $"수신 대기 - 포트: {_scenarioBindPort}, 예상 크기: {expectedSize} bytes";
+
+            var receiveResult = await _scenarioClient.WaitForResponseAsync(timeoutMs);
+
+            if (receiveResult != null)
             {
-                using var timeoutCts = new CancellationTokenSource(timeoutMs);
-                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+                var receivedData = receiveResult.Value.Data;
+                var responseText = BitConverter.ToString(receivedData).Replace("-", " ");
+                
+                AddLog(LogLevel.Debug, $"메시지 수신: {receivedData.Length} bytes from {receiveResult.Value.RemoteEndPoint}", step.Name);
 
-                var receiveTask = udpClient.ReceiveAsync();
-                var delayTask = Task.Delay(timeoutMs, linkedCts.Token);
-
-                var completedTask = await Task.WhenAny(receiveTask, delayTask);
-
-                if (completedTask == receiveTask)
+                DataReceived?.Invoke(this, new DataReceivedEventArgs
                 {
-                    var udpResult = await receiveTask;
-                    var responseText = BitConverter.ToString(udpResult.Buffer).Replace("-", " ");
-                    result.ResponseReceived = $"수신됨 from {udpResult.RemoteEndPoint}: {responseText}";
-                    AddLog(LogLevel.Success, $"메시지 수신 완료: {udpResult.Buffer.Length} bytes from {udpResult.RemoteEndPoint}", step.Name);
+                    IpAddress = receiveResult.Value.RemoteEndPoint.Address.ToString(),
+                    Port = receiveResult.Value.RemoteEndPoint.Port,
+                    Data = receivedData,
+                    Timestamp = DateTime.Now
+                });
 
-                    // DataReceived 이벤트 발생
-                    DataReceived?.Invoke(this, new DataReceivedEventArgs
-                    {
-                        IpAddress = udpResult.RemoteEndPoint.Address.ToString(),
-                        Port = udpResult.RemoteEndPoint.Port,
-                        Data = udpResult.Buffer,
-                        Timestamp = DateTime.Now
-                    });
-                }
-                else
+                // 패킷 크기 검증
+                if (receivedData.Length != expectedSize)
                 {
-                    throw new TimeoutException($"수신 타임아웃 ({timeoutMs}ms)");
+                    result.ResponseReceived = $"수신됨 from {receiveResult.Value.RemoteEndPoint}: {responseText}";
+                    throw new Exception($"패킷 크기 불일치: 예상 {expectedSize} bytes, 실제 {receivedData.Length} bytes");
                 }
+
+                result.ResponseReceived = $"수신됨 from {receiveResult.Value.RemoteEndPoint} ({receivedData.Length} bytes): {responseText}";
+                AddLog(LogLevel.Success, $"메시지 수신 완료 - 크기 검증 성공 ({receivedData.Length} bytes)", step.Name);
             }
-            finally
+            else
             {
-                udpClient.Close();
+                throw new TimeoutException($"수신 타임아웃 ({timeoutMs}ms)");
             }
         }
 
         /// <summary>
-        /// 메시지 수신 후 응답 전송 (서버 모드)
+        /// 메시지 수신 후 응답 전송 (서버 모드) - 시나리오 포트 바인딩 필수
         /// </summary>
         private async Task ExecuteReceiveAndReply(TestStep step, TestResult result, CancellationToken cancellationToken)
         {
+            // 시나리오 포트 바인딩 필수
+            if (_scenarioClient == null)
+            {
+                throw new Exception("수신 후 응답을 사용하려면 시나리오에서 포트 바인딩을 설정해야 합니다.");
+            }
+
             int timeoutMs = step.ReceiveTimeoutMs;
             int responseRequestId = step.ResponseRequestId;
 
@@ -724,106 +697,51 @@ namespace MMG.Services
                 throw new Exception("응답 요청 ID가 설정되지 않았습니다.");
             }
 
-            // 시나리오 클라이언트가 있으면 사용
-            if (_scenarioClient != null)
+            // 예상 패킷 크기 계산
+            var savedRequest = await GetSavedRequestAsync(step.SavedRequestId);
+            int expectedSize = CalculateExpectedPacketSize(savedRequest);
+
+            AddLog(LogLevel.Info, $"수신 후 응답 대기 (포트: {_scenarioBindPort}), 타임아웃: {timeoutMs}ms, 예상 크기: {expectedSize} bytes", step.Name);
+            result.RequestSent = $"수신 대기 (응답 예정) - 포트: {_scenarioBindPort}, 예상 크기: {expectedSize} bytes";
+
+            var receiveResult = await _scenarioClient.WaitForResponseAsync(timeoutMs);
+
+            if (receiveResult != null)
             {
-                AddLog(LogLevel.Info, $"수신 후 응답 대기 (시나리오 포트: {_scenarioBindPort}), 타임아웃: {timeoutMs}ms", step.Name);
-                result.RequestSent = $"수신 대기 (응답 예정) - 시나리오 포트: {_scenarioBindPort}";
+                var receivedData = receiveResult.Value.Data;
+                var receivedText = BitConverter.ToString(receivedData).Replace("-", " ");
+                
+                AddLog(LogLevel.Debug, $"메시지 수신: {receivedData.Length} bytes from {receiveResult.Value.RemoteEndPoint}", step.Name);
 
-                var receiveResult = await _scenarioClient.WaitForResponseAsync(timeoutMs);
-
-                if (receiveResult != null)
+                DataReceived?.Invoke(this, new DataReceivedEventArgs
                 {
-                    var receivedText = BitConverter.ToString(receiveResult.Value.Data).Replace("-", " ");
-                    AddLog(LogLevel.Info, $"메시지 수신: {receiveResult.Value.Data.Length} bytes from {receiveResult.Value.RemoteEndPoint}", step.Name);
+                    IpAddress = receiveResult.Value.RemoteEndPoint.Address.ToString(),
+                    Port = receiveResult.Value.RemoteEndPoint.Port,
+                    Data = receivedData,
+                    Timestamp = DateTime.Now
+                });
 
-                    DataReceived?.Invoke(this, new DataReceivedEventArgs
-                    {
-                        IpAddress = receiveResult.Value.RemoteEndPoint.Address.ToString(),
-                        Port = receiveResult.Value.RemoteEndPoint.Port,
-                        Data = receiveResult.Value.Data,
-                        Timestamp = DateTime.Now
-                    });
-
-                    // 응답 전송 (시나리오 클라이언트 사용)
-                    var responseRequest = await GetSavedRequestAsync(responseRequestId);
-                    var messageBytes = BuildMessageFromSavedRequest(responseRequest);
-                    var replyEndpoint = receiveResult.Value.RemoteEndPoint;
-
-                    AddLog(LogLevel.Debug, $"응답 전송: {replyEndpoint}", step.Name);
-                    await _scenarioClient.SendAsync(messageBytes, replyEndpoint);
-
-                    result.ResponseReceived = $"수신: {receivedText}\n응답 전송: {replyEndpoint}";
-                    AddLog(LogLevel.Success, "수신 후 응답 전송 완료", step.Name);
-                }
-                else
+                // 패킷 크기 검증
+                if (receivedData.Length != expectedSize)
                 {
-                    throw new TimeoutException($"수신 타임아웃 ({timeoutMs}ms)");
+                    result.ResponseReceived = $"수신: {receivedText}";
+                    throw new Exception($"패킷 크기 불일치: 예상 {expectedSize} bytes, 실제 {receivedData.Length} bytes");
                 }
-                return;
+
+                // 응답 전송
+                var responseRequest = await GetSavedRequestAsync(responseRequestId);
+                var messageBytes = BuildMessageFromSavedRequest(responseRequest);
+                var replyEndpoint = receiveResult.Value.RemoteEndPoint;
+
+                AddLog(LogLevel.Debug, $"응답 전송: {replyEndpoint}", step.Name);
+                await _scenarioClient.SendAsync(messageBytes, replyEndpoint);
+
+                result.ResponseReceived = $"수신 ({receivedData.Length} bytes): {receivedText}\n응답 전송: {replyEndpoint}";
+                AddLog(LogLevel.Success, $"수신 후 응답 전송 완료 - 크기 검증 성공 ({receivedData.Length} bytes)", step.Name);
             }
-
-            // 시나리오 클라이언트 없으면 스텝별 포트 사용
-            int listenPort = step.ListenPort;
-
-            if (listenPort <= 0)
+            else
             {
-                throw new Exception("수신 대기 포트가 설정되지 않았습니다. 시나리오 포트 바인딩을 사용하거나 스텝에 수신 포트를 설정하세요.");
-            }
-
-            AddLog(LogLevel.Info, $"수신 후 응답 대기 시작 - 포트: {listenPort}, 타임아웃: {timeoutMs}ms", step.Name);
-            result.RequestSent = $"수신 대기 (응답 예정) - 포트: {listenPort}";
-
-            using var udpClient = new UdpClient(listenPort);
-
-            try
-            {
-                using var timeoutCts = new CancellationTokenSource(timeoutMs);
-                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-
-                var receiveTask = udpClient.ReceiveAsync();
-                var delayTask = Task.Delay(timeoutMs, linkedCts.Token);
-
-                var completedTask = await Task.WhenAny(receiveTask, delayTask);
-
-                if (completedTask == receiveTask)
-                {
-                    var udpResult = await receiveTask;
-                    var receivedText = BitConverter.ToString(udpResult.Buffer).Replace("-", " ");
-                    AddLog(LogLevel.Info, $"메시지 수신: {udpResult.Buffer.Length} bytes from {udpResult.RemoteEndPoint}", step.Name);
-
-                    // DataReceived 이벤트 발생
-                    DataReceived?.Invoke(this, new DataReceivedEventArgs
-                    {
-                        IpAddress = udpResult.RemoteEndPoint.Address.ToString(),
-                        Port = udpResult.RemoteEndPoint.Port,
-                        Data = udpResult.Buffer,
-                        Timestamp = DateTime.Now
-                    });
-
-                    // 응답 전송
-                    var responseRequest = await GetSavedRequestAsync(responseRequestId);
-                    var responseUdpRequest = CreateUdpRequestFromSaved(responseRequest);
-
-                    // 응답은 수신된 주소로 전송
-                    responseUdpRequest.IpAddress = udpResult.RemoteEndPoint.Address.ToString();
-                    responseUdpRequest.Port = udpResult.RemoteEndPoint.Port;
-
-                    AddLog(LogLevel.Debug, $"응답 전송: {responseUdpRequest.IpAddress}:{responseUdpRequest.Port}", step.Name);
-
-                    var response = await _udpClientService.SendRequestAsync(responseUdpRequest);
-
-                    result.ResponseReceived = $"수신: {receivedText}\n응답 전송: {responseRequest.IpAddress}:{responseRequest.Port}";
-                    AddLog(LogLevel.Success, "수신 후 응답 전송 완료", step.Name);
-                }
-                else
-                {
-                    throw new TimeoutException($"수신 타임아웃 ({timeoutMs}ms)");
-                }
-            }
-            finally
-            {
-                udpClient.Close();
+                throw new TimeoutException($"수신 타임아웃 ({timeoutMs}ms)");
             }
         }
 
@@ -869,6 +787,58 @@ namespace MMG.Services
                 result.ResponseReceived = "빈 응답";
                 AddLog(LogLevel.Warning, "빈 응답 수신", step.Name);
             }
+        }
+
+        /// <summary>
+        /// SavedRequest의 Header + Response 예상 패킷 크기 계산
+        /// </summary>
+        private int CalculateExpectedPacketSize(SavedRequest savedRequest)
+        {
+            int totalSize = 0;
+
+            // RequestSchemaJson에서 Header 크기 계산
+            if (!string.IsNullOrEmpty(savedRequest.RequestSchemaJson))
+            {
+                var parts = savedRequest.RequestSchemaJson.Split('|');
+                if (parts.Length >= 1 && !string.IsNullOrEmpty(parts[0]))
+                {
+                    var headers = _databaseService.DeserializeDataFields(parts[0]);
+                    foreach (var field in headers)
+                    {
+                        totalSize += GetFieldSize(field);
+                    }
+                }
+            }
+
+            // ResponseSchemaJson에서 Response 크기 계산
+            if (!string.IsNullOrEmpty(savedRequest.ResponseSchemaJson))
+            {
+                var responseFields = _databaseService.DeserializeDataFields(savedRequest.ResponseSchemaJson);
+                foreach (var field in responseFields)
+                {
+                    totalSize += GetFieldSize(field);
+                }
+            }
+
+            return totalSize;
+        }
+
+        /// <summary>
+        /// DataField의 바이트 크기 계산
+        /// </summary>
+        private int GetFieldSize(DataField field)
+        {
+            return field.Type switch
+            {
+                DataType.Byte => 1,
+                DataType.Int16 => 2,
+                DataType.UInt16 => 2,
+                DataType.Int => 4,
+                DataType.UInt => 4,
+                DataType.Float => 4,
+                DataType.Padding => field.PaddingSize,
+                _ => 0
+            };
         }
 
         private UdpRequest CreateUdpRequestFromSaved(SavedRequest savedRequest)

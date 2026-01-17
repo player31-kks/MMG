@@ -32,6 +32,9 @@ namespace MMG.Models
         private bool isEditing = false;
 
         [ObservableProperty]
+        private bool isEditingPort = false;
+
+        [ObservableProperty]
         private double progress = 0;
 
         /// <summary>

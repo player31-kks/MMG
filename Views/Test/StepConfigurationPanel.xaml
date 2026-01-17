@@ -419,23 +419,6 @@
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
-                            <Grid Margin="0,0,0,8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="80"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0"
-                                           Text="수신 포트:"
-                                           FontSize="12"
-                                           Foreground="#495057"
-                                           VerticalAlignment="Center"/>
-                                <TextBox Grid.Column="1"
-                                         Text="{Binding SelectedStep.ListenPort, Mode=TwoWay}"
-                                         FontSize="12"
-                                         Padding="8,4"
-                                         BorderBrush="#DEE2E6"
-                                         BorderThickness="1"/>
-                            </Grid>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="80"/>
@@ -460,7 +443,7 @@
                                            VerticalAlignment="Center"
                                            Margin="4,0,0,0"/>
                             </Grid>
-                            <TextBlock Text="💡 지정된 포트에서 UDP 메시지를 수신 대기합니다. (서버 모드)"
+                            <TextBlock Text="💡 시나리오 포트에서 UDP 메시지를 수신 대기합니다. 수신된 패킷 크기가 요청의 Header+Response 크기와 일치하면 성공입니다."
                                        FontSize="11"
                                        Foreground="#6C757D"
                                        FontStyle="Italic"
@@ -483,23 +466,6 @@
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
-                            <Grid Margin="0,0,0,8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="80"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0"
-                                           Text="수신 포트:"
-                                           FontSize="12"
-                                           Foreground="#495057"
-                                           VerticalAlignment="Center"/>
-                                <TextBox Grid.Column="1"
-                                         Text="{Binding SelectedStep.ListenPort, Mode=TwoWay}"
-                                         FontSize="12"
-                                         Padding="8,4"
-                                         BorderBrush="#DEE2E6"
-                                         BorderThickness="1"/>
-                            </Grid>
                             <Grid Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="80"/>
@@ -544,7 +510,7 @@
                                           BorderBrush="#DEE2E6"
                                           BorderThickness="1"/>
                             </Grid>
-                            <TextBlock Text="💡 메시지 수신 후 지정된 응답 요청을 송신자에게 전송합니다."
+                            <TextBlock Text="💡 시나리오 포트에서 메시지 수신 후 지정된 응답 요청을 송신자에게 전송합니다. 수신된 패킷 크기가 요청의 Header+Response 크기와 일치해야 성공입니다."
                                        FontSize="11"
                                        Foreground="#6C757D"
                                        FontStyle="Italic"

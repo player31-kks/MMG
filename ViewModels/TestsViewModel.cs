@@ -137,6 +137,34 @@ namespace MMG.ViewModels
         }
 
         [RelayCommand]
+        private void EditScenarioPort(TestScenario? scenario)
+        {
+            if (scenario != null)
+                StartEditingPort(scenario);
+        }
+
+        [RelayCommand]
+        private async Task SaveScenarioPort(TestScenario? scenario)
+        {
+            if (scenario != null)
+                await SavePortInternal(scenario);
+        }
+
+        [RelayCommand]
+        private void CancelScenarioPort(TestScenario? scenario)
+        {
+            if (scenario != null)
+                CancelEditingPort(scenario);
+        }
+
+        [RelayCommand]
+        private async Task DuplicateScenario(TestScenario? scenario)
+        {
+            if (scenario != null)
+                await DuplicateScenarioInternal(scenario);
+        }
+
+        [RelayCommand]
         private async Task SaveScenarioRename(TestScenario? scenario)
         {
             if (scenario != null)
@@ -561,6 +589,118 @@ namespace MMG.ViewModels
                     });
                 }
             });
+        }
+
+        private void StartEditingPort(TestScenario scenario)
+        {
+            // 다른 시나리오의 포트 편집 모드 해제
+            foreach (var s in Scenarios)
+            {
+                if (s != scenario)
+                {
+                    s.IsEditingPort = false;
+                }
+            }
+
+            scenario.IsEditingPort = true;
+        }
+
+        private async Task SavePortInternal(TestScenario scenario)
+        {
+            try
+            {
+                await _testDatabaseService.UpdateScenarioAsync(scenario);
+                scenario.IsEditingPort = false;
+            }
+            catch (System.Exception ex)
+            {
+                ModernMessageDialog.ShowError($"포트 설정 변경 중 오류가 발생했습니다: {ex.Message}");
+            }
+        }
+
+        private void CancelEditingPort(TestScenario scenario)
+        {
+            scenario.IsEditingPort = false;
+
+            // 원래 값으로 복원
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var originalScenario = await _testDatabaseService.GetScenarioByIdAsync(scenario.Id);
+                    if (originalScenario != null)
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            scenario.UseBindPort = originalScenario.UseBindPort;
+                            scenario.BindPort = originalScenario.BindPort;
+                        });
+                    }
+                }
+                catch { }
+            });
+        }
+
+        private async Task DuplicateScenarioInternal(TestScenario scenario)
+        {
+            try
+            {
+                // 새 시나리오 생성
+                var newScenario = new TestScenario
+                {
+                    Name = $"{scenario.Name} (복사본)",
+                    Description = scenario.Description,
+                    UseBindPort = scenario.UseBindPort,
+                    BindPort = scenario.BindPort,
+                    IsEnabled = scenario.IsEnabled
+                };
+
+                // 시나리오 저장
+                newScenario.Id = await _testDatabaseService.CreateScenarioAsync(newScenario);
+
+                // 기존 시나리오의 스텝들 복사
+                var originalSteps = await _testDatabaseService.GetStepsForScenarioAsync(scenario.Id);
+                foreach (var step in originalSteps)
+                {
+                    var newStep = new TestStep
+                    {
+                        ScenarioId = newScenario.Id,
+                        Name = step.Name,
+                        StepType = step.StepType,
+                        SavedRequestId = step.SavedRequestId,
+                        PreDelayMs = step.PreDelayMs,
+                        PostDelayMs = step.PostDelayMs,
+                        IntervalMs = step.IntervalMs,
+                        FrequencyHz = step.FrequencyHz,
+                        DurationMs = step.DurationMs,
+                        RepeatCount = step.RepeatCount,
+                        ExpectedResponse = step.ExpectedResponse,
+                        IsEnabled = step.IsEnabled,
+                        Order = step.Order,
+                        IsBackground = step.IsBackground,
+                        StartDelayFromScenarioMs = step.StartDelayFromScenarioMs,
+                        ListenPort = step.ListenPort,
+                        ReceiveTimeoutMs = step.ReceiveTimeoutMs,
+                        ResponseRequestId = step.ResponseRequestId
+                    };
+
+                    // DB에 저장하고 ID 받기
+                    newStep.Id = await _testDatabaseService.CreateStepAsync(newStep);
+                    
+                    // 시나리오의 Steps 컬렉션에 추가
+                    newScenario.Steps.Add(newStep);
+                }
+
+                // UI에 추가
+                Scenarios.Add(newScenario);
+                SelectedScenario = newScenario;
+
+                ModernMessageDialog.ShowSuccess($"시나리오 '{scenario.Name}'이(가) 복사되었습니다. ({newScenario.Steps.Count}개 스텝)", "복사 완료");
+            }
+            catch (System.Exception ex)
+            {
+                ModernMessageDialog.ShowError($"시나리오 복사 중 오류가 발생했습니다: {ex.Message}");
+            }
         }
 
         private void OnDataReceived(object? sender, DataReceivedEventArgs e)
