@@ -23,12 +23,23 @@ namespace MMG.ViewModels.API
         [NotifyCanExecuteChangedFor(nameof(SendCommand))]
         private bool isSending;
 
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(PortBindStatusText))]
+        [NotifyPropertyChangedFor(nameof(PortBindButtonText))]
+        [NotifyCanExecuteChangedFor(nameof(TogglePortBindCommand))]
+        private bool isPortBound;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(PortBindStatusText))]
+        private int? boundPort;
+
         public RequestViewModel(UdpClientService udpClientService)
         {
             _udpClientService = udpClientService;
             currentRequest = new UdpRequest();
 
             InitializeDefaultFields();
+            UpdatePortBindStatus();
         }
 
         #region Properties
@@ -37,6 +48,12 @@ namespace MMG.ViewModels.API
         public int PayloadBytes => ByteCalculator.CalculateBytes(CurrentRequest.Payload);
         public string HeaderBytesText => ByteCalculator.FormatBytesText(HeaderBytes);
         public string PayloadBytesText => ByteCalculator.FormatBytesText(PayloadBytes);
+
+        public string PortBindStatusText => IsPortBound 
+            ? $"바인딩됨: Port {BoundPort}" 
+            : "바인딩 없음";
+
+        public string PortBindButtonText => IsPortBound ? "해제" : "바인딩";
 
         #endregion
 
@@ -152,6 +169,51 @@ namespace MMG.ViewModels.API
         }
 
         private bool CanSend() => !IsSending;
+
+        [RelayCommand]
+        private void TogglePortBind()
+        {
+            if (IsPortBound)
+            {
+                // 포트 해제
+                _udpClientService.UnbindPort();
+            }
+            else
+            {
+                // 포트 바인딩
+                int portToBind = 0;
+
+                if (CurrentRequest.UseCustomLocalPort && CurrentRequest.CustomLocalPort > 0)
+                {
+                    portToBind = CurrentRequest.CustomLocalPort;
+                }
+                else if (SettingsService.Instance.UseCustomPort)
+                {
+                    portToBind = SettingsService.Instance.CustomPort;
+                }
+
+                try
+                {
+                    _udpClientService.BindPort(portToBind);
+                }
+                catch (Exception ex)
+                {
+                    System.Windows.MessageBox.Show(
+                        $"포트 바인딩 실패: {ex.Message}", 
+                        "오류",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Error);
+                }
+            }
+
+            UpdatePortBindStatus();
+        }
+
+        private void UpdatePortBindStatus()
+        {
+            IsPortBound = _udpClientService.IsPortBound;
+            BoundPort = _udpClientService.CurrentBoundPort;
+        }
 
         [RelayCommand]
         private void AddHeader(object? selectedIndexObj = null)

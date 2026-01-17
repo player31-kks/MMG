@@ -5,6 +5,8 @@ namespace MMG.Views.Common
     public partial class CreateScenarioDialog : Window
     {
         public string ScenarioName { get; private set; } = string.Empty;
+        public bool UseBindPort { get; private set; } = false;
+        public int BindPort { get; private set; } = 0;
 
         public CreateScenarioDialog()
         {
@@ -23,6 +25,13 @@ namespace MMG.Views.Common
             }
 
             ScenarioName = ScenarioNameTextBox.Text.Trim();
+            UseBindPort = UseBindPortCheckBox.IsChecked == true;
+
+            if (UseBindPort && int.TryParse(BindPortTextBox.Text, out int port))
+            {
+                BindPort = port;
+            }
+
             DialogResult = true;
             Close();
         }

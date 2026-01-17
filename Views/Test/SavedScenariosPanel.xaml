@@ -4,10 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:models="clr-namespace:MMG.Models"
+             xmlns:converters="clr-namespace:MMG.Converters"
              mc:Ignorable="d"
              d:DesignHeight="600"
              d:DesignWidth="360"
              Background="{StaticResource PanelBackground}">
+    <UserControl.Resources>
+        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -79,6 +83,31 @@
                     <Border Style="{StaticResource ScenarioListItem}">
                         <Border.ContextMenu>
                             <ContextMenu>
+                                <MenuItem Header="이름 변경"
+                                          Command="{Binding DataContext.RenameScenarioCommand, Source={x:Reference ScenariosListBox}}"
+                                          CommandParameter="{Binding}">
+                                    <MenuItem.Icon>
+                                        <TextBlock Text="✏️"
+                                                   FontSize="12"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="포트 설정"
+                                          Command="{Binding DataContext.EditScenarioPortCommand, Source={x:Reference ScenariosListBox}}"
+                                          CommandParameter="{Binding}">
+                                    <MenuItem.Icon>
+                                        <TextBlock Text="🔌"
+                                                   FontSize="12"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="복사"
+                                          Command="{Binding DataContext.DuplicateScenarioCommand, Source={x:Reference ScenariosListBox}}"
+                                          CommandParameter="{Binding}">
+                                    <MenuItem.Icon>
+                                        <TextBlock Text="📋"
+                                                   FontSize="12"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator/>
                                 <MenuItem Header="삭제"
                                           Command="{Binding DataContext.DeleteScenarioCommand, Source={x:Reference ScenariosListBox}}"
                                           CommandParameter="{Binding}">
@@ -172,6 +201,117 @@
                                 <TextBlock Text="{Binding TestSteps.Count, StringFormat='{}{0}개 단계'}"
                                            FontSize="11"
                                            Foreground="#6C757D"/>
+                                <!-- 포트 바인딩 표시 (읽기 모드) -->
+                                <Rectangle Width="4"
+                                           Height="4"
+                                           VerticalAlignment="Center"
+                                           Margin="8,0"
+                                           Fill="#6C757D"
+                                           RadiusX="2"
+                                           RadiusY="2">
+                                    <Rectangle.Style>
+                                        <Style TargetType="Rectangle">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding UseBindPort}" Value="True"/>
+                                                        <Condition Binding="{Binding IsEditingPort}" Value="False"/>
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </MultiDataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Rectangle.Style>
+                                </Rectangle>
+                                <TextBlock Text="{Binding BindPortText}"
+                                           FontSize="11"
+                                           Foreground="#2196F3"
+                                           Cursor="Hand">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding UseBindPort}" Value="True"/>
+                                                        <Condition Binding="{Binding IsEditingPort}" Value="False"/>
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </MultiDataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                    <TextBlock.InputBindings>
+                                        <MouseBinding MouseAction="LeftDoubleClick"
+                                                      Command="{Binding DataContext.EditScenarioPortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                      CommandParameter="{Binding}"/>
+                                    </TextBlock.InputBindings>
+                                </TextBlock>
+                                
+                                <!-- 포트 편집 모드 -->
+                                <StackPanel Orientation="Horizontal">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsEditingPort}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <Rectangle Width="4"
+                                               Height="4"
+                                               VerticalAlignment="Center"
+                                               Margin="8,0"
+                                               Fill="#6C757D"
+                                               RadiusX="2"
+                                               RadiusY="2"/>
+                                    <CheckBox IsChecked="{Binding UseBindPort, Mode=TwoWay}"
+                                              Content="포트:"
+                                              FontSize="11"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,4,0"/>
+                                    <TextBox Text="{Binding BindPort, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             Width="60"
+                                             FontSize="11"
+                                             Padding="4,2"
+                                             BorderBrush="#007BFF"
+                                             BorderThickness="1"
+                                             VerticalAlignment="Center">
+                                        <TextBox.InputBindings>
+                                            <KeyBinding Key="Enter"
+                                                        Command="{Binding DataContext.SaveScenarioPortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"/>
+                                            <KeyBinding Key="Escape"
+                                                        Command="{Binding DataContext.CancelScenarioPortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"/>
+                                        </TextBox.InputBindings>
+                                    </TextBox>
+                                    <Button Content="✓"
+                                            Width="20"
+                                            Height="20"
+                                            FontSize="10"
+                                            Margin="4,0,0,0"
+                                            Background="#28A745"
+                                            Foreground="White"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            Command="{Binding DataContext.SaveScenarioPortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"/>
+                                    <Button Content="✕"
+                                            Width="20"
+                                            Height="20"
+                                            FontSize="10"
+                                            Margin="2,0,0,0"
+                                            Background="#DC3545"
+                                            Foreground="White"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            Command="{Binding DataContext.CancelScenarioPortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"/>
+                                </StackPanel>
                             </StackPanel>
 
                             <!-- 진행률 표시 -->

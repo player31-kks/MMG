@@ -32,9 +32,30 @@ namespace MMG.Models
         private bool isEditing = false;
 
         [ObservableProperty]
+        private bool isEditingPort = false;
+
+        [ObservableProperty]
         private double progress = 0;
 
+        /// <summary>
+        /// 시나리오 레벨 바인딩 포트 (0이면 자동)
+        /// </summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(BindPortText))]
+        private int bindPort = 0;
+
+        /// <summary>
+        /// 바인딩 포트 사용 여부
+        /// </summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(BindPortText))]
+        private bool useBindPort = false;
+
         public string StatusText => IsRunning ? "실행중" : "준비됨";
+
+        public string BindPortText => UseBindPort 
+            ? (BindPort > 0 ? $"Port {BindPort}" : "자동 할당") 
+            : "사용 안함";
 
         public ObservableCollection<TestStep> Steps { get; } = new ObservableCollection<TestStep>();
 

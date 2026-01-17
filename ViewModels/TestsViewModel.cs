@@ -124,7 +124,7 @@ namespace MMG.ViewModels
         [RelayCommand(CanExecute = nameof(CanSaveStep))]
         private async Task SaveStep() => await SaveStepInternal();
 
-        private bool CanSaveStep() => SelectedStep != null && !IsTestRunning && !IsStopping;
+        private bool CanSaveStep() => SelectedScenario != null && SelectedScenario.Steps.Count > 0 && !IsTestRunning && !IsStopping;
 
         [RelayCommand]
         private async Task RefreshScenarios() => await RefreshAll();
@@ -134,6 +134,34 @@ namespace MMG.ViewModels
         {
             if (scenario != null)
                 StartRenaming(scenario);
+        }
+
+        [RelayCommand]
+        private void EditScenarioPort(TestScenario? scenario)
+        {
+            if (scenario != null)
+                StartEditingPort(scenario);
+        }
+
+        [RelayCommand]
+        private async Task SaveScenarioPort(TestScenario? scenario)
+        {
+            if (scenario != null)
+                await SavePortInternal(scenario);
+        }
+
+        [RelayCommand]
+        private void CancelScenarioPort(TestScenario? scenario)
+        {
+            if (scenario != null)
+                CancelEditingPort(scenario);
+        }
+
+        [RelayCommand]
+        private async Task DuplicateScenario(TestScenario? scenario)
+        {
+            if (scenario != null)
+                await DuplicateScenarioInternal(scenario);
         }
 
         [RelayCommand]
@@ -271,7 +299,9 @@ namespace MMG.ViewModels
                     var newScenario = new TestScenario
                     {
                         Name = dialog.ScenarioName,
-                        Description = ""
+                        Description = "",
+                        UseBindPort = dialog.UseBindPort,
+                        BindPort = dialog.BindPort
                     };
 
                     try
@@ -405,25 +435,29 @@ namespace MMG.ViewModels
 
         private async Task SaveStepInternal()
         {
-            if (SelectedStep == null) return;
+            if (SelectedScenario == null) return;
 
             try
             {
-                await _testDatabaseService.UpdateStepAsync(SelectedStep);
-                ModernMessageDialog.ShowSuccess("스텝이 성공적으로 저장되었습니다.", "저장 완료");
+                // 현재 시나리오의 모든 스텝 저장
+                int savedCount = 0;
+                foreach (var step in SelectedScenario.Steps)
+                {
+                    await _testDatabaseService.UpdateStepAsync(step);
+                    savedCount++;
+                }
+
+                ModernMessageDialog.ShowSuccess($"{savedCount}개의 스텝이 성공적으로 저장되었습니다.", "저장 완료");
 
                 // 스텝 목록 새로고침으로 UI 업데이트
                 await LoadSteps();
 
                 // 선택된 시나리오의 Steps 컬렉션도 업데이트
-                if (SelectedScenario != null)
+                var latestSteps = await _testDatabaseService.GetStepsForScenarioAsync(SelectedScenario.Id);
+                SelectedScenario.Steps.Clear();
+                foreach (var step in latestSteps)
                 {
-                    var latestSteps = await _testDatabaseService.GetStepsForScenarioAsync(SelectedScenario.Id);
-                    SelectedScenario.Steps.Clear();
-                    foreach (var step in latestSteps)
-                    {
-                        SelectedScenario.Steps.Add(step);
-                    }
+                    SelectedScenario.Steps.Add(step);
                 }
             }
             catch (System.Exception ex)
@@ -555,6 +589,118 @@ namespace MMG.ViewModels
                     });
                 }
             });
+        }
+
+        private void StartEditingPort(TestScenario scenario)
+        {
+            // 다른 시나리오의 포트 편집 모드 해제
+            foreach (var s in Scenarios)
+            {
+                if (s != scenario)
+                {
+                    s.IsEditingPort = false;
+                }
+            }
+
+            scenario.IsEditingPort = true;
+        }
+
+        private async Task SavePortInternal(TestScenario scenario)
+        {
+            try
+            {
+                await _testDatabaseService.UpdateScenarioAsync(scenario);
+                scenario.IsEditingPort = false;
+            }
+            catch (System.Exception ex)
+            {
+                ModernMessageDialog.ShowError($"포트 설정 변경 중 오류가 발생했습니다: {ex.Message}");
+            }
+        }
+
+        private void CancelEditingPort(TestScenario scenario)
+        {
+            scenario.IsEditingPort = false;
+
+            // 원래 값으로 복원
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var originalScenario = await _testDatabaseService.GetScenarioByIdAsync(scenario.Id);
+                    if (originalScenario != null)
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            scenario.UseBindPort = originalScenario.UseBindPort;
+                            scenario.BindPort = originalScenario.BindPort;
+                        });
+                    }
+                }
+                catch { }
+            });
+        }
+
+        private async Task DuplicateScenarioInternal(TestScenario scenario)
+        {
+            try
+            {
+                // 새 시나리오 생성
+                var newScenario = new TestScenario
+                {
+                    Name = $"{scenario.Name} (복사본)",
+                    Description = scenario.Description,
+                    UseBindPort = scenario.UseBindPort,
+                    BindPort = scenario.BindPort,
+                    IsEnabled = scenario.IsEnabled
+                };
+
+                // 시나리오 저장
+                newScenario.Id = await _testDatabaseService.CreateScenarioAsync(newScenario);
+
+                // 기존 시나리오의 스텝들 복사
+                var originalSteps = await _testDatabaseService.GetStepsForScenarioAsync(scenario.Id);
+                foreach (var step in originalSteps)
+                {
+                    var newStep = new TestStep
+                    {
+                        ScenarioId = newScenario.Id,
+                        Name = step.Name,
+                        StepType = step.StepType,
+                        SavedRequestId = step.SavedRequestId,
+                        PreDelayMs = step.PreDelayMs,
+                        PostDelayMs = step.PostDelayMs,
+                        IntervalMs = step.IntervalMs,
+                        FrequencyHz = step.FrequencyHz,
+                        DurationMs = step.DurationMs,
+                        RepeatCount = step.RepeatCount,
+                        ExpectedResponse = step.ExpectedResponse,
+                        IsEnabled = step.IsEnabled,
+                        Order = step.Order,
+                        IsBackground = step.IsBackground,
+                        StartDelayFromScenarioMs = step.StartDelayFromScenarioMs,
+                        ListenPort = step.ListenPort,
+                        ReceiveTimeoutMs = step.ReceiveTimeoutMs,
+                        ResponseRequestId = step.ResponseRequestId
+                    };
+
+                    // DB에 저장하고 ID 받기
+                    newStep.Id = await _testDatabaseService.CreateStepAsync(newStep);
+                    
+                    // 시나리오의 Steps 컬렉션에 추가
+                    newScenario.Steps.Add(newStep);
+                }
+
+                // UI에 추가
+                Scenarios.Add(newScenario);
+                SelectedScenario = newScenario;
+
+                ModernMessageDialog.ShowSuccess($"시나리오 '{scenario.Name}'이(가) 복사되었습니다. ({newScenario.Steps.Count}개 스텝)", "복사 완료");
+            }
+            catch (System.Exception ex)
+            {
+                ModernMessageDialog.ShowError($"시나리오 복사 중 오류가 발생했습니다: {ex.Message}");
+            }
         }
 
         private void OnDataReceived(object? sender, DataReceivedEventArgs e)
@@ -707,6 +853,105 @@ namespace MMG.ViewModels
                 ModernMessageDialog.ShowError($"결과 새로고침 중 오류가 발생했습니다: {ex.Message}");
                 return Task.CompletedTask;
             }
+        }
+
+        /// <summary>
+        /// 드래그 앤 드롭으로 스텝의 순서를 변경합니다.
+        /// </summary>
+        /// <param name="draggedStep">드래그된 스텝</param>
+        /// <param name="targetStep">드롭 위치의 스텝 (null이면 마지막에 배치)</param>
+        public void ReorderStep(TestStep draggedStep, TestStep? targetStep)
+        {
+            if (SelectedScenario == null || draggedStep == null) return;
+            if (draggedStep == targetStep) return;
+
+            var steps = SelectedScenario.Steps;
+            
+            int oldIndex = steps.IndexOf(draggedStep);
+            if (oldIndex < 0) return;
+
+            int newIndex = targetStep == null ? steps.Count - 1 : steps.IndexOf(targetStep);
+            if (newIndex < 0) return;
+
+            if (oldIndex == newIndex) return;
+
+            steps.Move(oldIndex, newIndex);
+            UpdateStepOrders();
+        }
+
+        /// <summary>
+        /// 드래그 앤 드롭으로 스텝을 특정 인덱스 위치로 이동합니다.
+        /// </summary>
+        /// <param name="draggedStep">드래그된 스텝</param>
+        /// <param name="insertIndex">삽입할 인덱스 위치</param>
+        public void ReorderStepToIndex(TestStep draggedStep, int insertIndex)
+        {
+            if (SelectedScenario == null || draggedStep == null) return;
+
+            var steps = SelectedScenario.Steps;
+            
+            int oldIndex = steps.IndexOf(draggedStep);
+            if (oldIndex < 0) return;
+
+            // insertIndex가 범위를 벗어나면 조정
+            if (insertIndex < 0) insertIndex = 0;
+            if (insertIndex > steps.Count) insertIndex = steps.Count;
+
+            // 같은 위치거나 바로 다음 위치면 이동하지 않음 (의미 없음)
+            if (oldIndex == insertIndex || oldIndex == insertIndex - 1) return;
+
+            // 아래로 이동할 때는 인덱스 조정 필요
+            // (드래그한 아이템이 제거되면서 인덱스가 1 감소하기 때문)
+            int targetIndex;
+            if (oldIndex < insertIndex)
+            {
+                targetIndex = insertIndex - 1;
+            }
+            else
+            {
+                targetIndex = insertIndex;
+            }
+
+            steps.Move(oldIndex, targetIndex);
+            UpdateStepOrders();
+        }
+
+        /// <summary>
+        /// 스텝들의 Order 속성을 업데이트하고 DB에 저장합니다.
+        /// </summary>
+        private void UpdateStepOrders()
+        {
+            if (SelectedScenario == null) return;
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var steps = SelectedScenario.Steps;
+                    for (int i = 0; i < steps.Count; i++)
+                    {
+                        steps[i].Order = i + 1;
+                        await _testDatabaseService.UpdateStepAsync(steps[i]);
+                    }
+
+                    // UI 스레드에서 CurrentSteps 업데이트
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        CurrentSteps.Clear();
+                        foreach (var step in steps)
+                        {
+                            CurrentSteps.Add(step);
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        ModernMessageDialog.ShowError($"스텝 순서 저장 중 오류가 발생했습니다: {ex.Message}");
+                    });
+                }
+            });
         }
 
         #endregion

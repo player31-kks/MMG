@@ -14,64 +14,131 @@ namespace MMG.Services
 
     public class UdpClientService
     {
+        private readonly UdpSocketManager _socketManager;
+
         public event EventHandler<DataReceivedEventArgs>? DataReceived;
+
+        // 현재 바인딩된 포트 (UI 표시용)
+        public int? CurrentBoundPort { get; private set; }
+        public bool IsPortBound => CurrentBoundPort.HasValue && _socketManager.IsPortBound(CurrentBoundPort.Value);
+
+        public UdpClientService()
+        {
+            _socketManager = UdpSocketManager.Instance;
+            _socketManager.DataReceived += OnSocketDataReceived;
+        }
+
+        private void OnSocketDataReceived(object? sender, DataReceivedEventArgs e)
+        {
+            DataReceived?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// 특정 포트에 바인딩 (지속적인 송수신 가능)
+        /// </summary>
+        public int BindPort(int port)
+        {
+            var client = _socketManager.BindPort(port);
+            CurrentBoundPort = client.ActualPort;
+            return client.ActualPort;
+        }
+
+        /// <summary>
+        /// 현재 바인딩된 포트 해제
+        /// </summary>
+        public void UnbindPort()
+        {
+            if (CurrentBoundPort.HasValue)
+            {
+                _socketManager.UnbindPort(CurrentBoundPort.Value);
+                CurrentBoundPort = null;
+            }
+        }
+
+        /// <summary>
+        /// 특정 포트 해제
+        /// </summary>
+        public void UnbindPort(int port)
+        {
+            _socketManager.UnbindPort(port);
+            if (CurrentBoundPort == port)
+            {
+                CurrentBoundPort = null;
+            }
+        }
+
+        /// <summary>
+        /// 모든 포트 해제
+        /// </summary>
+        public void UnbindAllPorts()
+        {
+            _socketManager.UnbindAllPorts();
+            CurrentBoundPort = null;
+        }
+
         public async Task<UdpResponse> SendRequestAsync(UdpRequest request, ResponseSchema? responseSchema = null)
         {
             var response = new UdpResponse();
 
             try
             {
-                // Build message bytes with BigEndian setting
-                var messageBytes = BuildMessage(request.Headers, request.Payload, request.IsBigEndian);
+                // 로컬 포트 결정
+                int localPort = GetLocalPort(request);
 
-                // Determine local port (request-specific port takes priority)
-                var localPort = GetLocalPort(request);
+                // 바인딩된 포트가 있고 요청의 로컬 포트와 같으면 해당 포트 사용
+                // 아니면 새로 바인딩
+                ManagedUdpClient client;
 
-                // Create UDP client with specific local port
-                using var udpClient = new UdpClient(localPort);
-                var endpoint = new IPEndPoint(IPAddress.Parse(request.IpAddress), request.Port);
-
-                // Send message
-                await udpClient.SendAsync(messageBytes, messageBytes.Length, endpoint);
-
-                // Check if we should wait for response
-                if (!request.WaitForResponse)
+                if (CurrentBoundPort.HasValue && 
+                    (localPort == 0 || localPort == CurrentBoundPort.Value))
                 {
-                    response.Status = "Sent (No Wait)";
-                    response.ReceivedAt = DateTime.Now;
-                    return response;
+                    // 기존 바인딩된 포트 사용
+                    client = _socketManager.GetClient(CurrentBoundPort.Value)!;
                 }
-
-                // Wait for response (with timeout)
-                var receiveTask = udpClient.ReceiveAsync();
-                var timeoutTask = Task.Delay(5000); // 5 second timeout
-
-                var completedTask = await Task.WhenAny(receiveTask, timeoutTask);
-
-                if (completedTask == receiveTask)
+                else if (localPort > 0)
                 {
-                    var result = await receiveTask;
-                    response.RawData = result.Buffer;
-                    response.Status = "Success";
-
-                    // Fire data received event
-                    DataReceived?.Invoke(this, new DataReceivedEventArgs
-                    {
-                        IpAddress = result.RemoteEndPoint.Address.ToString(),
-                        Port = result.RemoteEndPoint.Port,
-                        Data = result.Buffer,
-                        Timestamp = DateTime.Now
-                    });
-
-                    // Parse response if schema is provided
-                    if (responseSchema != null)
-                    {
-                        response.ParsedData = ParseResponse(result.Buffer, responseSchema);
-                    }
+                    // 특정 포트로 바인딩
+                    client = _socketManager.BindPort(localPort);
                 }
                 else
                 {
-                    response.Status = "Timeout";
+                    // 새 랜덤 포트로 바인딩
+                    client = _socketManager.BindPort(0);
+                }
+
+                // 수신 큐 비우기 (이전 응답 무시)
+                client.ClearReceiveQueue();
+
+                // 메시지 빌드
+                var messageBytes = BuildMessage(request.Headers, request.Payload, request.IsBigEndian);
+
+                // 송신
+                var endpoint = new IPEndPoint(IPAddress.Parse(request.IpAddress), request.Port);
+                await client.SendAsync(messageBytes, endpoint);
+
+                response.Status = "Sent";
+                response.ReceivedAt = DateTime.Now;
+
+                // 응답 대기가 필요한 경우
+                if (request.WaitForResponse)
+                {
+                    var receiveResult = await client.WaitForResponseAsync(5000);
+
+                    if (receiveResult != null)
+                    {
+                        response.RawData = receiveResult.Value.Data;
+                        response.Status = "Success";
+
+                        // Parse response if schema is provided
+                        if (responseSchema != null)
+                        {
+                            response.ParsedData = ParseResponse(receiveResult.Value.Data, responseSchema);
+                        }
+                    }
+                    else
+                    {
+                        response.Status = "Timeout";
+                    }
                 }
             }
             catch (Exception ex)

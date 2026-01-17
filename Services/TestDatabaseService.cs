@@ -88,6 +88,15 @@ namespace MMG.Services
             AddColumnIfNotExists(connection, "TestSteps", "PostDelayMs", "INTEGER DEFAULT 0");
             AddColumnIfNotExists(connection, "TestSteps", "IntervalMs", "INTEGER DEFAULT 100");
             AddColumnIfNotExists(connection, "TestSteps", "RepeatCount", "INTEGER DEFAULT 1");
+            AddColumnIfNotExists(connection, "TestSteps", "IsBackground", "INTEGER DEFAULT 0");
+            AddColumnIfNotExists(connection, "TestSteps", "StartDelayFromScenarioMs", "INTEGER DEFAULT 0");
+            AddColumnIfNotExists(connection, "TestSteps", "ListenPort", "INTEGER DEFAULT 0");
+            AddColumnIfNotExists(connection, "TestSteps", "ReceiveTimeoutMs", "INTEGER DEFAULT 5000");
+            AddColumnIfNotExists(connection, "TestSteps", "ResponseRequestId", "INTEGER DEFAULT 0");
+
+            // TestScenarios 새로운 컬럼 추가
+            AddColumnIfNotExists(connection, "TestScenarios", "BindPort", "INTEGER DEFAULT 0");
+            AddColumnIfNotExists(connection, "TestScenarios", "UseBindPort", "INTEGER DEFAULT 0");
         }
 
         private void AddColumnIfNotExists(SQLiteConnection connection, string tableName, string columnName, string columnDefinition)
@@ -128,7 +137,9 @@ namespace MMG.Services
                     Description = reader["Description"] == DBNull.Value ? string.Empty : reader["Description"].ToString() ?? string.Empty,
                     CreatedAt = DateTime.Parse(reader["CreatedAt"].ToString() ?? DateTime.Now.ToString()),
                     LastRunAt = reader["LastRunAt"] == DBNull.Value ? null : DateTime.Parse(reader["LastRunAt"].ToString() ?? DateTime.Now.ToString()),
-                    IsEnabled = Convert.ToInt32(reader["IsEnabled"]) == 1
+                    IsEnabled = Convert.ToInt32(reader["IsEnabled"]) == 1,
+                    BindPort = GetIntOrDefault(reader, "BindPort", 0),
+                    UseBindPort = GetIntOrDefault(reader, "UseBindPort", 0) == 1
                 };
 
                 // Load steps for this scenario
@@ -150,8 +161,8 @@ namespace MMG.Services
             await connection.OpenAsync();
 
             var query = @"
-                INSERT INTO TestScenarios (Name, Description, CreatedAt, IsEnabled)
-                VALUES (@Name, @Description, @CreatedAt, @IsEnabled);
+                INSERT INTO TestScenarios (Name, Description, CreatedAt, IsEnabled, BindPort, UseBindPort)
+                VALUES (@Name, @Description, @CreatedAt, @IsEnabled, @BindPort, @UseBindPort);
                 SELECT last_insert_rowid();";
 
             using var command = new SQLiteCommand(query, connection);
@@ -159,6 +170,8 @@ namespace MMG.Services
             command.Parameters.AddWithValue("@Description", scenario.Description);
             command.Parameters.AddWithValue("@CreatedAt", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             command.Parameters.AddWithValue("@IsEnabled", scenario.IsEnabled ? 1 : 0);
+            command.Parameters.AddWithValue("@BindPort", scenario.BindPort);
+            command.Parameters.AddWithValue("@UseBindPort", scenario.UseBindPort ? 1 : 0);
 
             var result = await command.ExecuteScalarAsync();
             return Convert.ToInt32(result);
@@ -184,14 +197,18 @@ namespace MMG.Services
             var query = @"UPDATE TestScenarios 
                          SET Name = @Name, 
                              Description = @Description,
-                             IsEnabled = @IsEnabled
+                             IsEnabled = @IsEnabled,
+                             BindPort = @BindPort,
+                             UseBindPort = @UseBindPort
                          WHERE Id = @Id";
 
             using var command = new SQLiteCommand(query, connection);
-            command.Parameters.AddWithValue("@Id", scenario.Id);
+            command.Parameters.AddWithValue("@Id", scenario.Id);;
             command.Parameters.AddWithValue("@Name", scenario.Name);
             command.Parameters.AddWithValue("@Description", scenario.Description);
             command.Parameters.AddWithValue("@IsEnabled", scenario.IsEnabled ? 1 : 0);
+            command.Parameters.AddWithValue("@BindPort", scenario.BindPort);
+            command.Parameters.AddWithValue("@UseBindPort", scenario.UseBindPort ? 1 : 0);
 
             await command.ExecuteNonQueryAsync();
         }
@@ -215,7 +232,9 @@ namespace MMG.Services
                     Description = reader.IsDBNull(2) ? string.Empty : reader.GetString(2), // Description
                     CreatedAt = DateTime.Parse(reader.GetString(3)), // CreatedAt
                     LastRunAt = reader.IsDBNull(4) ? null : DateTime.Parse(reader.GetString(4)), // LastRunAt
-                    IsEnabled = reader.GetInt32(5) == 1 // IsEnabled
+                    IsEnabled = reader.GetInt32(5) == 1, // IsEnabled
+                    BindPort = GetIntOrDefault(reader, "BindPort", 0),
+                    UseBindPort = GetIntOrDefault(reader, "UseBindPort", 0) == 1
                 };
             }
 
@@ -251,6 +270,11 @@ namespace MMG.Services
                     PostDelayMs = GetIntOrDefault(reader, "PostDelayMs", 0),
                     IntervalMs = GetIntOrDefault(reader, "IntervalMs", 100),
                     RepeatCount = GetIntOrDefault(reader, "RepeatCount", 1),
+                    IsBackground = GetIntOrDefault(reader, "IsBackground", 0) == 1,
+                    StartDelayFromScenarioMs = GetIntOrDefault(reader, "StartDelayFromScenarioMs", 0),
+                    ListenPort = GetIntOrDefault(reader, "ListenPort", 0),
+                    ReceiveTimeoutMs = GetIntOrDefault(reader, "ReceiveTimeoutMs", 5000),
+                    ResponseRequestId = GetIntOrDefault(reader, "ResponseRequestId", 0),
                     ExpectedResponse = reader["ExpectedResponse"] == DBNull.Value ? string.Empty : reader["ExpectedResponse"].ToString() ?? string.Empty,
                     IsEnabled = Convert.ToInt32(reader["IsEnabled"]) == 1,
                     Order = Convert.ToInt32(reader["Order"])
@@ -281,8 +305,8 @@ namespace MMG.Services
             await connection.OpenAsync();
 
             var query = @"
-                INSERT INTO TestSteps (ScenarioId, Name, StepType, SavedRequestId, DelaySeconds, FrequencyHz, DurationSeconds, PreDelayMs, PostDelayMs, IntervalMs, RepeatCount, ExpectedResponse, IsEnabled, [Order])
-                VALUES (@ScenarioId, @Name, @StepType, @SavedRequestId, @DelaySeconds, @FrequencyHz, @DurationSeconds, @PreDelayMs, @PostDelayMs, @IntervalMs, @RepeatCount, @ExpectedResponse, @IsEnabled, @Order);
+                INSERT INTO TestSteps (ScenarioId, Name, StepType, SavedRequestId, DelaySeconds, FrequencyHz, DurationSeconds, PreDelayMs, PostDelayMs, IntervalMs, RepeatCount, IsBackground, StartDelayFromScenarioMs, ListenPort, ReceiveTimeoutMs, ResponseRequestId, ExpectedResponse, IsEnabled, [Order])
+                VALUES (@ScenarioId, @Name, @StepType, @SavedRequestId, @DelaySeconds, @FrequencyHz, @DurationSeconds, @PreDelayMs, @PostDelayMs, @IntervalMs, @RepeatCount, @IsBackground, @StartDelayFromScenarioMs, @ListenPort, @ReceiveTimeoutMs, @ResponseRequestId, @ExpectedResponse, @IsEnabled, @Order);
                 SELECT last_insert_rowid();";
 
             using var command = new SQLiteCommand(query, connection);
@@ -297,6 +321,11 @@ namespace MMG.Services
             command.Parameters.AddWithValue("@PostDelayMs", step.PostDelayMs);
             command.Parameters.AddWithValue("@IntervalMs", step.IntervalMs);
             command.Parameters.AddWithValue("@RepeatCount", step.RepeatCount);
+            command.Parameters.AddWithValue("@IsBackground", step.IsBackground ? 1 : 0);
+            command.Parameters.AddWithValue("@StartDelayFromScenarioMs", step.StartDelayFromScenarioMs);
+            command.Parameters.AddWithValue("@ListenPort", step.ListenPort);
+            command.Parameters.AddWithValue("@ReceiveTimeoutMs", step.ReceiveTimeoutMs);
+            command.Parameters.AddWithValue("@ResponseRequestId", step.ResponseRequestId);
             command.Parameters.AddWithValue("@ExpectedResponse", step.ExpectedResponse);
             command.Parameters.AddWithValue("@IsEnabled", step.IsEnabled ? 1 : 0);
             command.Parameters.AddWithValue("@Order", step.Order);
@@ -315,6 +344,8 @@ namespace MMG.Services
                 SET Name = @Name, StepType = @StepType, SavedRequestId = @SavedRequestId, 
                     DelaySeconds = @DelaySeconds, FrequencyHz = @FrequencyHz, DurationSeconds = @DurationSeconds,
                     PreDelayMs = @PreDelayMs, PostDelayMs = @PostDelayMs, IntervalMs = @IntervalMs, RepeatCount = @RepeatCount,
+                    IsBackground = @IsBackground, StartDelayFromScenarioMs = @StartDelayFromScenarioMs,
+                    ListenPort = @ListenPort, ReceiveTimeoutMs = @ReceiveTimeoutMs, ResponseRequestId = @ResponseRequestId,
                     ExpectedResponse = @ExpectedResponse, IsEnabled = @IsEnabled, [Order] = @Order
                 WHERE Id = @Id";
 
@@ -330,6 +361,11 @@ namespace MMG.Services
             command.Parameters.AddWithValue("@PostDelayMs", step.PostDelayMs);
             command.Parameters.AddWithValue("@IntervalMs", step.IntervalMs);
             command.Parameters.AddWithValue("@RepeatCount", step.RepeatCount);
+            command.Parameters.AddWithValue("@IsBackground", step.IsBackground ? 1 : 0);
+            command.Parameters.AddWithValue("@StartDelayFromScenarioMs", step.StartDelayFromScenarioMs);
+            command.Parameters.AddWithValue("@ListenPort", step.ListenPort);
+            command.Parameters.AddWithValue("@ReceiveTimeoutMs", step.ReceiveTimeoutMs);
+            command.Parameters.AddWithValue("@ResponseRequestId", step.ResponseRequestId);
             command.Parameters.AddWithValue("@ExpectedResponse", step.ExpectedResponse);
             command.Parameters.AddWithValue("@IsEnabled", step.IsEnabled ? 1 : 0);
             command.Parameters.AddWithValue("@Order", step.Order);
