@@ -73,6 +73,7 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="80"/>
@@ -116,6 +117,9 @@
                                 <ComboBoxItem Tag="PreDelayed">사전 지연</ComboBoxItem>
                                 <ComboBoxItem Tag="PostDelayed">사후 지연</ComboBoxItem>
                                 <ComboBoxItem Tag="Periodic">주기적 실행</ComboBoxItem>
+                                <ComboBoxItem Tag="AbsoluteDelayed">절대 지연 (시나리오 시작 기준)</ComboBoxItem>
+                                <ComboBoxItem Tag="WaitForMessage">메시지 수신 대기</ComboBoxItem>
+                                <ComboBoxItem Tag="ReceiveAndReply">수신 후 응답</ComboBoxItem>
                             </ComboBox>
 
                             <CheckBox Grid.Row="2"
@@ -124,6 +128,15 @@
                                       IsChecked="{Binding SelectedStep.IsEnabled, Mode=TwoWay}"
                                       FontSize="12"
                                       Foreground="#495057"/>
+
+                            <CheckBox Grid.Row="3"
+                                      Grid.Column="1"
+                                      Content="백그라운드 실행"
+                                      IsChecked="{Binding SelectedStep.IsBackground, Mode=TwoWay}"
+                                      FontSize="12"
+                                      Foreground="#495057"
+                                      ToolTip="체크하면 이 스텝이 백그라운드에서 실행되고 다음 스텝으로 바로 진행됩니다"
+                                      Margin="0,8,0,0"/>
                         </Grid>
                     </StackPanel>
                 </Border>
@@ -342,6 +355,201 @@
                                        Foreground="#6C757D"
                                        FontStyle="Italic"
                                        TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <!-- AbsoluteDelayed 설정 -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility"
+                                            Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedStep.StepType}"
+                                                Value="AbsoluteDelayed">
+                                            <Setter Property="Visibility"
+                                                    Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="30"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="시나리오 시작 후:"
+                                           FontSize="12"
+                                           Foreground="#495057"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding SelectedStep.StartDelayFromScenarioMs, Mode=TwoWay}"
+                                         FontSize="12"
+                                         Padding="8,4"
+                                         BorderBrush="#DEE2E6"
+                                         BorderThickness="1"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="ms"
+                                           FontSize="12"
+                                           Foreground="#6C757D"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0,0,0"/>
+                            </Grid>
+                            <TextBlock Text="💡 시나리오 시작 시점을 기준으로 지정된 시간(ms) 후에 실행됩니다."
+                                       FontSize="11"
+                                       Foreground="#6C757D"
+                                       FontStyle="Italic"
+                                       TextWrapping="Wrap"
+                                       Margin="0,8,0,0"/>
+                        </StackPanel>
+
+                        <!-- WaitForMessage 설정 -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility"
+                                            Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedStep.StepType}"
+                                                Value="WaitForMessage">
+                                            <Setter Property="Visibility"
+                                                    Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="수신 포트:"
+                                           FontSize="12"
+                                           Foreground="#495057"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding SelectedStep.ListenPort, Mode=TwoWay}"
+                                         FontSize="12"
+                                         Padding="8,4"
+                                         BorderBrush="#DEE2E6"
+                                         BorderThickness="1"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="30"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="타임아웃:"
+                                           FontSize="12"
+                                           Foreground="#495057"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding SelectedStep.ReceiveTimeoutMs, Mode=TwoWay}"
+                                         FontSize="12"
+                                         Padding="8,4"
+                                         BorderBrush="#DEE2E6"
+                                         BorderThickness="1"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="ms"
+                                           FontSize="12"
+                                           Foreground="#6C757D"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0,0,0"/>
+                            </Grid>
+                            <TextBlock Text="💡 지정된 포트에서 UDP 메시지를 수신 대기합니다. (서버 모드)"
+                                       FontSize="11"
+                                       Foreground="#6C757D"
+                                       FontStyle="Italic"
+                                       TextWrapping="Wrap"
+                                       Margin="0,8,0,0"/>
+                        </StackPanel>
+
+                        <!-- ReceiveAndReply 설정 -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility"
+                                            Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedStep.StepType}"
+                                                Value="ReceiveAndReply">
+                                            <Setter Property="Visibility"
+                                                    Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="수신 포트:"
+                                           FontSize="12"
+                                           Foreground="#495057"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding SelectedStep.ListenPort, Mode=TwoWay}"
+                                         FontSize="12"
+                                         Padding="8,4"
+                                         BorderBrush="#DEE2E6"
+                                         BorderThickness="1"/>
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="30"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="타임아웃:"
+                                           FontSize="12"
+                                           Foreground="#495057"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding SelectedStep.ReceiveTimeoutMs, Mode=TwoWay}"
+                                         FontSize="12"
+                                         Padding="8,4"
+                                         BorderBrush="#DEE2E6"
+                                         BorderThickness="1"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="ms"
+                                           FontSize="12"
+                                           Foreground="#6C757D"
+                                           VerticalAlignment="Center"
+                                           Margin="4,0,0,0"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="응답 요청:"
+                                           FontSize="12"
+                                           Foreground="#495057"
+                                           VerticalAlignment="Center"/>
+                                <ComboBox Grid.Column="1"
+                                          ItemsSource="{Binding SavedRequests}"
+                                          SelectedValue="{Binding SelectedStep.ResponseRequestId, Mode=TwoWay}"
+                                          SelectedValuePath="Id"
+                                          DisplayMemberPath="Name"
+                                          FontSize="12"
+                                          Padding="8,4"
+                                          BorderBrush="#DEE2E6"
+                                          BorderThickness="1"/>
+                            </Grid>
+                            <TextBlock Text="💡 메시지 수신 후 지정된 응답 요청을 송신자에게 전송합니다."
+                                       FontSize="11"
+                                       Foreground="#6C757D"
+                                       FontStyle="Italic"
+                                       TextWrapping="Wrap"
+                                       Margin="0,8,0,0"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>

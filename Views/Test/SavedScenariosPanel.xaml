@@ -4,10 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:models="clr-namespace:MMG.Models"
+             xmlns:converters="clr-namespace:MMG.Converters"
              mc:Ignorable="d"
              d:DesignHeight="600"
              d:DesignWidth="360"
              Background="{StaticResource PanelBackground}">
+    <UserControl.Resources>
+        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -172,6 +176,19 @@
                                 <TextBlock Text="{Binding TestSteps.Count, StringFormat='{}{0}개 단계'}"
                                            FontSize="11"
                                            Foreground="#6C757D"/>
+                                <!-- 포트 바인딩 표시 -->
+                                <Rectangle Width="4"
+                                           Height="4"
+                                           VerticalAlignment="Center"
+                                           Margin="8,0"
+                                           Fill="#6C757D"
+                                           RadiusX="2"
+                                           RadiusY="2"
+                                           Visibility="{Binding UseBindPort, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                <TextBlock Text="{Binding BindPortText}"
+                                           FontSize="11"
+                                           Foreground="#2196F3"
+                                           Visibility="{Binding UseBindPort, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                             </StackPanel>
 
                             <!-- 진행률 표시 -->

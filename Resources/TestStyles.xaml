@@ -203,6 +203,21 @@
                         Value="0,0,8,0"/>
         </Style>
 
+        <!-- Background Step Number Badge Style (주황색) -->
+        <Style x:Key="BackgroundStepNumberBadge"
+               TargetType="Border">
+                <Setter Property="Background"
+                        Value="#FF8C00"/>
+                <Setter Property="CornerRadius"
+                        Value="10"/>
+                <Setter Property="Width"
+                        Value="22"/>
+                <Setter Property="Height"
+                        Value="22"/>
+                <Setter Property="Margin"
+                        Value="0,0,8,0"/>
+        </Style>
+
         <!-- Progress Bar Styles -->
         <Style x:Key="ModernProgressBar"
                TargetType="ProgressBar">

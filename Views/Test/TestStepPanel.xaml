@@ -121,7 +121,24 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <Border Style="{StaticResource StepNumberBadge}">
+                                    <!-- 백그라운드 스텝 여부에 따라 다른 뱃지 색상 -->
+                                    <Border>
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#6F5FF5"/>
+                                                <Setter Property="CornerRadius" Value="10"/>
+                                                <Setter Property="Width" Value="22"/>
+                                                <Setter Property="Height" Value="22"/>
+                                                <Setter Property="Margin" Value="0,0,8,0"/>
+                                                <Setter Property="ToolTip" Value="순차 실행"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsBackground}" Value="True">
+                                                        <Setter Property="Background" Value="#FF8C00"/>
+                                                        <Setter Property="ToolTip" Value="백그라운드 실행"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
                                         <TextBlock Text="{Binding StepNumber}"
                                                    Foreground="White"
                                                    FontSize="11"
@@ -132,10 +149,28 @@
 
                                     <StackPanel Grid.Column="1"
                                                 VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Name}"
-                                                   FontSize="14"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="#2C3E50"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Name}"
+                                                       FontSize="14"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="#2C3E50"/>
+                                            <!-- 백그라운드 표시 아이콘 -->
+                                            <TextBlock Text=" ⚡"
+                                                       FontSize="12"
+                                                       Foreground="#FF8C00"
+                                                       VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsBackground}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
                                         <TextBlock Text="{Binding StepTypeDisplay}"
                                                    FontSize="11"
                                                    Foreground="#6C757D"

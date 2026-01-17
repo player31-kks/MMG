@@ -124,7 +124,7 @@ namespace MMG.ViewModels
         [RelayCommand(CanExecute = nameof(CanSaveStep))]
         private async Task SaveStep() => await SaveStepInternal();
 
-        private bool CanSaveStep() => SelectedStep != null && !IsTestRunning && !IsStopping;
+        private bool CanSaveStep() => SelectedScenario != null && SelectedScenario.Steps.Count > 0 && !IsTestRunning && !IsStopping;
 
         [RelayCommand]
         private async Task RefreshScenarios() => await RefreshAll();
@@ -271,7 +271,9 @@ namespace MMG.ViewModels
                     var newScenario = new TestScenario
                     {
                         Name = dialog.ScenarioName,
-                        Description = ""
+                        Description = "",
+                        UseBindPort = dialog.UseBindPort,
+                        BindPort = dialog.BindPort
                     };
 
                     try
@@ -405,25 +407,29 @@ namespace MMG.ViewModels
 
         private async Task SaveStepInternal()
         {
-            if (SelectedStep == null) return;
+            if (SelectedScenario == null) return;
 
             try
             {
-                await _testDatabaseService.UpdateStepAsync(SelectedStep);
-                ModernMessageDialog.ShowSuccess("스텝이 성공적으로 저장되었습니다.", "저장 완료");
+                // 현재 시나리오의 모든 스텝 저장
+                int savedCount = 0;
+                foreach (var step in SelectedScenario.Steps)
+                {
+                    await _testDatabaseService.UpdateStepAsync(step);
+                    savedCount++;
+                }
+
+                ModernMessageDialog.ShowSuccess($"{savedCount}개의 스텝이 성공적으로 저장되었습니다.", "저장 완료");
 
                 // 스텝 목록 새로고침으로 UI 업데이트
                 await LoadSteps();
 
                 // 선택된 시나리오의 Steps 컬렉션도 업데이트
-                if (SelectedScenario != null)
+                var latestSteps = await _testDatabaseService.GetStepsForScenarioAsync(SelectedScenario.Id);
+                SelectedScenario.Steps.Clear();
+                foreach (var step in latestSteps)
                 {
-                    var latestSteps = await _testDatabaseService.GetStepsForScenarioAsync(SelectedScenario.Id);
-                    SelectedScenario.Steps.Clear();
-                    foreach (var step in latestSteps)
-                    {
-                        SelectedScenario.Steps.Add(step);
-                    }
+                    SelectedScenario.Steps.Add(step);
                 }
             }
             catch (System.Exception ex)
