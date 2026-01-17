@@ -93,18 +93,62 @@
         </Border>
 
         <!-- Test Steps List -->
-        <ScrollViewer Grid.Row="1"
-                      VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Disabled"
-                      Padding="8,8,8,0">
-            <ItemsControl ItemsSource="{Binding SelectedScenario.TestSteps}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="{x:Type models:TestStep}">
-                        <Button Command="{Binding DataContext.SelectStepCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                CommandParameter="{Binding}"
-                                Style="{StaticResource ClickableTestStep}">
-
-                            <Grid>
+        <ListBox x:Name="StepsListBox"
+                 Grid.Row="1"
+                 ItemsSource="{Binding SelectedScenario.TestSteps}"
+                 SelectedItem="{Binding SelectedStep}"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 Padding="8,8,8,0"
+                 AllowDrop="True"
+                 PreviewMouseLeftButtonDown="StepsListBox_PreviewMouseLeftButtonDown"
+                 PreviewMouseMove="StepsListBox_PreviewMouseMove"
+                 Drop="StepsListBox_Drop"
+                 DragOver="StepsListBox_DragOver">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="Margin" Value="0"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <ContentPresenter/>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type models:TestStep}">
+                    <Border x:Name="StepBorder"
+                            Style="{StaticResource ClickableTestStepBorder}"
+                            AllowDrop="True">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- 드래그 핸들 -->
+                            <Border Grid.Column="0"
+                                    Width="20"
+                                    Background="Transparent"
+                                    Cursor="SizeAll"
+                                    ToolTip="드래그하여 순서 변경"
+                                    Margin="0,0,4,0">
+                                <TextBlock Text="⋮⋮"
+                                           FontSize="12"
+                                           Foreground="#ADB5BD"
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"/>
+                            </Border>
+                            
+                            <!-- 스텝 내용 -->
+                            <Grid Grid.Column="1">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
@@ -297,11 +341,11 @@
                                     </ProgressBar.Style>
                                 </ProgressBar>
                             </Grid>
-                        </Button>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
 
         <!-- Empty State -->
         <StackPanel Grid.Row="1"

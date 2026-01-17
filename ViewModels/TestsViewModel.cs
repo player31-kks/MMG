@@ -855,6 +855,105 @@ namespace MMG.ViewModels
             }
         }
 
+        /// <summary>
+        /// 드래그 앤 드롭으로 스텝의 순서를 변경합니다.
+        /// </summary>
+        /// <param name="draggedStep">드래그된 스텝</param>
+        /// <param name="targetStep">드롭 위치의 스텝 (null이면 마지막에 배치)</param>
+        public void ReorderStep(TestStep draggedStep, TestStep? targetStep)
+        {
+            if (SelectedScenario == null || draggedStep == null) return;
+            if (draggedStep == targetStep) return;
+
+            var steps = SelectedScenario.Steps;
+            
+            int oldIndex = steps.IndexOf(draggedStep);
+            if (oldIndex < 0) return;
+
+            int newIndex = targetStep == null ? steps.Count - 1 : steps.IndexOf(targetStep);
+            if (newIndex < 0) return;
+
+            if (oldIndex == newIndex) return;
+
+            steps.Move(oldIndex, newIndex);
+            UpdateStepOrders();
+        }
+
+        /// <summary>
+        /// 드래그 앤 드롭으로 스텝을 특정 인덱스 위치로 이동합니다.
+        /// </summary>
+        /// <param name="draggedStep">드래그된 스텝</param>
+        /// <param name="insertIndex">삽입할 인덱스 위치</param>
+        public void ReorderStepToIndex(TestStep draggedStep, int insertIndex)
+        {
+            if (SelectedScenario == null || draggedStep == null) return;
+
+            var steps = SelectedScenario.Steps;
+            
+            int oldIndex = steps.IndexOf(draggedStep);
+            if (oldIndex < 0) return;
+
+            // insertIndex가 범위를 벗어나면 조정
+            if (insertIndex < 0) insertIndex = 0;
+            if (insertIndex > steps.Count) insertIndex = steps.Count;
+
+            // 같은 위치거나 바로 다음 위치면 이동하지 않음 (의미 없음)
+            if (oldIndex == insertIndex || oldIndex == insertIndex - 1) return;
+
+            // 아래로 이동할 때는 인덱스 조정 필요
+            // (드래그한 아이템이 제거되면서 인덱스가 1 감소하기 때문)
+            int targetIndex;
+            if (oldIndex < insertIndex)
+            {
+                targetIndex = insertIndex - 1;
+            }
+            else
+            {
+                targetIndex = insertIndex;
+            }
+
+            steps.Move(oldIndex, targetIndex);
+            UpdateStepOrders();
+        }
+
+        /// <summary>
+        /// 스텝들의 Order 속성을 업데이트하고 DB에 저장합니다.
+        /// </summary>
+        private void UpdateStepOrders()
+        {
+            if (SelectedScenario == null) return;
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var steps = SelectedScenario.Steps;
+                    for (int i = 0; i < steps.Count; i++)
+                    {
+                        steps[i].Order = i + 1;
+                        await _testDatabaseService.UpdateStepAsync(steps[i]);
+                    }
+
+                    // UI 스레드에서 CurrentSteps 업데이트
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        CurrentSteps.Clear();
+                        foreach (var step in steps)
+                        {
+                            CurrentSteps.Add(step);
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        ModernMessageDialog.ShowError($"스텝 순서 저장 중 오류가 발생했습니다: {ex.Message}");
+                    });
+                }
+            });
+        }
+
         #endregion
     }
 }
