@@ -848,6 +848,7 @@ namespace MMG.Services
                 IpAddress = savedRequest.IpAddress,
                 Port = savedRequest.Port,
                 IsBigEndian = savedRequest.IsBigEndian,
+                WaitForResponse = savedRequest.WaitForResponse,
                 UseCustomLocalPort = savedRequest.UseCustomLocalPort,
                 CustomLocalPort = savedRequest.CustomLocalPort
             };

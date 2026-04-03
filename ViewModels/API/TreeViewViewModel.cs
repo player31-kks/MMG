@@ -184,6 +184,7 @@ namespace MMG.ViewModels.API
                         IpAddress = originalRequest.IpAddress,
                         Port = originalRequest.Port,
                         IsBigEndian = originalRequest.IsBigEndian,
+                        WaitForResponse = originalRequest.WaitForResponse,
                         UseCustomLocalPort = originalRequest.UseCustomLocalPort,
                         CustomLocalPort = originalRequest.CustomLocalPort,
                         RequestSchemaJson = originalRequest.RequestSchemaJson,

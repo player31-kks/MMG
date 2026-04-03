@@ -20,6 +20,9 @@ namespace MMG.Models
         private bool isBigEndian = true;
 
         [ObservableProperty]
+        private bool waitForResponse = true;
+
+        [ObservableProperty]
         private bool useCustomLocalPort = false;
 
         [ObservableProperty]

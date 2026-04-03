@@ -86,6 +86,7 @@ namespace MMG.ViewModels.API
             CurrentRequest.IpAddress = savedRequest.IpAddress;
             CurrentRequest.Port = savedRequest.Port;
             CurrentRequest.IsBigEndian = savedRequest.IsBigEndian;
+            CurrentRequest.WaitForResponse = savedRequest.WaitForResponse;
             CurrentRequest.UseCustomLocalPort = savedRequest.UseCustomLocalPort;
             CurrentRequest.CustomLocalPort = savedRequest.CustomLocalPort;
 
@@ -104,6 +105,7 @@ namespace MMG.ViewModels.API
             CurrentRequest.IpAddress = "127.0.0.1";
             CurrentRequest.Port = 8080;
             CurrentRequest.IsBigEndian = true;
+            CurrentRequest.WaitForResponse = true;
             CurrentRequest.UseCustomLocalPort = false;
             CurrentRequest.CustomLocalPort = 0;
 

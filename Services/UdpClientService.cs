@@ -132,7 +132,7 @@ namespace MMG.Services
                         // Parse response if schema is provided
                         if (responseSchema != null)
                         {
-                            response.ParsedData = ParseResponse(receiveResult.Value.Data, responseSchema);
+                            response.ParsedData = ParseResponse(receiveResult.Value.Data, responseSchema, request.IsBigEndian);
                         }
                     }
                     else
@@ -315,7 +315,7 @@ namespace MMG.Services
             }
         }
 
-        private Dictionary<string, object> ParseResponse(byte[] data, ResponseSchema schema)
+        private Dictionary<string, object> ParseResponse(byte[] data, ResponseSchema schema, bool isBigEndian)
         {
             var result = new Dictionary<string, object>();
             var offset = 0;
@@ -327,7 +327,7 @@ namespace MMG.Services
 
                 try
                 {
-                    var (value, fieldSize) = ParseField(data, offset, field);
+                    var (value, fieldSize) = ParseField(data, offset, field, isBigEndian);
                     result[$"Header.{field.Name}"] = value;
                     offset += fieldSize;
                 }
@@ -345,7 +345,7 @@ namespace MMG.Services
 
                 try
                 {
-                    var (value, fieldSize) = ParseField(data, offset, field);
+                    var (value, fieldSize) = ParseField(data, offset, field, isBigEndian);
                     result[$"Payload.{field.Name}"] = value;
                     offset += fieldSize;
                 }
@@ -359,7 +359,7 @@ namespace MMG.Services
             return result;
         }
 
-        private (object value, int size) ParseField(byte[] data, int offset, DataField field)
+        private (object value, int size) ParseField(byte[] data, int offset, DataField field, bool isBigEndian)
         {
             int size = field.Type switch
             {
@@ -379,14 +379,22 @@ namespace MMG.Services
                 throw new ArgumentOutOfRangeException($"Not enough data to read {field.Type} at offset {offset}");
             }
 
+            var fieldBytes = new byte[size];
+            Array.Copy(data, offset, fieldBytes, 0, size);
+
+            if (size > 1 && field.Type != DataType.Padding && BitConverter.IsLittleEndian == isBigEndian)
+            {
+                Array.Reverse(fieldBytes);
+            }
+
             object value = field.Type switch
             {
-                DataType.Byte => data[offset],
-                DataType.Int16 => BitConverter.ToInt16(data, offset),
-                DataType.UInt16 => BitConverter.ToUInt16(data, offset),
-                DataType.Int => BitConverter.ToInt32(data, offset),
-                DataType.UInt => BitConverter.ToUInt32(data, offset),
-                DataType.Float => BitConverter.ToSingle(data, offset),
+                DataType.Byte => fieldBytes[0],
+                DataType.Int16 => BitConverter.ToInt16(fieldBytes, 0),
+                DataType.UInt16 => BitConverter.ToUInt16(fieldBytes, 0),
+                DataType.Int => BitConverter.ToInt32(fieldBytes, 0),
+                DataType.UInt => BitConverter.ToUInt32(fieldBytes, 0),
+                DataType.Float => BitConverter.ToSingle(fieldBytes, 0),
                 DataType.Padding => $"Padding({field.PaddingSize} bytes)",
                 _ => 0
             };
