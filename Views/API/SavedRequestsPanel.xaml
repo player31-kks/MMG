@@ -34,6 +34,13 @@
                                FontSize="12"/>
                 </MenuItem.Icon>
             </MenuItem>
+            <MenuItem Header="Import"
+                      Command="{Binding ImportApisCommand}">
+                <MenuItem.Icon>
+                    <TextBlock Text="📥"
+                               FontSize="12"/>
+                </MenuItem.Icon>
+            </MenuItem>
             <Separator/>
             <MenuItem Header="이름 변경"
                       Command="{Binding RenameItemCommand}"
@@ -81,6 +88,47 @@
                 </MenuItem.Icon>
             </MenuItem>
         </ContextMenu>
+
+            <Style x:Key="AddPopupMenuButtonStyle"
+                   TargetType="Button">
+                <Setter Property="Background"
+                    Value="Transparent"/>
+                <Setter Property="BorderThickness"
+                    Value="0"/>
+                <Setter Property="Foreground"
+                    Value="Black"/>
+                <Setter Property="HorizontalContentAlignment"
+                    Value="Left"/>
+                <Setter Property="VerticalContentAlignment"
+                    Value="Center"/>
+                <Setter Property="Padding"
+                    Value="10,8"/>
+                <Setter Property="MinWidth"
+                    Value="150"/>
+                <Setter Property="FontSize"
+                    Value="12"/>
+                <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                    <Border x:Name="Border"
+                        Background="{TemplateBinding Background}"
+                        CornerRadius="4"
+                        Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Left"
+                                  VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver"
+                             Value="True">
+                        <Setter TargetName="Border"
+                            Property="Background"
+                            Value="#F0F0F0"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+                </Setter>
+            </Style>
     </UserControl.Resources>
 
     <Grid Background="{StaticResource PanelBackground}">
@@ -141,64 +189,24 @@
                                 <StackPanel Margin="2">
                                     <Button Content="📁 New Folder"
                                             Command="{Binding NewFolderCommand}"
-                                            HorizontalContentAlignment="Left"
-                                            Padding="10,8"
-                                            MinWidth="120"
-                                            FontSize="12"
-                                            Foreground="Black"
+                                            Style="{StaticResource AddPopupMenuButtonStyle}"
                                             Click="PopupButton_Click">
-                                        <Button.Style>
-                                            <Style TargetType="Button"
-                                                   BasedOn="{StaticResource ModernButton}">
-                                                <Setter Property="Background"
-                                                        Value="Transparent"/>
-                                                <Setter Property="BorderThickness"
-                                                        Value="0"/>
-                                                <Setter Property="Foreground"
-                                                        Value="Black"/>
-                                                <Style.Triggers>
-                                                    <Trigger Property="IsMouseOver"
-                                                             Value="True">
-                                                        <Setter Property="Background"
-                                                                Value="#F0F0F0"/>
-                                                        <Setter Property="Foreground"
-                                                                Value="Black"/>
-                                                    </Trigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Button.Style>
                                     </Button>
 
                                     <Separator Margin="5,2"/>
 
+                                    <Button Content="📥 Import"
+                                            Command="{Binding ImportApisCommand}"
+                                            Style="{StaticResource AddPopupMenuButtonStyle}"
+                                            Click="PopupButton_Click">
+                                    </Button>
+
+                                        <Separator Margin="5,2"/>
+
                                     <Button Content="📃 New Request"
                                             Command="{Binding NewRequestCommand}"
-                                            HorizontalContentAlignment="Left"
-                                            Padding="10,8"
-                                            MinWidth="120"
-                                            FontSize="12"
-                                            Foreground="Black"
+                                            Style="{StaticResource AddPopupMenuButtonStyle}"
                                             Click="PopupButton_Click">
-                                        <Button.Style>
-                                            <Style TargetType="Button"
-                                                   BasedOn="{StaticResource ModernButton}">
-                                                <Setter Property="Background"
-                                                        Value="Transparent"/>
-                                                <Setter Property="BorderThickness"
-                                                        Value="0"/>
-                                                <Setter Property="Foreground"
-                                                        Value="Black"/>
-                                                <Style.Triggers>
-                                                    <Trigger Property="IsMouseOver"
-                                                             Value="True">
-                                                        <Setter Property="Background"
-                                                                Value="#F0F0F0"/>
-                                                        <Setter Property="Foreground"
-                                                                Value="Black"/>
-                                                    </Trigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Button.Style>
                                     </Button>
                                 </StackPanel>
                             </Border>
@@ -233,6 +241,13 @@
                                   Command="{Binding NewRequestCommand}">
                             <MenuItem.Icon>
                                 <TextBlock Text="📃"
+                                           FontSize="12"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Import"
+                                  Command="{Binding ImportApisCommand}">
+                            <MenuItem.Icon>
+                                <TextBlock Text="📥"
                                            FontSize="12"/>
                             </MenuItem.Icon>
                         </MenuItem>

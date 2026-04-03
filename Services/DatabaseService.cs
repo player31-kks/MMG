@@ -136,9 +136,48 @@ namespace MMG.Services
             using var connection = new SQLiteConnection(_connectionString);
             await connection.OpenAsync();
 
+            return await SaveRequestInternalAsync(connection, request);
+        }
+
+        public async Task<IReadOnlyList<SavedRequest>> SaveRequestsAsync(IEnumerable<SavedRequest> requests)
+        {
+            var requestList = requests.ToList();
+            if (requestList.Count == 0)
+            {
+                return requestList;
+            }
+
+            using var connection = new SQLiteConnection(_connectionString);
+            await connection.OpenAsync();
+            using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                foreach (var request in requestList)
+                {
+                    await SaveRequestInternalAsync(connection, request, transaction);
+                }
+
+                transaction.Commit();
+                return requestList;
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
+
+        private async Task<int> SaveRequestInternalAsync(SQLiteConnection connection, SavedRequest request, SQLiteTransaction? transaction = null)
+        {
+
             request.LastModified = DateTime.Now;
 
             var command = connection.CreateCommand();
+            if (transaction != null)
+            {
+                command.Transaction = transaction;
+            }
 
             if (request.Id == 0) // Insert
             {

@@ -1,0 +1,111 @@
+{
+  "data": [
+    {
+      "name": "StatusQuery",
+      "ipAddress": "127.0.0.1",
+      "port": 9000,
+      "isBigEndian": true,
+      "waitForResponse": true,
+      "request": {
+        "header": [
+          {
+            "name": "Command",
+            "type": "Byte",
+            "value": "1"
+          },
+          {
+            "name": "Sequence",
+            "type": "UInt16",
+            "value": "100"
+          }
+        ],
+        "payload": [
+          {
+            "name": "DeviceId",
+            "type": "UInt",
+            "value": "1001"
+          },
+          {
+            "name": "Reserved",
+            "type": "Padding",
+            "value": 2
+          }
+        ]
+      },
+      "response": {
+        "header": [
+          {
+            "name": "Ack",
+            "type": "Byte"
+          },
+          {
+            "name": "Sequence",
+            "type": "UInt16"
+          }
+        ],
+        "payload": [
+          {
+            "name": "StatusCode",
+            "type": "UInt16"
+          },
+          {
+            "name": "Temperature",
+            "type": "Float"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ControlCommand",
+      "ipAddress": "192.168.0.50",
+      "port": 9100,
+      "isBigEndian": false,
+      "waitForResponse": false,
+      "request": {
+        "header": [
+          {
+            "name": "Command",
+            "type": "Byte",
+            "value": "2"
+          },
+          {
+            "name": "Length",
+            "type": "UInt16",
+            "value": "8"
+          }
+        ],
+        "payload": [
+          {
+            "name": "TargetId",
+            "type": "UInt",
+            "value": "5000"
+          },
+          {
+            "name": "Mode",
+            "type": "Byte",
+            "value": "3"
+          },
+          {
+            "name": "Power",
+            "type": "Int16",
+            "value": "120"
+          }
+        ]
+      },
+      "response": {
+        "header": [
+          {
+            "name": "Ack",
+            "type": "Byte"
+          }
+        ],
+        "payload": [
+          {
+            "name": "Result",
+            "type": "UInt16"
+          }
+        ]
+      }
+    }
+  ]
+}

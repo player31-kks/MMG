@@ -32,6 +32,8 @@ namespace MMG
             services.AddSingleton<TestDatabaseService>();
             services.AddSingleton<UdpClientService>();
             services.AddSingleton<SettingsService>();
+            services.AddSingleton<IApiImportHandler, JsonApiImportHandler>();
+            services.AddSingleton<IApiImportService, ApiImportService>();
             services.AddSingleton<ISpecParserFactory, SpecParserFactory>();
             services.AddSingleton<SpecAdapterService>();
             services.AddSingleton<TestExecutionService>();

@@ -1,5 +1,8 @@
 using System.Collections.ObjectModel;
+using Microsoft.Win32;
+using MMG.Core.Interfaces;
 using MMG.Models;
+using MMG.Models.Import;
 using MMG.Services;
 using MMG.Views.Common;
 using System.Windows;
@@ -11,6 +14,7 @@ namespace MMG.ViewModels.API
     public partial class TreeViewViewModel : ObservableObject
     {
         private readonly DatabaseService _databaseService;
+        private readonly IApiImportService _apiImportService;
 
         [ObservableProperty]
         private ObservableCollection<TreeViewItemModel> treeItems = new();
@@ -25,9 +29,10 @@ namespace MMG.ViewModels.API
 
         public bool HasSelectedItem => SelectedTreeItem != null;
 
-        public TreeViewViewModel(DatabaseService databaseService)
+        public TreeViewViewModel(DatabaseService databaseService, IApiImportService apiImportService)
         {
             _databaseService = databaseService;
+            _apiImportService = apiImportService;
             _ = BuildTreeView();
         }
 
@@ -120,6 +125,62 @@ namespace MMG.ViewModels.API
             catch (Exception ex)
             {
                 ModernMessageDialog.ShowError($"폴더 생성 중 오류가 발생했습니다: {ex.Message}", "오류");
+            }
+        }
+
+        [RelayCommand]
+        private async Task ImportApis()
+        {
+            try
+            {
+                var dialog = new ImportApiDialog();
+                if (dialog.ShowDialog() != true)
+                {
+                    return;
+                }
+
+                if (dialog.SelectedFormat == ApiImportFormat.Idl)
+                {
+                    ModernMessageDialog.ShowInfo("IDL import는 다음 단계에서 추가할 예정입니다. 현재는 JSON import만 지원합니다.", "준비 중");
+                    return;
+                }
+
+                var fileDialog = new OpenFileDialog
+                {
+                    Title = "Import JSON Files",
+                    Filter = "JSON Files (*.json)|*.json|All Files (*.*)|*.*",
+                    Multiselect = true,
+                    CheckFileExists = true
+                };
+
+                if (fileDialog.ShowDialog() != true)
+                {
+                    return;
+                }
+
+                var result = await _apiImportService.ImportAsync(new ApiImportRequest
+                {
+                    Format = dialog.SelectedFormat,
+                    FilePaths = fileDialog.FileNames,
+                    TargetFolderId = GetSelectedFolderId()
+                });
+
+                await BuildTreeView();
+                SelectImportedRequest(result.SavedRequests.FirstOrDefault());
+
+                if (result.ImportedCount == 0)
+                {
+                    ModernMessageDialog.ShowWarning("가져온 API가 없습니다. JSON 구조를 확인해주세요.", "Import 결과");
+                    return;
+                }
+
+                ModernMessageDialog.ShowSuccess(
+                    $"{result.ImportedCount}개의 API를 가져왔습니다.\n파일 수: {fileDialog.FileNames.Length}",
+                    "Import 완료");
+            }
+            catch (Exception ex)
+            {
+                ModernMessageDialog.ShowError($"Import 중 오류가 발생했습니다: {ex.Message}", "오류");
             }
         }
 
@@ -327,6 +388,41 @@ namespace MMG.ViewModels.API
             }
 
             item.IsEditing = true;
+        }
+
+        private int? GetSelectedFolderId()
+        {
+            if (SelectedTreeItem?.ItemType == TreeViewItemType.Folder && SelectedTreeItem.Tag is Folder folder)
+            {
+                return folder.Id;
+            }
+
+            if (SelectedTreeItem?.ItemType == TreeViewItemType.Request && SelectedTreeItem.Tag is SavedRequest request)
+            {
+                return request.FolderId;
+            }
+
+            return null;
+        }
+
+        private void SelectImportedRequest(SavedRequest? importedRequest)
+        {
+            if (importedRequest == null)
+            {
+                return;
+            }
+
+            var treeItem = GetAllTreeItems()
+                .FirstOrDefault(item => item.ItemType == TreeViewItemType.Request && item.Tag is SavedRequest savedRequest && savedRequest.Id == importedRequest.Id);
+
+            if (treeItem != null)
+            {
+                SelectedTreeItem = treeItem;
+                treeItem.IsSelected = true;
+                return;
+            }
+
+            RequestSelected?.Invoke(this, importedRequest);
         }
 
         private async Task BuildTreeView()
