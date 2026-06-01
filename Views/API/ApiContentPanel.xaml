@@ -32,7 +32,6 @@
                 <Border Grid.Column="0"
                         Background="{StaticResource PanelBackground}"
                         BorderBrush="{StaticResource MutedBorder}"
-                        BorderThickness="0,0,1,0"
                         CornerRadius="10"
                         Padding="4">
                     <api:SavedRequestsPanel DataContext="{Binding}"/>
@@ -42,7 +41,7 @@
                 <GridSplitter Grid.Column="1"
                               HorizontalAlignment="Center"
                               VerticalAlignment="Stretch"
-                              Width="10"
+                              Width="3"
                               Background="Transparent"
                               ShowsPreview="False"
                               Cursor="SizeWE">
@@ -87,7 +86,6 @@
                 <Border Grid.Column="4"
                         Background="{StaticResource PanelBackground}"
                         BorderBrush="{StaticResource MutedBorder}"
-                        BorderThickness="1,0,0,0"
                         CornerRadius="10"
                         Padding="10,0,6,0">
                     <api:ResponsePanel DataContext="{Binding}"/>

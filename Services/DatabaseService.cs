@@ -51,6 +51,7 @@ namespace MMG.Services
                     IsBigEndian INTEGER NOT NULL DEFAULT 1,
                     WaitForResponse INTEGER NOT NULL DEFAULT 1,
                     FolderId INTEGER,
+                    SortOrder INTEGER NOT NULL DEFAULT 0,
                     RequestSchemaJson TEXT NOT NULL,
                     ResponseSchemaJson TEXT,
                     CreatedAt TEXT NOT NULL,
@@ -69,6 +70,7 @@ namespace MMG.Services
             bool hasWaitForResponse = false;
             bool hasUseCustomLocalPort = false;
             bool hasCustomLocalPort = false;
+            bool hasSortOrder = false;
             while (reader.Read())
             {
                 var columnName = reader["name"].ToString();
@@ -91,6 +93,10 @@ namespace MMG.Services
                 if (columnName == "CustomLocalPort")
                 {
                     hasCustomLocalPort = true;
+                }
+                if (columnName == "SortOrder")
+                {
+                    hasSortOrder = true;
                 }
             }
             reader.Close();
@@ -129,6 +135,20 @@ namespace MMG.Services
                 alterTableCommand.CommandText = "ALTER TABLE SavedRequests ADD COLUMN CustomLocalPort INTEGER NOT NULL DEFAULT 0";
                 alterTableCommand.ExecuteNonQuery();
             }
+
+            if (!hasSortOrder)
+            {
+                var alterTableCommand = connection.CreateCommand();
+                alterTableCommand.CommandText = "ALTER TABLE SavedRequests ADD COLUMN SortOrder INTEGER NOT NULL DEFAULT 0";
+                alterTableCommand.ExecuteNonQuery();
+            }
+
+            var initializeSortOrderCommand = connection.CreateCommand();
+            initializeSortOrderCommand.CommandText = @"
+                UPDATE SavedRequests
+                SET SortOrder = Id
+                WHERE SortOrder IS NULL OR SortOrder = 0";
+            initializeSortOrderCommand.ExecuteNonQuery();
         }
 
         public async Task<int> SaveRequestAsync(SavedRequest request)
@@ -173,6 +193,18 @@ namespace MMG.Services
 
             request.LastModified = DateTime.Now;
 
+            if (request.Id == 0)
+            {
+                if (request.SortOrder <= 0)
+                {
+                    request.SortOrder = await GetNextRequestSortOrderAsync(connection, request.FolderId, transaction);
+                }
+                else
+                {
+                    await ShiftRequestSortOrdersAsync(connection, request.FolderId, request.SortOrder, transaction);
+                }
+            }
+
             var command = connection.CreateCommand();
             if (transaction != null)
             {
@@ -182,8 +214,8 @@ namespace MMG.Services
             if (request.Id == 0) // Insert
             {
                 command.CommandText = @"
-                    INSERT INTO SavedRequests (Name, IpAddress, Port, IsBigEndian, WaitForResponse, UseCustomLocalPort, CustomLocalPort, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified)
-                    VALUES (@name, @ipAddress, @port, @isBigEndian, @waitForResponse, @useCustomLocalPort, @customLocalPort, @folderId, @requestSchemaJson, @responseSchemaJson, @createdAt, @lastModified);
+                    INSERT INTO SavedRequests (Name, IpAddress, Port, IsBigEndian, WaitForResponse, UseCustomLocalPort, CustomLocalPort, FolderId, SortOrder, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified)
+                    VALUES (@name, @ipAddress, @port, @isBigEndian, @waitForResponse, @useCustomLocalPort, @customLocalPort, @folderId, @sortOrder, @requestSchemaJson, @responseSchemaJson, @createdAt, @lastModified);
                     SELECT last_insert_rowid();";
             }
             else // Update
@@ -191,7 +223,7 @@ namespace MMG.Services
                 command.CommandText = @"
                     UPDATE SavedRequests 
                     SET Name = @name, IpAddress = @ipAddress, Port = @port, IsBigEndian = @isBigEndian, WaitForResponse = @waitForResponse, UseCustomLocalPort = @useCustomLocalPort, CustomLocalPort = @customLocalPort, FolderId = @folderId,
-                        RequestSchemaJson = @requestSchemaJson, ResponseSchemaJson = @responseSchemaJson, 
+                        SortOrder = @sortOrder, RequestSchemaJson = @requestSchemaJson, ResponseSchemaJson = @responseSchemaJson, 
                         LastModified = @lastModified
                     WHERE Id = @id;
                     SELECT @id;";
@@ -206,6 +238,7 @@ namespace MMG.Services
             command.Parameters.AddWithValue("@useCustomLocalPort", request.UseCustomLocalPort ? 1 : 0);
             command.Parameters.AddWithValue("@customLocalPort", request.CustomLocalPort);
             command.Parameters.AddWithValue("@folderId", request.FolderId.HasValue ? (object)request.FolderId.Value : DBNull.Value);
+            command.Parameters.AddWithValue("@sortOrder", request.SortOrder);
             command.Parameters.AddWithValue("@requestSchemaJson", request.RequestSchemaJson);
             command.Parameters.AddWithValue("@responseSchemaJson", request.ResponseSchemaJson ?? "");
             command.Parameters.AddWithValue("@createdAt", request.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -227,9 +260,9 @@ namespace MMG.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT Id, Name, IpAddress, Port, IsBigEndian, WaitForResponse, UseCustomLocalPort, CustomLocalPort, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
+                SELECT Id, Name, IpAddress, Port, IsBigEndian, WaitForResponse, UseCustomLocalPort, CustomLocalPort, FolderId, SortOrder, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
                 FROM SavedRequests
-                ORDER BY LastModified DESC";
+                ORDER BY SortOrder ASC, Id ASC";
 
             using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
@@ -245,10 +278,11 @@ namespace MMG.Services
                     UseCustomLocalPort = reader.IsDBNull(6) ? false : reader.GetInt32(6) == 1,
                     CustomLocalPort = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
                     FolderId = reader.IsDBNull(8) ? null : reader.GetInt32(8),
-                    RequestSchemaJson = reader.GetString(9),
-                    ResponseSchemaJson = reader.GetString(10),
-                    CreatedAt = DateTime.Parse(reader.GetString(11)),
-                    LastModified = DateTime.Parse(reader.GetString(12))
+                    SortOrder = reader.IsDBNull(9) ? 0 : reader.GetInt32(9),
+                    RequestSchemaJson = reader.GetString(10),
+                    ResponseSchemaJson = reader.GetString(11),
+                    CreatedAt = DateTime.Parse(reader.GetString(12)),
+                    LastModified = DateTime.Parse(reader.GetString(13))
                 };
                 requests.Add(request);
             }
@@ -263,7 +297,7 @@ namespace MMG.Services
 
             var command = connection.CreateCommand();
             command.CommandText = @"
-                SELECT Id, Name, IpAddress, Port, IsBigEndian, WaitForResponse, UseCustomLocalPort, CustomLocalPort, FolderId, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
+                SELECT Id, Name, IpAddress, Port, IsBigEndian, WaitForResponse, UseCustomLocalPort, CustomLocalPort, FolderId, SortOrder, RequestSchemaJson, ResponseSchemaJson, CreatedAt, LastModified
                 FROM SavedRequests
                 WHERE Id = @id";
             command.Parameters.AddWithValue("@id", id);
@@ -282,10 +316,11 @@ namespace MMG.Services
                     UseCustomLocalPort = reader.IsDBNull(6) ? false : reader.GetInt32(6) == 1,
                     CustomLocalPort = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
                     FolderId = reader.IsDBNull(8) ? null : reader.GetInt32(8),
-                    RequestSchemaJson = reader.GetString(9),
-                    ResponseSchemaJson = reader.GetString(10),
-                    CreatedAt = DateTime.Parse(reader.GetString(11)),
-                    LastModified = DateTime.Parse(reader.GetString(12))
+                    SortOrder = reader.IsDBNull(9) ? 0 : reader.GetInt32(9),
+                    RequestSchemaJson = reader.GetString(10),
+                    ResponseSchemaJson = reader.GetString(11),
+                    CreatedAt = DateTime.Parse(reader.GetString(12)),
+                    LastModified = DateTime.Parse(reader.GetString(13))
                 };
             }
 
@@ -313,17 +348,65 @@ namespace MMG.Services
             using var connection = new SQLiteConnection(_connectionString);
             await connection.OpenAsync();
 
+            var request = await GetRequestByIdAsync(requestId);
+            if (request == null)
+            {
+                return false;
+            }
+
+            var nextSortOrder = await GetNextRequestSortOrderAsync(connection, targetFolderId);
+
             var command = connection.CreateCommand();
             command.CommandText = @"
                 UPDATE SavedRequests 
-                SET FolderId = @folderId, LastModified = @lastModified
+                SET FolderId = @folderId, SortOrder = @sortOrder, LastModified = @lastModified
                 WHERE Id = @id";
             command.Parameters.AddWithValue("@id", requestId);
             command.Parameters.AddWithValue("@folderId", targetFolderId.HasValue ? (object)targetFolderId.Value : DBNull.Value);
+            command.Parameters.AddWithValue("@sortOrder", nextSortOrder);
             command.Parameters.AddWithValue("@lastModified", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
             var rowsAffected = await command.ExecuteNonQueryAsync();
             return rowsAffected > 0;
+        }
+
+        private async Task<int> GetNextRequestSortOrderAsync(SQLiteConnection connection, int? folderId, SQLiteTransaction? transaction = null)
+        {
+            var command = connection.CreateCommand();
+            if (transaction != null)
+            {
+                command.Transaction = transaction;
+            }
+
+            command.CommandText = @"
+                SELECT COALESCE(MAX(SortOrder), 0) + 1
+                FROM SavedRequests
+                WHERE ((@folderId IS NULL AND FolderId IS NULL) OR FolderId = @folderId)";
+            command.Parameters.AddWithValue("@folderId", folderId.HasValue ? (object)folderId.Value : DBNull.Value);
+
+            var result = await command.ExecuteScalarAsync();
+            return Convert.ToInt32(result);
+        }
+
+        private async Task ShiftRequestSortOrdersAsync(SQLiteConnection connection, int? folderId, int fromSortOrder, SQLiteTransaction? transaction = null)
+        {
+            var command = connection.CreateCommand();
+            if (transaction != null)
+            {
+                command.Transaction = transaction;
+            }
+
+            command.CommandText = @"
+                UPDATE SavedRequests
+                SET SortOrder = SortOrder + 1,
+                    LastModified = @lastModified
+                WHERE ((@folderId IS NULL AND FolderId IS NULL) OR FolderId = @folderId)
+                  AND SortOrder >= @fromSortOrder";
+            command.Parameters.AddWithValue("@folderId", folderId.HasValue ? (object)folderId.Value : DBNull.Value);
+            command.Parameters.AddWithValue("@fromSortOrder", fromSortOrder);
+            command.Parameters.AddWithValue("@lastModified", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+            await command.ExecuteNonQueryAsync();
         }
 
         public string SerializeDataFields(ObservableCollection<DataField> dataFields)

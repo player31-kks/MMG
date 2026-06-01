@@ -129,6 +129,24 @@ namespace MMG.ViewModels.API
         }
 
         [RelayCommand]
+        private async Task NewRequest()
+        {
+            try
+            {
+                var allRequests = await _databaseService.GetAllRequestsAsync();
+                var newRequest = CreateDefaultRequest(allRequests);
+
+                await _databaseService.SaveRequestAsync(newRequest);
+                await BuildTreeView();
+                SelectRequest(newRequest);
+            }
+            catch (Exception ex)
+            {
+                ModernMessageDialog.ShowError($"새 요청 생성 중 오류가 발생했습니다: {ex.Message}", "오류");
+            }
+        }
+
+        [RelayCommand]
         private async Task ImportApis()
         {
             try
@@ -166,7 +184,7 @@ namespace MMG.ViewModels.API
                 });
 
                 await BuildTreeView();
-                SelectImportedRequest(result.SavedRequests.FirstOrDefault());
+                SelectRequest(result.SavedRequests.FirstOrDefault());
 
                 if (result.ImportedCount == 0)
                 {
@@ -405,15 +423,15 @@ namespace MMG.ViewModels.API
             return null;
         }
 
-        private void SelectImportedRequest(SavedRequest? importedRequest)
+        private void SelectRequest(SavedRequest? request)
         {
-            if (importedRequest == null)
+            if (request == null)
             {
                 return;
             }
 
             var treeItem = GetAllTreeItems()
-                .FirstOrDefault(item => item.ItemType == TreeViewItemType.Request && item.Tag is SavedRequest savedRequest && savedRequest.Id == importedRequest.Id);
+                .FirstOrDefault(item => item.ItemType == TreeViewItemType.Request && item.Tag is SavedRequest savedRequest && savedRequest.Id == request.Id);
 
             if (treeItem != null)
             {
@@ -422,7 +440,85 @@ namespace MMG.ViewModels.API
                 return;
             }
 
-            RequestSelected?.Invoke(this, importedRequest);
+            RequestSelected?.Invoke(this, request);
+        }
+
+        private SavedRequest CreateDefaultRequest(ObservableCollection<SavedRequest> allRequests)
+        {
+            var insertionContext = GetNewRequestInsertionContext(allRequests);
+            var requestHeaders = new ObservableCollection<DataField>
+            {
+                new() { Name = "Header1", Type = DataType.Byte, Value = "0" }
+            };
+
+            var requestPayload = new ObservableCollection<DataField>
+            {
+                new() { Name = "Field1", Type = DataType.Byte, Value = "0" }
+            };
+
+            var responseHeaders = new ObservableCollection<DataField>
+            {
+                new() { Name = "ResponseHeader1", Type = DataType.Byte, Value = "" }
+            };
+
+            var responsePayload = new ObservableCollection<DataField>
+            {
+                new() { Name = "ResponseField1", Type = DataType.Byte, Value = "" }
+            };
+
+            return new SavedRequest
+            {
+                Name = GenerateNewRequestName(allRequests),
+                IpAddress = "127.0.0.1",
+                Port = 8080,
+                IsBigEndian = true,
+                WaitForResponse = true,
+                UseCustomLocalPort = false,
+                CustomLocalPort = 0,
+                FolderId = insertionContext.FolderId,
+                SortOrder = insertionContext.SortOrder,
+                RequestSchemaJson = _databaseService.SerializeDataFields(requestHeaders) + "|" + _databaseService.SerializeDataFields(requestPayload),
+                ResponseSchemaJson = _databaseService.SerializeDataFields(responseHeaders) + "|" + _databaseService.SerializeDataFields(responsePayload)
+            };
+        }
+
+        private (int? FolderId, int SortOrder) GetNewRequestInsertionContext(IEnumerable<SavedRequest> allRequests)
+        {
+            if (SelectedTreeItem?.ItemType == TreeViewItemType.Request && SelectedTreeItem.Tag is SavedRequest selectedRequest)
+            {
+                return (selectedRequest.FolderId, selectedRequest.SortOrder + 1);
+            }
+
+            var targetFolderId = GetSelectedFolderId();
+            var lastSortOrder = allRequests
+                .Where(request => request.FolderId == targetFolderId)
+                .Select(request => request.SortOrder)
+                .DefaultIfEmpty(0)
+                .Max();
+
+            return (targetFolderId, lastSortOrder + 1);
+        }
+
+        private string GenerateNewRequestName(IEnumerable<SavedRequest> allRequests)
+        {
+            const string baseName = "New Request";
+
+            var existingNames = allRequests
+                .Select(request => request.Name)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            if (!existingNames.Contains(baseName))
+            {
+                return baseName;
+            }
+
+            int suffix = 2;
+            while (existingNames.Contains($"{baseName} {suffix}"))
+            {
+                suffix++;
+            }
+
+            return $"{baseName} {suffix}";
         }
 
         private async Task BuildTreeView()
@@ -446,7 +542,7 @@ namespace MMG.ViewModels.API
                 }
 
                 // Add root-level requests (requests without folder)
-                var rootRequests = allRequests.Where(r => r.FolderId == null).OrderBy(r => r.Name);
+                var rootRequests = allRequests.Where(r => r.FolderId == null).OrderBy(r => r.SortOrder).ThenBy(r => r.Id);
                 foreach (var request in rootRequests)
                 {
                     var treeItem = new TreeViewItemModel
@@ -485,7 +581,7 @@ namespace MMG.ViewModels.API
             }
 
             // Add requests in this folder
-            var folderRequests = allRequests.Where(r => r.FolderId == folder.Id).OrderBy(r => r.Name);
+            var folderRequests = allRequests.Where(r => r.FolderId == folder.Id).OrderBy(r => r.SortOrder).ThenBy(r => r.Id);
             foreach (var request in folderRequests)
             {
                 var requestItem = new TreeViewItemModel

@@ -207,7 +207,7 @@ namespace MMG.ViewModels
         public ICommand CopyItemCommand => TreeViewViewModel.CopyItemCommand;
         public ICommand ImportApisCommand => TreeViewViewModel.ImportApisCommand;
         public ICommand RenameSelectedItemCommand => TreeViewViewModel.RenameSelectedItemCommand;
-        public ICommand NewRequestCommand => SavedRequestsViewModel.NewRequestCommand;
+        public ICommand NewRequestCommand => TreeViewViewModel.NewRequestCommand;
         public ICommand NewFolderCommand => TreeViewViewModel.NewFolderCommand;
         public ICommand AddHeaderCommand => RequestViewModel.AddHeaderCommand;
         public ICommand RemoveHeaderCommand => RequestViewModel.RemoveHeaderCommand;

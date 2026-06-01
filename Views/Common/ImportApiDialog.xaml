@@ -2,14 +2,13 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="API Import"
-        Width="420"
-        Height="330"
+        Width="360"
+        Height="240"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         Background="White">
-    <Grid Margin="20">
+    <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -42,19 +41,7 @@
             </ComboBox>
         </StackPanel>
 
-        <Border Grid.Row="2"
-                Background="#F7F8FA"
-                BorderBrush="#E5E7EB"
-                BorderThickness="1"
-                CornerRadius="8"
-                Padding="12">
-            <TextBlock TextWrapping="Wrap"
-                       Foreground="#374151"
-                       LineHeight="20"
-                       Text="여러 JSON 파일을 한 번에 선택할 수 있고, 각 파일의 data 배열 안에 여러 API가 있으면 모두 가져옵니다. 선택된 폴더가 있으면 그 폴더 아래로 저장됩니다."/>
-        </Border>
-
-        <StackPanel Grid.Row="3"
+        <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Bottom"

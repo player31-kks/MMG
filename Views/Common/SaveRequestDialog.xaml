@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="요청 저장"
         Width="420"
-        Height="320"
+        Height="280"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="White">
@@ -61,7 +61,7 @@
                         Content="저장"
                         Width="75"
                         Height="30"
-                        Margin="0,0,10,0"
+                        Margin="0,0,10,10"
                         IsDefault="True"
                         Style="{StaticResource ModernButton}"
                         Background="{StaticResource SecondaryColor}"
@@ -72,6 +72,7 @@
                         Width="75"
                         Height="30"
                         IsCancel="True"
+                        Margin="0,0,0,10"
                         Style="{StaticResource ModernButton}"
                         Background="{StaticResource WarningColor}"
                         Click="CancelButton_Click"/>

@@ -32,6 +32,9 @@ namespace MMG.Models
         private int? folderId;
 
         [ObservableProperty]
+        private int sortOrder;
+
+        [ObservableProperty]
         private string requestSchemaJson = "";
 
         [ObservableProperty]

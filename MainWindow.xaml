@@ -42,12 +42,13 @@
 
         <!-- Custom Title Bar -->
         <Border Grid.Row="0"
-                Background="{StaticResource PanelBackground}"
+            Background="#F3F4F8"
                 BorderBrush="{StaticResource MutedBorder}"
-                BorderThickness="0,0,0,1">
+                >
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="1468*"/>
+                    <ColumnDefinition Width="27*"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
@@ -60,48 +61,7 @@
                            VerticalAlignment="Center"
                            Margin="10,0,0,0"
                            FontWeight="SemiBold"
-                           FontSize="14"/>
-
-                <!-- Settings Button -->
-                <Button Grid.Column="1"
-                        Content="★"
-                        Width="35"
-                        Height="35"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        FontSize="16"
-                        ToolTip="설정"
-                        Click="SettingsButton_Click"
-                        WindowChrome.IsHitTestVisibleInChrome="True">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Background"
-                                    Value="Transparent"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border Background="{TemplateBinding Background}">
-                                            <ContentPresenter HorizontalAlignment="Center"
-                                                              VerticalAlignment="Center"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver"
-                                                     Value="True">
-                                                <Setter Property="Background"
-                                                        Value="#E9ECEF"/>
-                                            </Trigger>
-                                            <Trigger Property="IsPressed"
-                                                     Value="True">
-                                                <Setter Property="Background"
-                                                        Value="#DEE2E6"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </Button.Style>
-                </Button>
+                           FontSize="14" Grid.ColumnSpan="2"/>
 
                 <!-- Minimize Button -->
                 <Button Grid.Column="2"
@@ -109,7 +69,7 @@
                         Width="35"
                         Height="35"
                         Click="MinimizeButton_Click"
-                        WindowChrome.IsHitTestVisibleInChrome="True">
+                        WindowChrome.IsHitTestVisibleInChrome="True" Grid.ColumnSpan="2" Margin="0,0,0,-1">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Background"
@@ -143,12 +103,12 @@
                 </Button>
 
                 <!-- Maximize/Restore Button -->
-                <Button Grid.Column="3"
+                <Button Grid.Column="4"
                         Content="□"
                         Width="35"
                         Height="35"
                         Click="MaximizeButton_Click"
-                        WindowChrome.IsHitTestVisibleInChrome="True">
+                        WindowChrome.IsHitTestVisibleInChrome="True" Margin="0,0,0,-1">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Background"
@@ -182,12 +142,12 @@
                 </Button>
 
                 <!-- Close Button -->
-                <Button Grid.Column="4"
+                <Button Grid.Column="5"
                         Content="✕"
                         Width="35"
                         Height="35"
                         Click="CloseButton_Click"
-                        WindowChrome.IsHitTestVisibleInChrome="True">
+                        WindowChrome.IsHitTestVisibleInChrome="True" Margin="0,0,0,-1">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Background"
@@ -238,7 +198,7 @@
             <Border Grid.Column="0"
                     Background="#F3F4F8"
                     BorderBrush="{StaticResource MutedBorder}"
-                    BorderThickness="0,0,1,0">
+                    >
                 <StackPanel Orientation="Vertical"
                             Margin="0,18,0,0">
 
@@ -260,7 +220,7 @@
                                           Fill="{Binding RelativeSource={RelativeSource AncestorType=ToggleButton}, Path=Foreground}"/>
                                 </Canvas>
                             </Viewbox>
-                            <TextBlock Text="APIs"
+                            <TextBlock Text="API"
                                        FontSize="10"
                                        HorizontalAlignment="Center"
                                        Margin="0,2,0,0"/>
@@ -285,7 +245,7 @@
                                           Fill="{Binding RelativeSource={RelativeSource AncestorType=ToggleButton}, Path=Foreground}"/>
                                 </Canvas>
                             </Viewbox>
-                            <TextBlock Text="Tests"
+                            <TextBlock Text="Test"
                                        FontSize="10"
                                        HorizontalAlignment="Center"
                                        Margin="0,2,0,0"/>

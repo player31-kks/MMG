@@ -1,0 +1,35 @@
+<UserControl x:Class="MMG.Views.Common.WarningIcon"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             x:Name="Root"
+             mc:Ignorable="d"
+             d:DesignHeight="18"
+             d:DesignWidth="18">
+    <UserControl.Resources>
+        <StreamGeometry x:Key="WarningTriangleGeometry">M 9,1.072 L 17,14.928 L 1,14.928 Z</StreamGeometry>
+    </UserControl.Resources>
+
+    <Viewbox Stretch="Uniform">
+        <Grid Width="18"
+              Height="18">
+            <Path Data="{StaticResource WarningTriangleGeometry}"
+                  Fill="{Binding TriangleFill, ElementName=Root}"
+                  Stretch="Fill"/>
+            <Border Width="2.2"
+                    Height="6"
+                    Background="{Binding SymbolFill, ElementName=Root}"
+                    CornerRadius="1.1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Margin="0,5.1,0,0"/>
+            <Ellipse Width="2"
+                     Height="2"
+                     Fill="{Binding SymbolFill, ElementName=Root}"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Top"
+                     Margin="0,12.6,0,0"/>
+        </Grid>
+    </Viewbox>
+</UserControl>
