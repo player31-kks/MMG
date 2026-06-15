@@ -12,6 +12,7 @@
 
     <UserControl.Resources>
         <converters:StringToBooleanConverter x:Key="EqualToStringConverter"/>
+        <converters:BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </UserControl.Resources>
 
     <Grid>
@@ -330,7 +331,9 @@
                                            VerticalAlignment="Center"
                                            Margin="4,0,0,0"/>
                             </Grid>
-                            <Grid Margin="0,0,0,8">
+                            <!-- 반복 횟수 (무한 반복이 꺼져 있을 때만 표시) -->
+                            <Grid Margin="0,0,0,8"
+                                  Visibility="{Binding SelectedStep.RepeatCountVisibility}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="80"/>
                                     <ColumnDefinition Width="*"/>
@@ -354,11 +357,106 @@
                                            VerticalAlignment="Center"
                                            Margin="4,0,0,0"/>
                             </Grid>
-                            <TextBlock Text="💡 지정된 간격(ms)으로 반복 횟수만큼 요청을 실행합니다."
-                                       FontSize="11"
+
+                            <!-- 무한 반복 토글 블록 -->
+                            <Border Background="#F8F7FF"
+                                    BorderBrush="#C5BDFA"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="12,10"
+                                    Margin="0,0,0,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center">
+                                        <Border Width="3"
+                                                Height="13"
+                                                CornerRadius="2"
+                                                Background="{StaticResource PrimaryColor}"
+                                                Margin="0,0,7,0"
+                                                VerticalAlignment="Center"/>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock FontSize="12"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextPrimaryColor}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="무한 반복"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding SelectedStep.IsInfiniteRepeat}" Value="True">
+                                                                <Setter Property="Text" Value="무한 반복 (∞)"/>
+                                                                <Setter Property="Foreground" Value="{StaticResource PrimaryColor}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <TextBlock Text="중지 버튼을 누를 때까지 계속 전송"
+                                                       FontSize="10"
+                                                       Foreground="{StaticResource MutedText}"
+                                                       Margin="0,1,0,0"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <!-- 토글 스위치 -->
+                                    <ToggleButton Grid.Column="1"
+                                                  IsChecked="{Binding SelectedStep.IsInfiniteRepeat, Mode=TwoWay}"
+                                                  Width="40"
+                                                  Height="20"
+                                                  Cursor="Hand">
+                                        <ToggleButton.Style>
+                                            <Style TargetType="ToggleButton">
+                                                <Setter Property="Background" Value="#DEE2E6"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="ToggleButton">
+                                                            <Border x:Name="Track"
+                                                                    Background="{TemplateBinding Background}"
+                                                                    CornerRadius="10"
+                                                                    Width="40"
+                                                                    Height="20">
+                                                                <Border x:Name="Thumb"
+                                                                        Width="14"
+                                                                        Height="14"
+                                                                        CornerRadius="7"
+                                                                        Background="White"
+                                                                        HorizontalAlignment="Left"
+                                                                        Margin="3,0,0,0"/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsChecked" Value="True">
+                                                                    <Setter TargetName="Track" Property="Background" Value="{StaticResource PrimaryColor}"/>
+                                                                    <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
+                                                                    <Setter TargetName="Thumb" Property="Margin" Value="0,0,3,0"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </ToggleButton.Style>
+                                    </ToggleButton>
+                                </Grid>
+                            </Border>
+
+                            <TextBlock FontSize="11"
                                        Foreground="{StaticResource MutedText}"
                                        FontStyle="Italic"
-                                       TextWrapping="Wrap"/>
+                                       TextWrapping="Wrap">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="💡 지정된 간격(ms)으로 반복 횟수만큼 요청을 실행합니다."/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedStep.IsInfiniteRepeat}" Value="True">
+                                                <Setter Property="Text" Value="💡 무한 반복 모드: 지정된 간격으로 계속 전송합니다. 헤더 ■ 중지 버튼으로 종료하세요."/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                         </StackPanel>
 
                         <!-- AbsoluteDelayed 설정 -->

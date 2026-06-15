@@ -556,72 +556,79 @@ namespace MMG.Services
 
             // 하위 호환성: FrequencyHz가 설정되어 있으면 사용
             if (intervalMs <= 0 && step.FrequencyHz > 0)
-            {
                 intervalMs = (int)(1000.0 / step.FrequencyHz);
-            }
 
             // 하위 호환성: DurationSeconds가 설정되어 있으면 사용
             if (durationMs <= 0 && step.DurationSeconds > 0)
-            {
                 durationMs = (int)(step.DurationSeconds * 1000);
-            }
-
-            // RepeatCount가 설정되어 있으면 횟수 기반 실행
-            // 아니면 DurationMs 기반으로 횟수 계산
-            int totalExecutions;
-            if (repeatCount > 0)
-            {
-                totalExecutions = repeatCount;
-            }
-            else if (durationMs > 0 && intervalMs > 0)
-            {
-                totalExecutions = durationMs / intervalMs;
-            }
-            else
-            {
-                totalExecutions = 1; // 기본값
-            }
 
             if (intervalMs <= 0)
+                intervalMs = 100;
+
+            // ── 무한 반복 모드 ──
+            if (step.IsInfiniteRepeat)
             {
-                intervalMs = 100; // 기본 간격 100ms
+                AddLog(LogLevel.Info, $"주기적 실행 시작: 무한 반복, 간격 {intervalMs}ms (중지 버튼으로 종료)", step.Name);
+                result.RequestSent = $"{savedRequest.IpAddress}:{savedRequest.Port} (무한 반복, 간격 {intervalMs}ms)";
+
+                int infiniteCount = 0;
+                try
+                {
+                    while (!cancellationToken.IsCancellationRequested)
+                    {
+                        if (infiniteCount > 0)
+                            await Task.Delay(intervalMs, cancellationToken);
+
+                        var udpRequest = CreateUdpRequestFromSaved(savedRequest);
+                        await _udpClientService.SendRequestAsync(udpRequest);
+                        infiniteCount++;
+
+                        if (infiniteCount % 10 == 0)
+                            AddLog(LogLevel.Debug, $"주기적 요청 진행: {infiniteCount}회 (무한 반복)", step.Name);
+                    }
+                }
+                catch (OperationCanceledException) { }
+
+                result.ResponseReceived = $"무한 반복 {infiniteCount}회 실행 후 중지됨";
+                AddLog(LogLevel.Info, $"주기적 실행 완료 (무한 반복): {infiniteCount}회 실행", step.Name);
+                return;
             }
+
+            // ── 횟수 기반 모드 ──
+            int totalExecutions;
+            if (repeatCount > 0)
+                totalExecutions = repeatCount;
+            else if (durationMs > 0 && intervalMs > 0)
+                totalExecutions = durationMs / intervalMs;
+            else
+                totalExecutions = 1;
 
             AddLog(LogLevel.Info, $"주기적 실행 시작: {totalExecutions}회, 간격 {intervalMs}ms", step.Name);
 
             var responses = new System.Text.StringBuilder();
             int executionCount = 0;
-            var startTime = DateTime.Now;
 
             for (int i = 0; i < totalExecutions && !cancellationToken.IsCancellationRequested; i++)
             {
-                // 첫 실행이 아니면 간격 대기
                 if (i > 0)
-                {
                     await Task.Delay(intervalMs, cancellationToken);
-                }
 
-                // 요청 실행
                 var udpRequest = CreateUdpRequestFromSaved(savedRequest);
                 var response = await _udpClientService.SendRequestAsync(udpRequest);
                 executionCount++;
 
-                string responseText = response != null && response.RawData != null
+                string responseText = response?.RawData != null
                     ? BitConverter.ToString(response.RawData).Replace("-", " ")
                     : "응답 없음";
 
                 responses.AppendLine($"[{executionCount}/{totalExecutions}] {DateTime.Now:HH:mm:ss.fff}: {responseText}");
 
-                // 주기적으로 로그 출력 (10% 간격 또는 마지막)
                 if (executionCount % Math.Max(1, totalExecutions / 10) == 0 || executionCount == totalExecutions)
-                {
                     AddLog(LogLevel.Debug, $"주기적 요청 진행: {executionCount}/{totalExecutions}", step.Name);
-                }
             }
 
             result.RequestSent = $"{savedRequest.IpAddress}:{savedRequest.Port} (주기적 실행 {executionCount}회, 간격 {intervalMs}ms)";
             result.ResponseReceived = responses.ToString();
-
             AddLog(LogLevel.Info, $"주기적 실행 완료: {executionCount}회 실행", step.Name);
         }
 

@@ -71,6 +71,16 @@ namespace MMG.Models
         [ObservableProperty]
         private int repeatCount = 1;
 
+        /// <summary>
+        /// 무한 반복 여부 (true면 RepeatCount 무시하고 중지 버튼을 누를 때까지 반복)
+        /// </summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(RepeatCountVisibility))]
+        private bool isInfiniteRepeat = false;
+
+        public System.Windows.Visibility RepeatCountVisibility =>
+            IsInfiniteRepeat ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+
         [ObservableProperty]
         private string expectedResponse = string.Empty;
 

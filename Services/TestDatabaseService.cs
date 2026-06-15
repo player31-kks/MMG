@@ -97,6 +97,7 @@ namespace MMG.Services
             AddColumnIfNotExists(connection, "TestSteps", "IdFilterOffset", "INTEGER DEFAULT 0");
             AddColumnIfNotExists(connection, "TestSteps", "IdFilterType", "TEXT DEFAULT 'Byte'");
             AddColumnIfNotExists(connection, "TestSteps", "IdFilterValue", "INTEGER DEFAULT 0");
+            AddColumnIfNotExists(connection, "TestSteps", "IsInfiniteRepeat", "INTEGER DEFAULT 0");
 
             // TestScenarios 새로운 컬럼 추가
             AddColumnIfNotExists(connection, "TestScenarios", "BindPort", "INTEGER DEFAULT 0");
@@ -283,6 +284,7 @@ namespace MMG.Services
                     IdFilterOffset = GetIntOrDefault(reader, "IdFilterOffset", 0),
                     IdFilterType = reader["IdFilterType"] == DBNull.Value ? "Byte" : reader["IdFilterType"].ToString() ?? "Byte",
                     IdFilterValue = GetIntOrDefault(reader, "IdFilterValue", 0),
+                    IsInfiniteRepeat = GetIntOrDefault(reader, "IsInfiniteRepeat", 0) == 1,
                     ExpectedResponse = reader["ExpectedResponse"] == DBNull.Value ? string.Empty : reader["ExpectedResponse"].ToString() ?? string.Empty,
                     IsEnabled = Convert.ToInt32(reader["IsEnabled"]) == 1,
                     Order = Convert.ToInt32(reader["Order"])
@@ -313,8 +315,8 @@ namespace MMG.Services
             await connection.OpenAsync();
 
             var query = @"
-                INSERT INTO TestSteps (ScenarioId, Name, StepType, SavedRequestId, DelaySeconds, FrequencyHz, DurationSeconds, PreDelayMs, PostDelayMs, IntervalMs, RepeatCount, IsBackground, StartDelayFromScenarioMs, ListenPort, ReceiveTimeoutMs, ResponseRequestId, UseIdFilter, IdFilterOffset, IdFilterType, IdFilterValue, ExpectedResponse, IsEnabled, [Order])
-                VALUES (@ScenarioId, @Name, @StepType, @SavedRequestId, @DelaySeconds, @FrequencyHz, @DurationSeconds, @PreDelayMs, @PostDelayMs, @IntervalMs, @RepeatCount, @IsBackground, @StartDelayFromScenarioMs, @ListenPort, @ReceiveTimeoutMs, @ResponseRequestId, @UseIdFilter, @IdFilterOffset, @IdFilterType, @IdFilterValue, @ExpectedResponse, @IsEnabled, @Order);
+                INSERT INTO TestSteps (ScenarioId, Name, StepType, SavedRequestId, DelaySeconds, FrequencyHz, DurationSeconds, PreDelayMs, PostDelayMs, IntervalMs, RepeatCount, IsBackground, StartDelayFromScenarioMs, ListenPort, ReceiveTimeoutMs, ResponseRequestId, UseIdFilter, IdFilterOffset, IdFilterType, IdFilterValue, IsInfiniteRepeat, ExpectedResponse, IsEnabled, [Order])
+                VALUES (@ScenarioId, @Name, @StepType, @SavedRequestId, @DelaySeconds, @FrequencyHz, @DurationSeconds, @PreDelayMs, @PostDelayMs, @IntervalMs, @RepeatCount, @IsBackground, @StartDelayFromScenarioMs, @ListenPort, @ReceiveTimeoutMs, @ResponseRequestId, @UseIdFilter, @IdFilterOffset, @IdFilterType, @IdFilterValue, @IsInfiniteRepeat, @ExpectedResponse, @IsEnabled, @Order);
                 SELECT last_insert_rowid();";
 
             using var command = new SQLiteCommand(query, connection);
@@ -338,6 +340,7 @@ namespace MMG.Services
             command.Parameters.AddWithValue("@IdFilterOffset", step.IdFilterOffset);
             command.Parameters.AddWithValue("@IdFilterType", step.IdFilterType);
             command.Parameters.AddWithValue("@IdFilterValue", step.IdFilterValue);
+            command.Parameters.AddWithValue("@IsInfiniteRepeat", step.IsInfiniteRepeat ? 1 : 0);
             command.Parameters.AddWithValue("@ExpectedResponse", step.ExpectedResponse);
             command.Parameters.AddWithValue("@IsEnabled", step.IsEnabled ? 1 : 0);
             command.Parameters.AddWithValue("@Order", step.Order);
@@ -359,6 +362,7 @@ namespace MMG.Services
                     IsBackground = @IsBackground, StartDelayFromScenarioMs = @StartDelayFromScenarioMs,
                     ListenPort = @ListenPort, ReceiveTimeoutMs = @ReceiveTimeoutMs, ResponseRequestId = @ResponseRequestId,
                     UseIdFilter = @UseIdFilter, IdFilterOffset = @IdFilterOffset, IdFilterType = @IdFilterType, IdFilterValue = @IdFilterValue,
+                    IsInfiniteRepeat = @IsInfiniteRepeat,
                     ExpectedResponse = @ExpectedResponse, IsEnabled = @IsEnabled, [Order] = @Order
                 WHERE Id = @Id";
 
@@ -383,6 +387,7 @@ namespace MMG.Services
             command.Parameters.AddWithValue("@IdFilterOffset", step.IdFilterOffset);
             command.Parameters.AddWithValue("@IdFilterType", step.IdFilterType);
             command.Parameters.AddWithValue("@IdFilterValue", step.IdFilterValue);
+            command.Parameters.AddWithValue("@IsInfiniteRepeat", step.IsInfiniteRepeat ? 1 : 0);
             command.Parameters.AddWithValue("@ExpectedResponse", step.ExpectedResponse);
             command.Parameters.AddWithValue("@IsEnabled", step.IsEnabled ? 1 : 0);
             command.Parameters.AddWithValue("@Order", step.Order);

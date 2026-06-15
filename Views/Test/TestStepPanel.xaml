@@ -80,14 +80,58 @@
                             Style="{StaticResource ModernButton}"
                             ToolTip="새 테스트 단계 추가"
                             Margin="0,0,6,0"/>
-                    <Button Content="▶"
-                            Command="{Binding RunSelectedScenarioCommand}"
+
+                    <!-- 실행 버튼 (미실행 상태일 때) -->
+                    <Button Command="{Binding RunSelectedScenarioCommand}"
                             Width="30"
                             Height="30"
-                            FontSize="13"
-                            Style="{StaticResource ModernButton}"
-                            Background="{StaticResource SecondaryColor}"
-                            ToolTip="시나리오 실행"/>
+                            ToolTip="시나리오 실행">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource ModernButton}">
+                                <Setter Property="Background" Value="{StaticResource SecondaryColor}"/>
+                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsTestRunning}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <TextBlock Text="▶" FontSize="12" VerticalAlignment="Center"/>
+                    </Button>
+
+                    <!-- 중지 버튼 (실행 중일 때) -->
+                    <Button Command="{Binding StopTestCommand}"
+                            Width="30"
+                            Height="30"
+                            ToolTip="테스트 중지">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource ModernButton}">
+                                <Setter Property="Background" Value="{StaticResource WarningColor}"/>
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsTestRunning}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock FontSize="10" VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="■"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsStopping}" Value="True">
+                                                <Setter Property="Text" Value="…"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
