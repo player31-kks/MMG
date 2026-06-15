@@ -12,6 +12,7 @@
              d:DesignWidth="400">
     <TabControl Style="{x:Null}"
                 BorderThickness="0,1,0,0">
+
         <!-- Headers Tab -->
         <TabItem Header="Headers"
                  Style="{StaticResource ModernTabItem}"
@@ -22,95 +23,158 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0"
-                            Orientation="Horizontal">
-                    <Button Content="Add Header"
+                <!-- 툴바 -->
+                <Grid Grid.Row="0" Margin="0,6,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0"
                             Command="{Binding AddHeaderCommand}"
                             CommandParameter="{Binding ElementName=HeadersDataGrid, Path=SelectedIndex}"
-                            Style="{StaticResource ModernButton}"
-                            Width="80"
-                            Height="30"/>
-                    <TextBlock Text="{Binding HeaderBytesText}"
-                               VerticalAlignment="Center"
-                               Margin="15,0,0,0"
-                               Foreground="#007ACC"
-                               FontWeight="SemiBold"/>
-                </StackPanel>
+                            Height="28"
+                            Padding="10,0"
+                            Style="{StaticResource ModernButton}">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Add Header" FontSize="12" VerticalAlignment="Center" Padding="4"/>
+                        </StackPanel>
+                    </Button>
+                    <Border Grid.Column="2"
+                            Background="{StaticResource SoftAccent}"
+                            CornerRadius="10"
+                            Padding="8,3"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="{Binding HeaderBytesText}"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource PrimaryColor}"/>
+                    </Border>
+                </Grid>
 
-                <DataGrid Grid.Row="1"
-                          x:Name="HeadersDataGrid"
-                          ItemsSource="{Binding CurrentRequest.Headers}"
-                          AutoGenerateColumns="False"
-                          CanUserAddRows="False"
-                          GridLinesVisibility="Horizontal"
-                          HeadersVisibility="Column"
-                          SelectionMode="Single"
-                          SelectionUnit="FullRow"
-                          KeyDown="DataGrid_KeyDown"
-                          MouseLeftButtonUp="DataGrid_MouseLeftButtonUp"
-                          Margin="0,10,0,0">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Name"
-                                            Binding="{Binding Name}"
-                                            Width="2*"
-                                            MinWidth="80"/>
-                        <DataGridTemplateColumn Header="Type"
-                                                Width="120"
-                                                MinWidth="100">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <ComboBox SelectedItem="{Binding Type, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                              Style="{StaticResource ModernComboBox}"
-                                              BorderThickness="0">
-                                        <ComboBox.ItemsSource>
-                                            <x:Array Type="models:DataType">
-                                                <models:DataType>Byte</models:DataType>
-                                                <models:DataType>Int16</models:DataType>
-                                                <models:DataType>UInt16</models:DataType>
-                                                <models:DataType>Int</models:DataType>
-                                                <models:DataType>UInt</models:DataType>
-                                                <models:DataType>Float</models:DataType>
-                                                <models:DataType>Padding</models:DataType>
-                                            </x:Array>
-                                        </ComboBox.ItemsSource>
-                                    </ComboBox>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="Value"
-                                            Binding="{Binding Value}"
-                                            Width="2*"
-                                            MinWidth="80"/>
-                        <DataGridTemplateColumn Header=""
-                                                Width="60"
-                                                MinWidth="50">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Button HorizontalAlignment="Center"
-                                            Command="{Binding ElementName=RequestTabsControl, Path=DataContext.RemoveHeaderCommand}"
-                                            CommandParameter="{Binding}"
-                                            Style="{StaticResource SchemaDeleteButtonStyle}"
-                                            ToolTip="삭제">
-                                        <common:TrashIcon Width="14"
-                                                          Height="14"
-                                                          IconFill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
-                                    </Button>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                            <DataGridTemplateColumn.HeaderTemplate>
-                                <DataTemplate>
-                                    <Button Command="{Binding DataContext.ClearAllHeadersCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            Style="{StaticResource SchemaDeleteButtonStyle}"
-                                            ToolTip="전체 삭제">
-                                        <common:TrashIcon Width="14"
-                                                          Height="14"
-                                                          IconFill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
-                                    </Button>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.HeaderTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <!-- 테이블 -->
+                <Border Grid.Row="1"
+                        BorderBrush="{StaticResource MutedBorder}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        ClipToBounds="True">
+                    <DataGrid x:Name="HeadersDataGrid"
+                              ItemsSource="{Binding CurrentRequest.Headers}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#F3F4F6"
+                              HeadersVisibility="Column"
+                              SelectionMode="Single"
+                              SelectionUnit="FullRow"
+                              BorderThickness="0"
+                              Background="White"
+                              RowBackground="White"
+                              AlternatingRowBackground="White"
+                              RowHeaderWidth="0"
+                              ColumnHeaderStyle="{StaticResource SchemaColumnHeaderStyle}"
+                              RowStyle="{StaticResource SchemaRowStyle}"
+                              CellStyle="{StaticResource SchemaCellStyle}"
+                              KeyDown="DataGrid_KeyDown"
+                              MouseLeftButtonUp="DataGrid_MouseLeftButtonUp">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name"
+                                                Binding="{Binding Name}"
+                                                Width="2*"
+                                                MinWidth="80">
+                                <DataGridTextColumn.EditingElementStyle>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="Padding" Value="8,0"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.EditingElementStyle>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Padding" Value="8,0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryColor}"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTemplateColumn Header="Type"
+                                                    Width="120"
+                                                    MinWidth="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox SelectedItem="{Binding Type, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                  Style="{StaticResource CompactComboBox}"
+                                                  BorderThickness="0"
+                                                  Background="Transparent"
+                                                  Padding="8,3">
+                                            <ComboBox.ItemsSource>
+                                                <x:Array Type="models:DataType">
+                                                    <models:DataType>Byte</models:DataType>
+                                                    <models:DataType>Int16</models:DataType>
+                                                    <models:DataType>UInt16</models:DataType>
+                                                    <models:DataType>Int</models:DataType>
+                                                    <models:DataType>UInt</models:DataType>
+                                                    <models:DataType>Float</models:DataType>
+                                                    <models:DataType>Padding</models:DataType>
+                                                </x:Array>
+                                            </ComboBox.ItemsSource>
+                                        </ComboBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Value"
+                                                Binding="{Binding Value}"
+                                                Width="2*"
+                                                MinWidth="80">
+                                <DataGridTextColumn.EditingElementStyle>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="Padding" Value="8,0"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.EditingElementStyle>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Padding" Value="8,0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryColor}"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTemplateColumn Width="44" MinWidth="44">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button HorizontalAlignment="Center"
+                                                Command="{Binding ElementName=RequestTabsControl, Path=DataContext.RemoveHeaderCommand}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource SchemaDeleteButtonStyle}"
+                                                ToolTip="삭제">
+                                            <common:TrashIcon Width="14"
+                                                              Height="14"
+                                                              IconFill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.ClearAllHeadersCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                Style="{StaticResource SchemaDeleteButtonStyle}"
+                                                ToolTip="전체 삭제">
+                                            <common:TrashIcon Width="13"
+                                                              Height="13"
+                                                              IconFill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.HeaderTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
             </Grid>
         </TabItem>
 
@@ -124,96 +188,156 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0"
-                            Orientation="Horizontal">
-                    <Button Content="Add Field"
+                <Grid Grid.Row="0" Margin="0,6,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0"
                             Command="{Binding AddPayloadFieldCommand}"
                             CommandParameter="{Binding ElementName=PayloadDataGrid, Path=SelectedIndex}"
-                            Style="{StaticResource ModernButton}"
-                            Width="80"
-                            Height="30"
-                            HorizontalAlignment="Left"/>
-                    <TextBlock Text="{Binding PayloadBytesText}"
-                               VerticalAlignment="Center"
-                               Margin="15,0,0,0"
-                               Foreground="#007ACC"
-                               FontWeight="SemiBold"/>
-                </StackPanel>
+                            Height="28"
+                            Padding="10,0"
+                            Style="{StaticResource ModernButton}">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Add Field" FontSize="12" VerticalAlignment="Center" Padding="4"/>
+                        </StackPanel>
+                    </Button>
+                    <Border Grid.Column="2"
+                            Background="{StaticResource SoftAccent}"
+                            CornerRadius="10"
+                            Padding="8,3"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="{Binding PayloadBytesText}"
+                                   FontSize="11"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource PrimaryColor}"/>
+                    </Border>
+                </Grid>
 
-                <DataGrid Grid.Row="1"
-                          x:Name="PayloadDataGrid"
-                          ItemsSource="{Binding CurrentRequest.Payload}"
-                          AutoGenerateColumns="False"
-                          CanUserAddRows="False"
-                          GridLinesVisibility="Horizontal"
-                          HeadersVisibility="Column"
-                          SelectionMode="Single"
-                          SelectionUnit="FullRow"
-                          KeyDown="DataGrid_KeyDown"
-                          MouseLeftButtonUp="DataGrid_MouseLeftButtonUp"
-                          Margin="0,10,0,0">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Name"
-                                            Binding="{Binding Name}"
-                                            Width="2*"
-                                            MinWidth="80"/>
-                        <DataGridTemplateColumn Header="Type"
-                                                Width="120"
-                                                MinWidth="100">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <ComboBox SelectedItem="{Binding Type, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                              Style="{StaticResource ModernComboBox}"
-                                              BorderThickness="0">
-                                        <ComboBox.ItemsSource>
-                                            <x:Array Type="models:DataType">
-                                                <models:DataType>Byte</models:DataType>
-                                                <models:DataType>Int16</models:DataType>
-                                                <models:DataType>UInt16</models:DataType>
-                                                <models:DataType>Int</models:DataType>
-                                                <models:DataType>UInt</models:DataType>
-                                                <models:DataType>Float</models:DataType>
-                                                <models:DataType>Padding</models:DataType>
-                                            </x:Array>
-                                        </ComboBox.ItemsSource>
-                                    </ComboBox>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="Value"
-                                            Binding="{Binding Value}"
-                                            Width="2*"
-                                            MinWidth="80"/>
-                        <DataGridTemplateColumn Header=""
-                                                Width="60"
-                                                MinWidth="50">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Button HorizontalAlignment="Center"
-                                            Command="{Binding ElementName=RequestTabsControl, Path=DataContext.RemovePayloadFieldCommand}"
-                                            CommandParameter="{Binding}"
-                                            Style="{StaticResource SchemaDeleteButtonStyle}"
-                                            ToolTip="삭제">
-                                        <common:TrashIcon Width="14"
-                                                          Height="14"
-                                                          IconFill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
-                                    </Button>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                            <DataGridTemplateColumn.HeaderTemplate>
-                                <DataTemplate>
-                                    <Button Command="{Binding DataContext.ClearAllPayloadFieldsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            Style="{StaticResource SchemaDeleteButtonStyle}"
-                                            ToolTip="전체 삭제">
-                                        <common:TrashIcon Width="14"
-                                                          Height="14"
-                                                          IconFill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
-                                    </Button>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.HeaderTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <Border Grid.Row="1"
+                        BorderBrush="{StaticResource MutedBorder}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        ClipToBounds="True">
+                    <DataGrid x:Name="PayloadDataGrid"
+                              ItemsSource="{Binding CurrentRequest.Payload}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#F3F4F6"
+                              HeadersVisibility="Column"
+                              SelectionMode="Single"
+                              SelectionUnit="FullRow"
+                              BorderThickness="0"
+                              Background="White"
+                              RowBackground="White"
+                              AlternatingRowBackground="White"
+                              RowHeaderWidth="0"
+                              ColumnHeaderStyle="{StaticResource SchemaColumnHeaderStyle}"
+                              RowStyle="{StaticResource SchemaRowStyle}"
+                              CellStyle="{StaticResource SchemaCellStyle}"
+                              KeyDown="DataGrid_KeyDown"
+                              MouseLeftButtonUp="DataGrid_MouseLeftButtonUp">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name"
+                                                Binding="{Binding Name}"
+                                                Width="2*"
+                                                MinWidth="80">
+                                <DataGridTextColumn.EditingElementStyle>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="Padding" Value="8,0"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.EditingElementStyle>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Padding" Value="8,0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryColor}"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTemplateColumn Header="Type"
+                                                    Width="120"
+                                                    MinWidth="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox SelectedItem="{Binding Type, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                  Style="{StaticResource CompactComboBox}"
+                                                  BorderThickness="0"
+                                                  Background="Transparent"
+                                                  Padding="8,3">
+                                            <ComboBox.ItemsSource>
+                                                <x:Array Type="models:DataType">
+                                                    <models:DataType>Byte</models:DataType>
+                                                    <models:DataType>Int16</models:DataType>
+                                                    <models:DataType>UInt16</models:DataType>
+                                                    <models:DataType>Int</models:DataType>
+                                                    <models:DataType>UInt</models:DataType>
+                                                    <models:DataType>Float</models:DataType>
+                                                    <models:DataType>Padding</models:DataType>
+                                                </x:Array>
+                                            </ComboBox.ItemsSource>
+                                        </ComboBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Value"
+                                                Binding="{Binding Value}"
+                                                Width="2*"
+                                                MinWidth="80">
+                                <DataGridTextColumn.EditingElementStyle>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="Padding" Value="8,0"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.EditingElementStyle>
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Padding" Value="8,0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryColor}"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTemplateColumn Width="44" MinWidth="44">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button HorizontalAlignment="Center"
+                                                Command="{Binding ElementName=RequestTabsControl, Path=DataContext.RemovePayloadFieldCommand}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource SchemaDeleteButtonStyle}"
+                                                ToolTip="삭제">
+                                            <common:TrashIcon Width="14"
+                                                              Height="14"
+                                                              IconFill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.HeaderTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.ClearAllPayloadFieldsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                Style="{StaticResource SchemaDeleteButtonStyle}"
+                                                ToolTip="전체 삭제">
+                                            <common:TrashIcon Width="13"
+                                                              Height="13"
+                                                              IconFill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.HeaderTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
             </Grid>
         </TabItem>
     </TabControl>

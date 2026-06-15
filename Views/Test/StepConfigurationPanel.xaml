@@ -65,13 +65,19 @@
             <StackPanel>
                 <!-- Step Basic Info -->
                 <Border Style="{StaticResource TestCard}"
-                        Margin="0,0,0,16">
+                        Margin="0,0,0,12">
                     <StackPanel>
-                        <TextBlock Text="기본 정보"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryColor}"
-                                   Margin="0,0,0,12"/>
+                        <!-- 섹션 헤더 -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <Border Width="3" Height="14" CornerRadius="2"
+                                    Background="{StaticResource PrimaryColor}"
+                                    Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="기본 정보"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimaryColor}"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
 
                         <Grid>
                             <Grid.RowDefinitions>
@@ -81,43 +87,35 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="72"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Row="0"
-                                       Grid.Column="0"
-                                       Text="이름:"
-                                       FontSize="12"
+                            <TextBlock Grid.Row="0" Grid.Column="0"
+                                       Text="이름"
+                                       FontSize="11" FontWeight="SemiBold"
                                        Foreground="{StaticResource MutedText}"
                                        VerticalAlignment="Center"
                                        Margin="0,0,0,8"/>
-                            <TextBox Grid.Row="0"
-                                     Grid.Column="1"
+                            <TextBox Grid.Row="0" Grid.Column="1"
                                      Text="{Binding SelectedStep.Name, Mode=TwoWay}"
+                                     Style="{StaticResource ModernTextBox}"
                                      FontSize="12"
                                      Padding="8,4"
-                                     Margin="0,0,0,8"
-                                     BorderBrush="{StaticResource MutedBorder}"
-                                     BorderThickness="1"/>
+                                     Margin="0,0,0,8"/>
 
-                            <TextBlock Grid.Row="1"
-                                       Grid.Column="0"
-                                       Text="타입:"
-                                       FontSize="12"
+                            <TextBlock Grid.Row="1" Grid.Column="0"
+                                       Text="타입"
+                                       FontSize="11" FontWeight="SemiBold"
                                        Foreground="{StaticResource MutedText}"
                                        VerticalAlignment="Center"
                                        Margin="0,0,0,8"/>
-                            <ComboBox Grid.Row="1"
-                                      Grid.Column="1"
+                            <ComboBox Grid.Row="1" Grid.Column="1"
                                       SelectedValue="{Binding SelectedStep.StepType, Mode=TwoWay}"
                                       SelectedValuePath="Tag"
                                       IsEditable="False"
-                                      FontSize="12"
-                                      Padding="8,4"
-                                      Margin="0,0,0,8"
-                                      BorderBrush="{StaticResource MutedBorder}"
-                                      BorderThickness="1">
+                                      Style="{StaticResource CompactComboBox}"
+                                      Margin="0,0,0,8">
                                 <ComboBoxItem Tag="Immediate">즉시 실행</ComboBoxItem>
                                 <ComboBoxItem Tag="PreDelayed">사전 지연</ComboBoxItem>
                                 <ComboBoxItem Tag="PostDelayed">사후 지연</ComboBoxItem>
@@ -127,45 +125,48 @@
                                 <ComboBoxItem Tag="ReceiveAndReply">수신 후 응답</ComboBoxItem>
                             </ComboBox>
 
-                            <CheckBox Grid.Row="2"
-                                      Grid.Column="1"
-                                      Content="활성화"
-                                      IsChecked="{Binding SelectedStep.IsEnabled, Mode=TwoWay}"
-                                      FontSize="12"
-                                      Foreground="{StaticResource MutedText}"/>
-
-                            <CheckBox Grid.Row="3"
-                                      Grid.Column="1"
-                                      Content="백그라운드 실행"
-                                      IsChecked="{Binding SelectedStep.IsBackground, Mode=TwoWay}"
-                                      FontSize="12"
-                                      Foreground="{StaticResource MutedText}"
-                                      ToolTip="체크하면 이 스텝이 백그라운드에서 실행되고 다음 스텝으로 바로 진행됩니다"
-                                      Margin="0,8,0,0"/>
+                            <!-- 체크박스 행 -->
+                            <StackPanel Grid.Row="2" Grid.Column="0"
+                                        Grid.ColumnSpan="2"
+                                        Orientation="Horizontal"
+                                        Margin="0,4,0,0">
+                                <CheckBox Content="활성화"
+                                          IsChecked="{Binding SelectedStep.IsEnabled, Mode=TwoWay}"
+                                          Style="{StaticResource ModernCheckBox}"
+                                          Margin="0,0,16,0"/>
+                                <CheckBox Content="백그라운드 실행"
+                                          IsChecked="{Binding SelectedStep.IsBackground, Mode=TwoWay}"
+                                          Style="{StaticResource ModernCheckBox}"
+                                          ToolTip="체크하면 이 스텝이 백그라운드에서 실행되고 다음 스텝으로 바로 진행됩니다"/>
+                            </StackPanel>
                         </Grid>
                     </StackPanel>
                 </Border>
 
                 <!-- Request Configuration -->
                 <Border Style="{StaticResource TestCard}"
-                        Margin="0,0,0,16">
+                        Margin="0,0,0,12">
                     <StackPanel>
-                        <TextBlock Text="요청 설정"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryColor}"
-                                   Margin="0,0,0,12"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <Border Width="3" Height="14" CornerRadius="2"
+                                    Background="{StaticResource SecondaryColor}"
+                                    Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="요청 설정"
+                                       FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimaryColor}"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
 
                         <!-- 공통 - 저장된 요청 선택 -->
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="72"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Grid.Column="0"
-                                       Text="저장된 요청:"
-                                       FontSize="12"
+                                       Text="요청"
+                                       FontSize="11" FontWeight="SemiBold"
                                        Foreground="{StaticResource MutedText}"
                                        VerticalAlignment="Center"/>
                             <ComboBox Grid.Column="1"
@@ -173,10 +174,7 @@
                                       SelectedValue="{Binding SelectedStep.SavedRequestId, Mode=TwoWay}"
                                       SelectedValuePath="Id"
                                       DisplayMemberPath="Name"
-                                      FontSize="12"
-                                      Padding="8,4"
-                                      BorderBrush="{StaticResource MutedBorder}"
-                                      BorderThickness="1"/>
+                                      Style="{StaticResource CompactComboBox}"/>
                         </Grid>
 
                         <!-- Immediate 설정 (추가 설정 없음) -->
@@ -228,10 +226,9 @@
                                            VerticalAlignment="Center"/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding SelectedStep.PreDelayMs, Mode=TwoWay}"
+                                         Style="{StaticResource ModernTextBox}"
                                          FontSize="12"
-                                         Padding="8,4"
-                                         BorderBrush="{StaticResource MutedBorder}"
-                                         BorderThickness="1"/>
+                                         Padding="8,4"/>
                                 <TextBlock Grid.Column="2"
                                            Text="ms"
                                            FontSize="12"
@@ -274,10 +271,9 @@
                                            VerticalAlignment="Center"/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding SelectedStep.PostDelayMs, Mode=TwoWay}"
+                                         Style="{StaticResource ModernTextBox}"
                                          FontSize="12"
-                                         Padding="8,4"
-                                         BorderBrush="{StaticResource MutedBorder}"
-                                         BorderThickness="1"/>
+                                         Padding="8,4"/>
                                 <TextBlock Grid.Column="2"
                                            Text="ms"
                                            FontSize="12"
@@ -320,10 +316,9 @@
                                            VerticalAlignment="Center"/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding SelectedStep.IntervalMs, Mode=TwoWay}"
+                                         Style="{StaticResource ModernTextBox}"
                                          FontSize="12"
-                                         Padding="8,4"
-                                         BorderBrush="{StaticResource MutedBorder}"
-                                         BorderThickness="1"/>
+                                         Padding="8,4"/>
                                 <TextBlock Grid.Column="2"
                                            Text="ms"
                                            FontSize="12"
@@ -346,10 +341,9 @@
                                            VerticalAlignment="Center"/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding SelectedStep.RepeatCount, Mode=TwoWay}"
+                                         Style="{StaticResource ModernTextBox}"
                                          FontSize="12"
-                                         Padding="8,4"
-                                         BorderBrush="{StaticResource MutedBorder}"
-                                         BorderThickness="1"/>
+                                         Padding="8,4"/>
                                 <TextBlock Grid.Column="2"
                                            Text="회"
                                            FontSize="12"
@@ -487,10 +481,9 @@
                                            VerticalAlignment="Center"/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding SelectedStep.StartDelayFromScenarioMs, Mode=TwoWay}"
+                                         Style="{StaticResource ModernTextBox}"
                                          FontSize="12"
-                                         Padding="8,4"
-                                         BorderBrush="{StaticResource MutedBorder}"
-                                         BorderThickness="1"/>
+                                         Padding="8,4"/>
                                 <TextBlock Grid.Column="2"
                                            Text="ms"
                                            FontSize="12"
@@ -534,10 +527,9 @@
                                            VerticalAlignment="Center"/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding SelectedStep.ReceiveTimeoutMs, Mode=TwoWay}"
+                                         Style="{StaticResource ModernTextBox}"
                                          FontSize="12"
-                                         Padding="8,4"
-                                         BorderBrush="{StaticResource MutedBorder}"
-                                         BorderThickness="1"/>
+                                         Padding="8,4"/>
                                 <TextBlock Grid.Column="2"
                                            Text="ms"
                                            FontSize="12"
@@ -823,10 +815,9 @@
                                            VerticalAlignment="Center"/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding SelectedStep.ReceiveTimeoutMs, Mode=TwoWay}"
+                                         Style="{StaticResource ModernTextBox}"
                                          FontSize="12"
-                                         Padding="8,4"
-                                         BorderBrush="{StaticResource MutedBorder}"
-                                         BorderThickness="1"/>
+                                         Padding="8,4"/>
                                 <TextBlock Grid.Column="2"
                                            Text="ms"
                                            FontSize="12"
@@ -849,10 +840,7 @@
                                           SelectedValue="{Binding SelectedStep.ResponseRequestId, Mode=TwoWay}"
                                           SelectedValuePath="Id"
                                           DisplayMemberPath="Name"
-                                          FontSize="12"
-                                          Padding="8,4"
-                                          BorderBrush="{StaticResource MutedBorder}"
-                                          BorderThickness="1"/>
+                                          Style="{StaticResource CompactComboBox}"/>
                             </Grid>
                             <!-- ID 필터 블록 (ReceiveAndReply) -->
                             <Border Background="#F8F7FF"
