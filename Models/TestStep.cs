@@ -131,6 +131,36 @@ namespace MMG.Models
         [ObservableProperty]
         private int responseRequestId = 0;
 
+        // ========== ID 필터 속성들 ==========
+
+        /// <summary>
+        /// ID 필터 사용 여부
+        /// </summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IdFilterVisibility))]
+        private bool useIdFilter = false;
+
+        /// <summary>
+        /// ID를 읽을 오프셋 (바이트 단위)
+        /// </summary>
+        [ObservableProperty]
+        private int idFilterOffset = 0;
+
+        /// <summary>
+        /// ID 읽기 타입 ("Byte" 또는 "UInt16")
+        /// </summary>
+        [ObservableProperty]
+        private string idFilterType = "Byte";
+
+        /// <summary>
+        /// 매칭할 ID 값
+        /// </summary>
+        [ObservableProperty]
+        private int idFilterValue = 0;
+
+        public System.Windows.Visibility IdFilterVisibility =>
+            UseIdFilter ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+
         // ========== Display 속성들 ==========
 
         public string StepTypeDisplay => StepType switch

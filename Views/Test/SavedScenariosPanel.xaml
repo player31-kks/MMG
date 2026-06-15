@@ -131,7 +131,7 @@
                                        Text="{Binding Name}"
                                        FontWeight="SemiBold"
                                        FontSize="14"
-                                       Foreground="#2C3E50"
+                                       Foreground="{StaticResource TextPrimaryColor}"
                                        TextWrapping="Wrap">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
@@ -159,7 +159,7 @@
                                      FontWeight="SemiBold"
                                      FontSize="14"
                                      BorderThickness="1"
-                                     BorderBrush="#007BFF"
+                                     BorderBrush="{StaticResource PrimaryColor}"
                                      Padding="4,2">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
@@ -190,23 +190,23 @@
                                         Margin="0,6,0,0">
                                 <TextBlock Text="{Binding StatusText}"
                                            FontSize="11"
-                                           Foreground="#6C757D"/>
+                                           Foreground="{StaticResource MutedText}"/>
                                 <Rectangle Width="4"
                                            Height="4"
                                            VerticalAlignment="Center"
                                            Margin="8,0"
-                                           Fill="#6C757D"
+                                           Fill="{StaticResource MutedText}"
                                            RadiusX="2"
                                            RadiusY="2"/>
                                 <TextBlock Text="{Binding TestSteps.Count, StringFormat='{}{0}개 단계'}"
                                            FontSize="11"
-                                           Foreground="#6C757D"/>
+                                           Foreground="{StaticResource MutedText}"/>
                                 <!-- 포트 바인딩 표시 (읽기 모드) -->
                                 <Rectangle Width="4"
                                            Height="4"
                                            VerticalAlignment="Center"
                                            Margin="8,0"
-                                           Fill="#6C757D"
+                                           Fill="{StaticResource MutedText}"
                                            RadiusX="2"
                                            RadiusY="2">
                                     <Rectangle.Style>
@@ -226,7 +226,7 @@
                                 </Rectangle>
                                 <TextBlock Text="{Binding BindPortText}"
                                            FontSize="11"
-                                           Foreground="#2196F3"
+                                           Foreground="{StaticResource PrimaryColor}"
                                            Cursor="Hand">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
@@ -265,7 +265,7 @@
                                                Height="4"
                                                VerticalAlignment="Center"
                                                Margin="8,0"
-                                               Fill="#6C757D"
+                                               Fill="{StaticResource MutedText}"
                                                RadiusX="2"
                                                RadiusY="2"/>
                                     <CheckBox IsChecked="{Binding UseBindPort, Mode=TwoWay}"
@@ -277,7 +277,7 @@
                                              Width="60"
                                              FontSize="11"
                                              Padding="4,2"
-                                             BorderBrush="#007BFF"
+                                             BorderBrush="{StaticResource PrimaryColor}"
                                              BorderThickness="1"
                                              VerticalAlignment="Center">
                                         <TextBox.InputBindings>
@@ -294,7 +294,7 @@
                                             Height="20"
                                             FontSize="10"
                                             Margin="4,0,0,0"
-                                            Background="#28A745"
+                                            Background="{StaticResource SecondaryColor}"
                                             Foreground="White"
                                             BorderThickness="0"
                                             Cursor="Hand"
@@ -305,7 +305,7 @@
                                             Height="20"
                                             FontSize="10"
                                             Margin="2,0,0,0"
-                                            Background="#DC3545"
+                                            Background="{StaticResource WarningColor}"
                                             Foreground="White"
                                             BorderThickness="0"
                                             Cursor="Hand"
@@ -320,8 +320,8 @@
                                          Maximum="100"
                                          Height="3"
                                          Margin="0,6,0,0"
-                                         Background="#E9ECEF"
-                                         Foreground="#007BFF"
+                                         Background="{StaticResource MutedBorder}"
+                                         Foreground="{StaticResource PrimaryColor}"
                                          BorderThickness="0">
                                 <ProgressBar.Style>
                                     <Style TargetType="ProgressBar">

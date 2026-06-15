@@ -125,18 +125,18 @@
                                         <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver"
                                                          Value="True">
-                                                        <Setter Property="Background"
-                                                                Value="#0086C7"/>
+                                                        <Setter Property="Opacity"
+                                                                Value="0.85"/>
                                                 </Trigger>
                                                 <Trigger Property="IsPressed"
                                                          Value="True">
-                                                        <Setter Property="Background"
-                                                                Value="#005A9E"/>
+                                                        <Setter Property="Opacity"
+                                                                Value="0.7"/>
                                                 </Trigger>
                                                 <Trigger Property="IsEnabled"
                                                          Value="False">
-                                                        <Setter Property="Background"
-                                                                Value="#CCCCCC"/>
+                                                        <Setter Property="Opacity"
+                                                                Value="0.4"/>
                                                 </Trigger>
                                         </ControlTemplate.Triggers>
                                 </ControlTemplate>

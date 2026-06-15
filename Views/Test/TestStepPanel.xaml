@@ -32,12 +32,12 @@
 
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="테스트 단계"
-                               FontSize="18"
+                               FontSize="16"
                                FontWeight="Bold"
-                               Foreground="#2C3E50"/>
+                               Foreground="{StaticResource PrimaryColor}"/>
                     <TextBlock Text="{Binding SelectedScenario.Name, StringFormat='시나리오: {0}'}"
                                FontSize="12"
-                               Foreground="#6C757D"
+                               Foreground="{StaticResource MutedText}"
                                Margin="0,2,0,0">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
@@ -64,29 +64,29 @@
                             Orientation="Horizontal">
                     <Button Content="📋"
                             Click="OpenLogWindow_Click"
-                            Width="32"
-                            Height="32"
-                            FontSize="14"
+                            Width="30"
+                            Height="30"
+                            FontSize="13"
                             Style="{StaticResource ModernButton}"
-                            Background="#6C757D"
+                            Background="#9CA3AF"
                             ToolTip="실시간 로그 창 열기"
-                            Margin="0,0,8,0"/>
+                            Margin="0,0,6,0"/>
                     <Button Content="+"
                             Command="{Binding AddTestStepCommand}"
-                            Width="32"
-                            Height="32"
-                            FontSize="16"
+                            Width="30"
+                            Height="30"
+                            FontSize="18"
+                            FontWeight="Light"
                             Style="{StaticResource ModernButton}"
-                            Background="#28A745"
                             ToolTip="새 테스트 단계 추가"
-                            Margin="0,0,8,0"/>
+                            Margin="0,0,6,0"/>
                     <Button Content="▶"
                             Command="{Binding RunSelectedScenarioCommand}"
-                            Width="32"
-                            Height="32"
-                            FontSize="14"
+                            Width="30"
+                            Height="30"
+                            FontSize="13"
                             Style="{StaticResource ModernButton}"
-                            Background="#007BFF"
+                            Background="{StaticResource SecondaryColor}"
                             ToolTip="시나리오 실행"/>
                 </StackPanel>
             </Grid>
@@ -197,7 +197,7 @@
                                             <TextBlock Text="{Binding Name}"
                                                        FontSize="14"
                                                        FontWeight="SemiBold"
-                                                       Foreground="#2C3E50"/>
+                                                       Foreground="{StaticResource TextPrimaryColor}"/>
                                             <!-- 백그라운드 표시 아이콘 -->
                                             <TextBlock Text=" ⚡"
                                                        FontSize="12"
@@ -217,7 +217,7 @@
                                         </StackPanel>
                                         <TextBlock Text="{Binding StepTypeDisplay}"
                                                    FontSize="11"
-                                                   Foreground="#6C757D"
+                                                   Foreground="{StaticResource MutedText}"
                                                    Margin="0,2,0,0"/>
                                     </StackPanel>
 
@@ -225,7 +225,7 @@
                                                 VerticalAlignment="Center">
                                         <TextBlock Text="{Binding StatusText}"
                                                    FontSize="10"
-                                                   Foreground="#17A2B8"
+                                                   Foreground="{StaticResource PrimaryColor}"
                                                    HorizontalAlignment="Right">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
@@ -291,14 +291,14 @@
                                                         <Setter Property="Text"
                                                                 Value="성공"/>
                                                         <Setter Property="Foreground"
-                                                                Value="#28A745"/>
+                                                                Value="#22C55E"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding LastResult.IsSuccess}"
                                                                          Value="False">
                                                                 <Setter Property="Text"
                                                                         Value="실패"/>
                                                                 <Setter Property="Foreground"
-                                                                        Value="#DC3545"/>
+                                                                        Value="{StaticResource WarningColor}"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -324,7 +324,7 @@
                                              IsIndeterminate="True"
                                              Height="2"
                                              Background="Transparent"
-                                             Foreground="#FFC107"
+                                             Foreground="{StaticResource PrimaryColor}"
                                              BorderThickness="0">
                                     <ProgressBar.Style>
                                         <Style TargetType="ProgressBar">
@@ -376,12 +376,13 @@
                        Margin="0,0,0,16"/>
             <TextBlock Text="테스트 단계가 없습니다"
                        FontSize="16"
-                       Foreground="#6C757D"
+                       Foreground="{StaticResource MutedText}"
                        HorizontalAlignment="Center"
                        Margin="0,0,0,8"/>
             <TextBlock Text="+ 버튼을 클릭하여 새 단계를 추가하세요"
                        FontSize="12"
-                       Foreground="#ADB5BD"
+                       Foreground="{StaticResource MutedText}"
+                       Opacity="0.6"
                        HorizontalAlignment="Center"/>
         </StackPanel>
 

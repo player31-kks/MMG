@@ -4,10 +4,15 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:models="clr-namespace:MMG.Models"
+             xmlns:converters="clr-namespace:MMG.Converters"
              mc:Ignorable="d"
              d:DesignHeight="600"
              d:DesignWidth="350"
              Background="{StaticResource PanelBackground}">
+
+    <UserControl.Resources>
+        <converters:StringToBooleanConverter x:Key="EqualToStringConverter"/>
+    </UserControl.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -34,10 +39,10 @@
                     <TextBlock Text="스텝 설정"
                                FontSize="16"
                                FontWeight="Bold"
-                               Foreground="#2C3E50"/>
+                               Foreground="{StaticResource TextPrimaryColor}"/>
                     <TextBlock Text="선택된 테스트 스텝 구성"
                                FontSize="12"
-                               Foreground="#6C757D"
+                               Foreground="{StaticResource MutedText}"
                                Margin="0,2,0,0"/>
                 </StackPanel>
 
@@ -48,7 +53,6 @@
                         Height="32"
                         FontSize="16"
                         Style="{StaticResource ModernButton}"
-                        Background="#28A745"
                         ToolTip="스텝 저장"/>
             </Grid>
         </Border>
@@ -65,7 +69,7 @@
                         <TextBlock Text="기본 정보"
                                    FontSize="14"
                                    FontWeight="SemiBold"
-                                   Foreground="#2C3E50"
+                                   Foreground="{StaticResource TextPrimaryColor}"
                                    Margin="0,0,0,12"/>
 
                         <Grid>
@@ -84,7 +88,7 @@
                                        Grid.Column="0"
                                        Text="이름:"
                                        FontSize="12"
-                                       Foreground="#495057"
+                                       Foreground="{StaticResource MutedText}"
                                        VerticalAlignment="Center"
                                        Margin="0,0,0,8"/>
                             <TextBox Grid.Row="0"
@@ -93,14 +97,14 @@
                                      FontSize="12"
                                      Padding="8,4"
                                      Margin="0,0,0,8"
-                                     BorderBrush="#DEE2E6"
+                                     BorderBrush="{StaticResource MutedBorder}"
                                      BorderThickness="1"/>
 
                             <TextBlock Grid.Row="1"
                                        Grid.Column="0"
                                        Text="타입:"
                                        FontSize="12"
-                                       Foreground="#495057"
+                                       Foreground="{StaticResource MutedText}"
                                        VerticalAlignment="Center"
                                        Margin="0,0,0,8"/>
                             <ComboBox Grid.Row="1"
@@ -111,7 +115,7 @@
                                       FontSize="12"
                                       Padding="8,4"
                                       Margin="0,0,0,8"
-                                      BorderBrush="#DEE2E6"
+                                      BorderBrush="{StaticResource MutedBorder}"
                                       BorderThickness="1">
                                 <ComboBoxItem Tag="Immediate">즉시 실행</ComboBoxItem>
                                 <ComboBoxItem Tag="PreDelayed">사전 지연</ComboBoxItem>
@@ -127,14 +131,14 @@
                                       Content="활성화"
                                       IsChecked="{Binding SelectedStep.IsEnabled, Mode=TwoWay}"
                                       FontSize="12"
-                                      Foreground="#495057"/>
+                                      Foreground="{StaticResource MutedText}"/>
 
                             <CheckBox Grid.Row="3"
                                       Grid.Column="1"
                                       Content="백그라운드 실행"
                                       IsChecked="{Binding SelectedStep.IsBackground, Mode=TwoWay}"
                                       FontSize="12"
-                                      Foreground="#495057"
+                                      Foreground="{StaticResource MutedText}"
                                       ToolTip="체크하면 이 스텝이 백그라운드에서 실행되고 다음 스텝으로 바로 진행됩니다"
                                       Margin="0,8,0,0"/>
                         </Grid>
@@ -148,7 +152,7 @@
                         <TextBlock Text="요청 설정"
                                    FontSize="14"
                                    FontWeight="SemiBold"
-                                   Foreground="#2C3E50"
+                                   Foreground="{StaticResource TextPrimaryColor}"
                                    Margin="0,0,0,12"/>
 
                         <!-- 공통 - 저장된 요청 선택 -->
@@ -161,7 +165,7 @@
                             <TextBlock Grid.Column="0"
                                        Text="저장된 요청:"
                                        FontSize="12"
-                                       Foreground="#495057"
+                                       Foreground="{StaticResource MutedText}"
                                        VerticalAlignment="Center"/>
                             <ComboBox Grid.Column="1"
                                       ItemsSource="{Binding SavedRequests}"
@@ -170,7 +174,7 @@
                                       DisplayMemberPath="Name"
                                       FontSize="12"
                                       Padding="8,4"
-                                      BorderBrush="#DEE2E6"
+                                      BorderBrush="{StaticResource MutedBorder}"
                                       BorderThickness="1"/>
                         </Grid>
 
@@ -191,7 +195,7 @@
                             </StackPanel.Style>
                             <TextBlock Text="💡 요청이 지연 없이 즉시 실행됩니다."
                                        FontSize="11"
-                                       Foreground="#6C757D"
+                                       Foreground="{StaticResource MutedText}"
                                        FontStyle="Italic"/>
                         </StackPanel>
 
@@ -219,24 +223,24 @@
                                 <TextBlock Grid.Column="0"
                                            Text="사전 지연:"
                                            FontSize="12"
-                                           Foreground="#495057"
+                                           Foreground="{StaticResource MutedText}"
                                            VerticalAlignment="Center"/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding SelectedStep.PreDelayMs, Mode=TwoWay}"
                                          FontSize="12"
                                          Padding="8,4"
-                                         BorderBrush="#DEE2E6"
+                                         BorderBrush="{StaticResource MutedBorder}"
                                          BorderThickness="1"/>
                                 <TextBlock Grid.Column="2"
                                            Text="ms"
                                            FontSize="12"
-                                           Foreground="#6C757D"
+                                           Foreground="{StaticResource MutedText}"
                                            VerticalAlignment="Center"
                                            Margin="4,0,0,0"/>
                             </Grid>
                             <TextBlock Text="💡 지정된 시간(ms) 대기 후 요청이 실행됩니다."
                                        FontSize="11"
-                                       Foreground="#6C757D"
+                                       Foreground="{StaticResource MutedText}"
                                        FontStyle="Italic"
                                        Margin="0,8,0,0"/>
                         </StackPanel>
@@ -265,24 +269,24 @@
                                 <TextBlock Grid.Column="0"
                                            Text="사후 지연:"
                                            FontSize="12"
-                                           Foreground="#495057"
+                                           Foreground="{StaticResource MutedText}"
                                            VerticalAlignment="Center"/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding SelectedStep.PostDelayMs, Mode=TwoWay}"
                                          FontSize="12"
                                          Padding="8,4"
-                                         BorderBrush="#DEE2E6"
+                                         BorderBrush="{StaticResource MutedBorder}"
                                          BorderThickness="1"/>
                                 <TextBlock Grid.Column="2"
                                            Text="ms"
                                            FontSize="12"
-                                           Foreground="#6C757D"
+                                           Foreground="{StaticResource MutedText}"
                                            VerticalAlignment="Center"
                                            Margin="4,0,0,0"/>
                             </Grid>
                             <TextBlock Text="💡 요청 실행 후 지정된 시간(ms) 동안 대기합니다."
                                        FontSize="11"
-                                       Foreground="#6C757D"
+                                       Foreground="{StaticResource MutedText}"
                                        FontStyle="Italic"
                                        Margin="0,8,0,0"/>
                         </StackPanel>
@@ -311,18 +315,18 @@
                                 <TextBlock Grid.Column="0"
                                            Text="실행 간격:"
                                            FontSize="12"
-                                           Foreground="#495057"
+                                           Foreground="{StaticResource MutedText}"
                                            VerticalAlignment="Center"/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding SelectedStep.IntervalMs, Mode=TwoWay}"
                                          FontSize="12"
                                          Padding="8,4"
-                                         BorderBrush="#DEE2E6"
+                                         BorderBrush="{StaticResource MutedBorder}"
                                          BorderThickness="1"/>
                                 <TextBlock Grid.Column="2"
                                            Text="ms"
                                            FontSize="12"
-                                           Foreground="#6C757D"
+                                           Foreground="{StaticResource MutedText}"
                                            VerticalAlignment="Center"
                                            Margin="4,0,0,0"/>
                             </Grid>
@@ -335,24 +339,24 @@
                                 <TextBlock Grid.Column="0"
                                            Text="반복 횟수:"
                                            FontSize="12"
-                                           Foreground="#495057"
+                                           Foreground="{StaticResource MutedText}"
                                            VerticalAlignment="Center"/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding SelectedStep.RepeatCount, Mode=TwoWay}"
                                          FontSize="12"
                                          Padding="8,4"
-                                         BorderBrush="#DEE2E6"
+                                         BorderBrush="{StaticResource MutedBorder}"
                                          BorderThickness="1"/>
                                 <TextBlock Grid.Column="2"
                                            Text="회"
                                            FontSize="12"
-                                           Foreground="#6C757D"
+                                           Foreground="{StaticResource MutedText}"
                                            VerticalAlignment="Center"
                                            Margin="4,0,0,0"/>
                             </Grid>
                             <TextBlock Text="💡 지정된 간격(ms)으로 반복 횟수만큼 요청을 실행합니다."
                                        FontSize="11"
-                                       Foreground="#6C757D"
+                                       Foreground="{StaticResource MutedText}"
                                        FontStyle="Italic"
                                        TextWrapping="Wrap"/>
                         </StackPanel>
@@ -381,24 +385,24 @@
                                 <TextBlock Grid.Column="0"
                                            Text="시나리오 시작 후:"
                                            FontSize="12"
-                                           Foreground="#495057"
+                                           Foreground="{StaticResource MutedText}"
                                            VerticalAlignment="Center"/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding SelectedStep.StartDelayFromScenarioMs, Mode=TwoWay}"
                                          FontSize="12"
                                          Padding="8,4"
-                                         BorderBrush="#DEE2E6"
+                                         BorderBrush="{StaticResource MutedBorder}"
                                          BorderThickness="1"/>
                                 <TextBlock Grid.Column="2"
                                            Text="ms"
                                            FontSize="12"
-                                           Foreground="#6C757D"
+                                           Foreground="{StaticResource MutedText}"
                                            VerticalAlignment="Center"
                                            Margin="4,0,0,0"/>
                             </Grid>
                             <TextBlock Text="💡 시나리오 시작 시점을 기준으로 지정된 시간(ms) 후에 실행됩니다."
                                        FontSize="11"
-                                       Foreground="#6C757D"
+                                       Foreground="{StaticResource MutedText}"
                                        FontStyle="Italic"
                                        TextWrapping="Wrap"
                                        Margin="0,8,0,0"/>
@@ -428,24 +432,266 @@
                                 <TextBlock Grid.Column="0"
                                            Text="타임아웃:"
                                            FontSize="12"
-                                           Foreground="#495057"
+                                           Foreground="{StaticResource MutedText}"
                                            VerticalAlignment="Center"/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding SelectedStep.ReceiveTimeoutMs, Mode=TwoWay}"
                                          FontSize="12"
                                          Padding="8,4"
-                                         BorderBrush="#DEE2E6"
+                                         BorderBrush="{StaticResource MutedBorder}"
                                          BorderThickness="1"/>
                                 <TextBlock Grid.Column="2"
                                            Text="ms"
                                            FontSize="12"
-                                           Foreground="#6C757D"
+                                           Foreground="{StaticResource MutedText}"
                                            VerticalAlignment="Center"
                                            Margin="4,0,0,0"/>
                             </Grid>
-                            <TextBlock Text="💡 시나리오 포트에서 UDP 메시지를 수신 대기합니다. 수신된 패킷 크기가 요청의 Header+Response 크기와 일치하면 성공입니다."
+
+                            <!-- ID 필터 블록 -->
+                            <Border Background="#F8F7FF"
+                                    BorderBrush="#C5BDFA"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="12,10"
+                                    Margin="0,10,0,0">
+                                <StackPanel>
+                                    <!-- 헤더 행 -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0"
+                                                    Orientation="Horizontal"
+                                                    VerticalAlignment="Center">
+                                            <Border Width="3"
+                                                    Height="13"
+                                                    CornerRadius="2"
+                                                    Background="{StaticResource PrimaryColor}"
+                                                    Margin="0,0,7,0"
+                                                    VerticalAlignment="Center"/>
+                                            <TextBlock Text="ID 필터"
+                                                       FontSize="12"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextPrimaryColor}"
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <!-- 토글 스위치 -->
+                                        <ToggleButton Grid.Column="1"
+                                                      IsChecked="{Binding SelectedStep.UseIdFilter, Mode=TwoWay}"
+                                                      Width="40"
+                                                      Height="20"
+                                                      Cursor="Hand">
+                                            <ToggleButton.Style>
+                                                <Style TargetType="ToggleButton">
+                                                    <Setter Property="Background" Value="#DEE2E6"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="ToggleButton">
+                                                                <Border x:Name="Track"
+                                                                        Background="{TemplateBinding Background}"
+                                                                        CornerRadius="10"
+                                                                        Width="40"
+                                                                        Height="20">
+                                                                    <Border x:Name="Thumb"
+                                                                            Width="14"
+                                                                            Height="14"
+                                                                            CornerRadius="7"
+                                                                            Background="White"
+                                                                            HorizontalAlignment="Left"
+                                                                            Margin="3,0,0,0"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsChecked" Value="True">
+                                                                        <Setter TargetName="Track" Property="Background" Value="{StaticResource PrimaryColor}"/>
+                                                                        <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
+                                                                        <Setter TargetName="Thumb" Property="Margin" Value="0,0,3,0"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </ToggleButton.Style>
+                                        </ToggleButton>
+                                    </Grid>
+
+                                    <!-- 필터 설정 (UseIdFilter = true 일 때) -->
+                                    <StackPanel Visibility="{Binding SelectedStep.IdFilterVisibility}"
+                                                Margin="0,10,0,0">
+
+                                        <!-- Offset 행 -->
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="60"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="Offset"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource MutedText}"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1"
+                                                     Text="{Binding SelectedStep.IdFilterOffset, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBox}"
+                                                     FontSize="12"
+                                                     Padding="8,4"/>
+                                            <Border Grid.Column="2"
+                                                    Background="#EEF2FF"
+                                                    CornerRadius="4"
+                                                    Padding="6,3"
+                                                    Margin="6,0,0,0"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="byte"
+                                                           FontSize="10"
+                                                           Foreground="{StaticResource PrimaryColor}"
+                                                           FontWeight="SemiBold"/>
+                                            </Border>
+                                        </Grid>
+
+                                        <!-- 타입 행 -->
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="60"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="타입"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource MutedText}"
+                                                       VerticalAlignment="Center"/>
+                                            <!-- 세그먼트 선택 -->
+                                            <Grid Grid.Column="1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <RadioButton Grid.Column="0"
+                                                             Content="Byte"
+                                                             GroupName="IdFilterTypeWFM"
+                                                             IsChecked="{Binding SelectedStep.IdFilterType, Converter={StaticResource EqualToStringConverter}, ConverterParameter=Byte, Mode=TwoWay}"
+                                                             Margin="0,0,3,0">
+                                                    <RadioButton.Style>
+                                                        <Style TargetType="RadioButton">
+                                                            <Setter Property="Background" Value="#F0F0F0"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource MutedText}"/>
+                                                            <Setter Property="FontSize" Value="11"/>
+                                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                                            <Setter Property="Cursor" Value="Hand"/>
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="RadioButton">
+                                                                        <Border x:Name="Bd"
+                                                                                Background="{TemplateBinding Background}"
+                                                                                BorderBrush="{StaticResource MutedBorder}"
+                                                                                BorderThickness="1"
+                                                                                CornerRadius="5"
+                                                                                Padding="0,5">
+                                                                            <ContentPresenter HorizontalAlignment="Center"
+                                                                                              VerticalAlignment="Center"/>
+                                                                        </Border>
+                                                                        <ControlTemplate.Triggers>
+                                                                            <Trigger Property="IsChecked" Value="True">
+                                                                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource PrimaryColor}"/>
+                                                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource PrimaryColor}"/>
+                                                                                <Setter Property="Foreground" Value="White"/>
+                                                                            </Trigger>
+                                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource PrimaryColor}"/>
+                                                                            </Trigger>
+                                                                        </ControlTemplate.Triggers>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                    </RadioButton.Style>
+                                                </RadioButton>
+                                                <RadioButton Grid.Column="1"
+                                                             Content="UInt16"
+                                                             GroupName="IdFilterTypeWFM"
+                                                             IsChecked="{Binding SelectedStep.IdFilterType, Converter={StaticResource EqualToStringConverter}, ConverterParameter=UInt16, Mode=TwoWay}"
+                                                             Margin="3,0,0,0">
+                                                    <RadioButton.Style>
+                                                        <Style TargetType="RadioButton">
+                                                            <Setter Property="Background" Value="#F0F0F0"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource MutedText}"/>
+                                                            <Setter Property="FontSize" Value="11"/>
+                                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                                            <Setter Property="Cursor" Value="Hand"/>
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="RadioButton">
+                                                                        <Border x:Name="Bd"
+                                                                                Background="{TemplateBinding Background}"
+                                                                                BorderBrush="{StaticResource MutedBorder}"
+                                                                                BorderThickness="1"
+                                                                                CornerRadius="5"
+                                                                                Padding="0,5">
+                                                                            <ContentPresenter HorizontalAlignment="Center"
+                                                                                              VerticalAlignment="Center"/>
+                                                                        </Border>
+                                                                        <ControlTemplate.Triggers>
+                                                                            <Trigger Property="IsChecked" Value="True">
+                                                                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource PrimaryColor}"/>
+                                                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource PrimaryColor}"/>
+                                                                                <Setter Property="Foreground" Value="White"/>
+                                                                            </Trigger>
+                                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource PrimaryColor}"/>
+                                                                            </Trigger>
+                                                                        </ControlTemplate.Triggers>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                    </RadioButton.Style>
+                                                </RadioButton>
+                                            </Grid>
+                                        </Grid>
+
+                                        <!-- ID 값 행 -->
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="60"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="ID 값"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource MutedText}"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1"
+                                                     Text="{Binding SelectedStep.IdFilterValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBox}"
+                                                     FontSize="12"
+                                                     Padding="8,4"/>
+                                            <Border Grid.Column="2"
+                                                    Background="#EEF2FF"
+                                                    CornerRadius="4"
+                                                    Padding="6,3"
+                                                    Margin="6,0,0,0"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="dec"
+                                                           FontSize="10"
+                                                           Foreground="{StaticResource PrimaryColor}"
+                                                           FontWeight="SemiBold"/>
+                                            </Border>
+                                        </Grid>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="💡 시나리오 포트에서 UDP 메시지를 수신 대기합니다. ID 필터가 켜진 경우 지정한 ID 값이 일치하는 메시지만 수신 성공으로 처리됩니다."
                                        FontSize="11"
-                                       Foreground="#6C757D"
+                                       Foreground="{StaticResource MutedText}"
                                        FontStyle="Italic"
                                        TextWrapping="Wrap"
                                        Margin="0,8,0,0"/>
@@ -475,18 +721,18 @@
                                 <TextBlock Grid.Column="0"
                                            Text="타임아웃:"
                                            FontSize="12"
-                                           Foreground="#495057"
+                                           Foreground="{StaticResource MutedText}"
                                            VerticalAlignment="Center"/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding SelectedStep.ReceiveTimeoutMs, Mode=TwoWay}"
                                          FontSize="12"
                                          Padding="8,4"
-                                         BorderBrush="#DEE2E6"
+                                         BorderBrush="{StaticResource MutedBorder}"
                                          BorderThickness="1"/>
                                 <TextBlock Grid.Column="2"
                                            Text="ms"
                                            FontSize="12"
-                                           Foreground="#6C757D"
+                                           Foreground="{StaticResource MutedText}"
                                            VerticalAlignment="Center"
                                            Margin="4,0,0,0"/>
                             </Grid>
@@ -498,7 +744,7 @@
                                 <TextBlock Grid.Column="0"
                                            Text="응답 요청:"
                                            FontSize="12"
-                                           Foreground="#495057"
+                                           Foreground="{StaticResource MutedText}"
                                            VerticalAlignment="Center"/>
                                 <ComboBox Grid.Column="1"
                                           ItemsSource="{Binding SavedRequests}"
@@ -507,12 +753,250 @@
                                           DisplayMemberPath="Name"
                                           FontSize="12"
                                           Padding="8,4"
-                                          BorderBrush="#DEE2E6"
+                                          BorderBrush="{StaticResource MutedBorder}"
                                           BorderThickness="1"/>
                             </Grid>
-                            <TextBlock Text="💡 시나리오 포트에서 메시지 수신 후 지정된 응답 요청을 송신자에게 전송합니다. 수신된 패킷 크기가 요청의 Header+Response 크기와 일치해야 성공입니다."
+                            <!-- ID 필터 블록 (ReceiveAndReply) -->
+                            <Border Background="#F8F7FF"
+                                    BorderBrush="#C5BDFA"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="12,10"
+                                    Margin="0,10,0,0">
+                                <StackPanel>
+                                    <!-- 헤더 행 -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0"
+                                                    Orientation="Horizontal"
+                                                    VerticalAlignment="Center">
+                                            <Border Width="3"
+                                                    Height="13"
+                                                    CornerRadius="2"
+                                                    Background="{StaticResource PrimaryColor}"
+                                                    Margin="0,0,7,0"
+                                                    VerticalAlignment="Center"/>
+                                            <TextBlock Text="ID 필터"
+                                                       FontSize="12"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextPrimaryColor}"
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ToggleButton Grid.Column="1"
+                                                      IsChecked="{Binding SelectedStep.UseIdFilter, Mode=TwoWay}"
+                                                      Width="40"
+                                                      Height="20"
+                                                      Cursor="Hand">
+                                            <ToggleButton.Style>
+                                                <Style TargetType="ToggleButton">
+                                                    <Setter Property="Background" Value="#DEE2E6"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="ToggleButton">
+                                                                <Border x:Name="Track"
+                                                                        Background="{TemplateBinding Background}"
+                                                                        CornerRadius="10"
+                                                                        Width="40"
+                                                                        Height="20">
+                                                                    <Border x:Name="Thumb"
+                                                                            Width="14"
+                                                                            Height="14"
+                                                                            CornerRadius="7"
+                                                                            Background="White"
+                                                                            HorizontalAlignment="Left"
+                                                                            Margin="3,0,0,0"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsChecked" Value="True">
+                                                                        <Setter TargetName="Track" Property="Background" Value="{StaticResource PrimaryColor}"/>
+                                                                        <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
+                                                                        <Setter TargetName="Thumb" Property="Margin" Value="0,0,3,0"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </ToggleButton.Style>
+                                        </ToggleButton>
+                                    </Grid>
+
+                                    <!-- 필터 설정 -->
+                                    <StackPanel Visibility="{Binding SelectedStep.IdFilterVisibility}"
+                                                Margin="0,10,0,0">
+                                        <!-- Offset 행 -->
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="60"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="Offset"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource MutedText}"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1"
+                                                     Text="{Binding SelectedStep.IdFilterOffset, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBox}"
+                                                     FontSize="12"
+                                                     Padding="8,4"/>
+                                            <Border Grid.Column="2"
+                                                    Background="#EEF2FF"
+                                                    CornerRadius="4"
+                                                    Padding="6,3"
+                                                    Margin="6,0,0,0"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="byte"
+                                                           FontSize="10"
+                                                           Foreground="{StaticResource PrimaryColor}"
+                                                           FontWeight="SemiBold"/>
+                                            </Border>
+                                        </Grid>
+
+                                        <!-- 타입 행 -->
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="60"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="타입"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource MutedText}"
+                                                       VerticalAlignment="Center"/>
+                                            <Grid Grid.Column="1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <RadioButton Grid.Column="0"
+                                                             Content="Byte"
+                                                             GroupName="IdFilterTypeRAR"
+                                                             IsChecked="{Binding SelectedStep.IdFilterType, Converter={StaticResource EqualToStringConverter}, ConverterParameter=Byte, Mode=TwoWay}"
+                                                             Margin="0,0,3,0">
+                                                    <RadioButton.Style>
+                                                        <Style TargetType="RadioButton">
+                                                            <Setter Property="Background" Value="#F0F0F0"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource MutedText}"/>
+                                                            <Setter Property="FontSize" Value="11"/>
+                                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                                            <Setter Property="Cursor" Value="Hand"/>
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="RadioButton">
+                                                                        <Border x:Name="Bd"
+                                                                                Background="{TemplateBinding Background}"
+                                                                                BorderBrush="{StaticResource MutedBorder}"
+                                                                                BorderThickness="1"
+                                                                                CornerRadius="5"
+                                                                                Padding="0,5">
+                                                                            <ContentPresenter HorizontalAlignment="Center"
+                                                                                              VerticalAlignment="Center"/>
+                                                                        </Border>
+                                                                        <ControlTemplate.Triggers>
+                                                                            <Trigger Property="IsChecked" Value="True">
+                                                                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource PrimaryColor}"/>
+                                                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource PrimaryColor}"/>
+                                                                                <Setter Property="Foreground" Value="White"/>
+                                                                            </Trigger>
+                                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource PrimaryColor}"/>
+                                                                            </Trigger>
+                                                                        </ControlTemplate.Triggers>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                    </RadioButton.Style>
+                                                </RadioButton>
+                                                <RadioButton Grid.Column="1"
+                                                             Content="UInt16"
+                                                             GroupName="IdFilterTypeRAR"
+                                                             IsChecked="{Binding SelectedStep.IdFilterType, Converter={StaticResource EqualToStringConverter}, ConverterParameter=UInt16, Mode=TwoWay}"
+                                                             Margin="3,0,0,0">
+                                                    <RadioButton.Style>
+                                                        <Style TargetType="RadioButton">
+                                                            <Setter Property="Background" Value="#F0F0F0"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource MutedText}"/>
+                                                            <Setter Property="FontSize" Value="11"/>
+                                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                                            <Setter Property="Cursor" Value="Hand"/>
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="RadioButton">
+                                                                        <Border x:Name="Bd"
+                                                                                Background="{TemplateBinding Background}"
+                                                                                BorderBrush="{StaticResource MutedBorder}"
+                                                                                BorderThickness="1"
+                                                                                CornerRadius="5"
+                                                                                Padding="0,5">
+                                                                            <ContentPresenter HorizontalAlignment="Center"
+                                                                                              VerticalAlignment="Center"/>
+                                                                        </Border>
+                                                                        <ControlTemplate.Triggers>
+                                                                            <Trigger Property="IsChecked" Value="True">
+                                                                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource PrimaryColor}"/>
+                                                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource PrimaryColor}"/>
+                                                                                <Setter Property="Foreground" Value="White"/>
+                                                                            </Trigger>
+                                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource PrimaryColor}"/>
+                                                                            </Trigger>
+                                                                        </ControlTemplate.Triggers>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                    </RadioButton.Style>
+                                                </RadioButton>
+                                            </Grid>
+                                        </Grid>
+
+                                        <!-- ID 값 행 -->
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="60"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="ID 값"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource MutedText}"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1"
+                                                     Text="{Binding SelectedStep.IdFilterValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource ModernTextBox}"
+                                                     FontSize="12"
+                                                     Padding="8,4"/>
+                                            <Border Grid.Column="2"
+                                                    Background="#EEF2FF"
+                                                    CornerRadius="4"
+                                                    Padding="6,3"
+                                                    Margin="6,0,0,0"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="dec"
+                                                           FontSize="10"
+                                                           Foreground="{StaticResource PrimaryColor}"
+                                                           FontWeight="SemiBold"/>
+                                            </Border>
+                                        </Grid>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="💡 시나리오 포트에서 메시지 수신 후 지정된 응답 요청을 송신자에게 전송합니다. ID 필터가 켜진 경우 지정한 ID 값이 일치하는 메시지만 처리됩니다."
                                        FontSize="11"
-                                       Foreground="#6C757D"
+                                       Foreground="{StaticResource MutedText}"
                                        FontStyle="Italic"
                                        TextWrapping="Wrap"
                                        Margin="0,8,0,0"/>
@@ -549,7 +1033,7 @@
                        Margin="0,0,0,16"/>
             <TextBlock Text="스텝을 선택하세요"
                        FontSize="16"
-                       Foreground="#6C757D"
+                       Foreground="{StaticResource MutedText}"
                        HorizontalAlignment="Center"
                        Margin="0,0,0,8"/>
             <TextBlock Text="테스트 스텝을 클릭하여 설정을 편집하세요"
@@ -578,7 +1062,7 @@
                             Command="{Binding DeleteTestStepCommand}"
                             CommandParameter="{Binding SelectedStep}"
                             Style="{StaticResource CancelButtonStyle}"
-                            Background="#DC3545"
+                            Background="{StaticResource WarningColor}"
                             Width="50"
                             Height="30"
                             FontSize="{DynamicResource text-sm}"/>

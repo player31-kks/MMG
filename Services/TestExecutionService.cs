@@ -630,29 +630,34 @@ namespace MMG.Services
         /// </summary>
         private async Task ExecuteWaitForMessage(TestStep step, TestResult result, CancellationToken cancellationToken)
         {
-            // 시나리오 포트 바인딩 필수
             if (_scenarioClient == null)
-            {
                 throw new Exception("수신 대기를 사용하려면 시나리오에서 포트 바인딩을 설정해야 합니다.");
-            }
 
             int timeoutMs = step.ReceiveTimeoutMs;
-            
-            // 예상 패킷 크기 계산
             var savedRequest = await GetSavedRequestAsync(step.SavedRequestId);
             int expectedSize = CalculateExpectedPacketSize(savedRequest);
 
-            AddLog(LogLevel.Info, $"메시지 수신 대기 시작 (포트: {_scenarioBindPort}), 타임아웃: {timeoutMs}ms, 예상 크기: {expectedSize} bytes", step.Name);
-            result.RequestSent = $"수신 대기 - 포트: {_scenarioBindPort}, 예상 크기: {expectedSize} bytes";
+            string filterDesc = step.UseIdFilter
+                ? $", ID 필터: offset={step.IdFilterOffset} type={step.IdFilterType} value=0x{step.IdFilterValue:X}"
+                : "";
+            AddLog(LogLevel.Info, $"메시지 수신 대기 시작 (포트: {_scenarioBindPort}), 타임아웃: {timeoutMs}ms, 예상 크기: {expectedSize} bytes{filterDesc}", step.Name);
+            result.RequestSent = $"수신 대기 - 포트: {_scenarioBindPort}, 예상 크기: {expectedSize} bytes{filterDesc}";
 
-            var receiveResult = await _scenarioClient.WaitForResponseAsync(timeoutMs);
-
-            if (receiveResult != null)
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            while (true)
             {
+                int remaining = timeoutMs - (int)sw.ElapsedMilliseconds;
+                if (remaining <= 0)
+                    throw new TimeoutException($"수신 타임아웃 ({timeoutMs}ms)");
+
+                var receiveResult = await _scenarioClient.WaitForResponseAsync(remaining);
+                if (receiveResult == null)
+                    throw new TimeoutException($"수신 타임아웃 ({timeoutMs}ms)");
+
                 var receivedData = receiveResult.Value.Data;
                 var responseText = BitConverter.ToString(receivedData).Replace("-", " ");
-                
-                AddLog(LogLevel.Debug, $"메시지 수신: {receivedData.Length} bytes from {receiveResult.Value.RemoteEndPoint}", step.Name);
+
+                AddLog(LogLevel.Debug, $"패킷 수신: {receivedData.Length} bytes from {receiveResult.Value.RemoteEndPoint}", step.Name);
 
                 DataReceived?.Invoke(this, new DataReceivedEventArgs
                 {
@@ -665,16 +670,30 @@ namespace MMG.Services
                 // 패킷 크기 검증
                 if (receivedData.Length != expectedSize)
                 {
+                    if (step.UseIdFilter)
+                    {
+                        AddLog(LogLevel.Debug, $"크기 불일치 ({receivedData.Length} bytes, 예상 {expectedSize}) - 스킵", step.Name);
+                        continue;
+                    }
                     result.ResponseReceived = $"수신됨 from {receiveResult.Value.RemoteEndPoint}: {responseText}";
                     throw new Exception($"패킷 크기 불일치: 예상 {expectedSize} bytes, 실제 {receivedData.Length} bytes");
                 }
 
+                // ID 필터 검증
+                if (step.UseIdFilter)
+                {
+                    int actualId = ReadIdFilterValue(receivedData, step.IdFilterOffset, step.IdFilterType, savedRequest.IsBigEndian);
+                    if (actualId != step.IdFilterValue)
+                    {
+                        AddLog(LogLevel.Debug, $"ID 불일치: 예상 0x{step.IdFilterValue:X4}({step.IdFilterValue}), 실제 0x{actualId:X4}({actualId}) - 스킵", step.Name);
+                        continue;
+                    }
+                    AddLog(LogLevel.Debug, $"ID 필터 일치: 0x{actualId:X4}({actualId})", step.Name);
+                }
+
                 result.ResponseReceived = $"수신됨 from {receiveResult.Value.RemoteEndPoint} ({receivedData.Length} bytes): {responseText}";
-                AddLog(LogLevel.Success, $"메시지 수신 완료 - 크기 검증 성공 ({receivedData.Length} bytes)", step.Name);
-            }
-            else
-            {
-                throw new TimeoutException($"수신 타임아웃 ({timeoutMs}ms)");
+                AddLog(LogLevel.Success, $"메시지 수신 완료 ({receivedData.Length} bytes)", step.Name);
+                break;
             }
         }
 
@@ -683,35 +702,39 @@ namespace MMG.Services
         /// </summary>
         private async Task ExecuteReceiveAndReply(TestStep step, TestResult result, CancellationToken cancellationToken)
         {
-            // 시나리오 포트 바인딩 필수
             if (_scenarioClient == null)
-            {
                 throw new Exception("수신 후 응답을 사용하려면 시나리오에서 포트 바인딩을 설정해야 합니다.");
-            }
 
             int timeoutMs = step.ReceiveTimeoutMs;
             int responseRequestId = step.ResponseRequestId;
 
             if (responseRequestId <= 0)
-            {
                 throw new Exception("응답 요청 ID가 설정되지 않았습니다.");
-            }
 
-            // 예상 패킷 크기 계산
             var savedRequest = await GetSavedRequestAsync(step.SavedRequestId);
             int expectedSize = CalculateExpectedPacketSize(savedRequest);
 
-            AddLog(LogLevel.Info, $"수신 후 응답 대기 (포트: {_scenarioBindPort}), 타임아웃: {timeoutMs}ms, 예상 크기: {expectedSize} bytes", step.Name);
-            result.RequestSent = $"수신 대기 (응답 예정) - 포트: {_scenarioBindPort}, 예상 크기: {expectedSize} bytes";
+            string filterDesc = step.UseIdFilter
+                ? $", ID 필터: offset={step.IdFilterOffset} type={step.IdFilterType} value=0x{step.IdFilterValue:X}"
+                : "";
+            AddLog(LogLevel.Info, $"수신 후 응답 대기 (포트: {_scenarioBindPort}), 타임아웃: {timeoutMs}ms, 예상 크기: {expectedSize} bytes{filterDesc}", step.Name);
+            result.RequestSent = $"수신 대기 (응답 예정) - 포트: {_scenarioBindPort}, 예상 크기: {expectedSize} bytes{filterDesc}";
 
-            var receiveResult = await _scenarioClient.WaitForResponseAsync(timeoutMs);
-
-            if (receiveResult != null)
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            while (true)
             {
+                int remaining = timeoutMs - (int)sw.ElapsedMilliseconds;
+                if (remaining <= 0)
+                    throw new TimeoutException($"수신 타임아웃 ({timeoutMs}ms)");
+
+                var receiveResult = await _scenarioClient.WaitForResponseAsync(remaining);
+                if (receiveResult == null)
+                    throw new TimeoutException($"수신 타임아웃 ({timeoutMs}ms)");
+
                 var receivedData = receiveResult.Value.Data;
                 var receivedText = BitConverter.ToString(receivedData).Replace("-", " ");
-                
-                AddLog(LogLevel.Debug, $"메시지 수신: {receivedData.Length} bytes from {receiveResult.Value.RemoteEndPoint}", step.Name);
+
+                AddLog(LogLevel.Debug, $"패킷 수신: {receivedData.Length} bytes from {receiveResult.Value.RemoteEndPoint}", step.Name);
 
                 DataReceived?.Invoke(this, new DataReceivedEventArgs
                 {
@@ -724,8 +747,25 @@ namespace MMG.Services
                 // 패킷 크기 검증
                 if (receivedData.Length != expectedSize)
                 {
+                    if (step.UseIdFilter)
+                    {
+                        AddLog(LogLevel.Debug, $"크기 불일치 ({receivedData.Length} bytes, 예상 {expectedSize}) - 스킵", step.Name);
+                        continue;
+                    }
                     result.ResponseReceived = $"수신: {receivedText}";
                     throw new Exception($"패킷 크기 불일치: 예상 {expectedSize} bytes, 실제 {receivedData.Length} bytes");
+                }
+
+                // ID 필터 검증
+                if (step.UseIdFilter)
+                {
+                    int actualId = ReadIdFilterValue(receivedData, step.IdFilterOffset, step.IdFilterType, savedRequest.IsBigEndian);
+                    if (actualId != step.IdFilterValue)
+                    {
+                        AddLog(LogLevel.Debug, $"ID 불일치: 예상 0x{step.IdFilterValue:X4}({step.IdFilterValue}), 실제 0x{actualId:X4}({actualId}) - 스킵", step.Name);
+                        continue;
+                    }
+                    AddLog(LogLevel.Debug, $"ID 필터 일치: 0x{actualId:X4}({actualId})", step.Name);
                 }
 
                 // 응답 전송
@@ -737,11 +777,8 @@ namespace MMG.Services
                 await _scenarioClient.SendAsync(messageBytes, replyEndpoint);
 
                 result.ResponseReceived = $"수신 ({receivedData.Length} bytes): {receivedText}\n응답 전송: {replyEndpoint}";
-                AddLog(LogLevel.Success, $"수신 후 응답 전송 완료 - 크기 검증 성공 ({receivedData.Length} bytes)", step.Name);
-            }
-            else
-            {
-                throw new TimeoutException($"수신 타임아웃 ({timeoutMs}ms)");
+                AddLog(LogLevel.Success, $"수신 후 응답 전송 완료 ({receivedData.Length} bytes)", step.Name);
+                break;
             }
         }
 
@@ -786,6 +823,31 @@ namespace MMG.Services
             {
                 result.ResponseReceived = "빈 응답";
                 AddLog(LogLevel.Warning, "빈 응답 수신", step.Name);
+            }
+        }
+
+        /// <summary>
+        /// 수신 패킷에서 ID 필터 값을 읽는다 (Byte 또는 UInt16)
+        /// </summary>
+        private int ReadIdFilterValue(byte[] data, int offset, string type, bool isBigEndian)
+        {
+            if (type == "UInt16")
+            {
+                if (offset + 2 > data.Length)
+                    throw new Exception($"ID 필터 오프셋 범위 초과: offset={offset}, type=UInt16, 패킷 크기={data.Length}");
+                var slice = new byte[2];
+                Array.Copy(data, offset, slice, 0, 2);
+                if (isBigEndian && BitConverter.IsLittleEndian)
+                    Array.Reverse(slice);
+                else if (!isBigEndian && !BitConverter.IsLittleEndian)
+                    Array.Reverse(slice);
+                return BitConverter.ToUInt16(slice, 0);
+            }
+            else
+            {
+                if (offset >= data.Length)
+                    throw new Exception($"ID 필터 오프셋 범위 초과: offset={offset}, 패킷 크기={data.Length}");
+                return data[offset];
             }
         }
 

@@ -9,7 +9,7 @@
                 <Setter Property="Background"
                         Value="White"/>
                 <Setter Property="BorderBrush"
-                        Value="#DEE2E6"/>
+                        Value="{StaticResource MutedBorder}"/>
                 <Setter Property="BorderThickness"
                         Value="1"/>
                 <Setter Property="CornerRadius"
@@ -22,9 +22,9 @@
                         <Trigger Property="IsMouseOver"
                                  Value="True">
                                 <Setter Property="BorderBrush"
-                                        Value="#007BFF"/>
+                                        Value="{StaticResource PrimaryColor}"/>
                                 <Setter Property="Background"
-                                        Value="#F0F7FF"/>
+                                        Value="{StaticResource SoftAccent}"/>
                         </Trigger>
                 </Style.Triggers>
         </Style>
@@ -35,7 +35,7 @@
                 <Setter Property="Background"
                         Value="White"/>
                 <Setter Property="BorderBrush"
-                        Value="#E5E7EB"/>
+                        Value="{StaticResource MutedBorder}"/>
                 <Setter Property="BorderThickness"
                         Value="1"/>
                 <Setter Property="CornerRadius"
@@ -50,9 +50,9 @@
                         <Trigger Property="IsMouseOver"
                                  Value="True">
                                 <Setter Property="BorderBrush"
-                                        Value="#6F5FF5"/>
+                                        Value="{StaticResource PrimaryColor}"/>
                                 <Setter Property="Background"
-                                        Value="#EEF2FF"/>
+                                        Value="{StaticResource SoftAccent}"/>
                         </Trigger>
                 </Style.Triggers>
         </Style>
@@ -62,9 +62,9 @@
                TargetType="Button"
                BasedOn="{StaticResource ModernButton}">
                 <Setter Property="Width"
-                        Value="24"/>
+                        Value="26"/>
                 <Setter Property="Height"
-                        Value="24"/>
+                        Value="26"/>
                 <Setter Property="FontSize"
                         Value="10"/>
                 <Setter Property="Padding"
@@ -81,17 +81,17 @@
                 <Setter Property="Height"
                         Value="8"/>
                 <Setter Property="Fill"
-                        Value="#28A745"/>
+                        Value="#22C55E"/>
                 <Style.Triggers>
                         <DataTrigger Binding="{Binding IsSuccess}"
                                      Value="False">
                                 <Setter Property="Fill"
-                                        Value="#DC3545"/>
+                                        Value="{StaticResource WarningColor}"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding IsRunning}"
                                      Value="True">
                                 <Setter Property="Fill"
-                                        Value="#FFC107"/>
+                                        Value="{StaticResource PrimaryColor}"/>
                         </DataTrigger>
                 </Style.Triggers>
         </Style>
@@ -102,7 +102,7 @@
                 <Setter Property="Background"
                         Value="White"/>
                 <Setter Property="BorderBrush"
-                        Value="#E5E7EB"/>
+                        Value="{StaticResource MutedBorder}"/>
                 <Setter Property="BorderThickness"
                         Value="1"/>
                 <Setter Property="CornerRadius"
@@ -117,28 +117,28 @@
                         <DataTrigger Binding="{Binding IsRunning}"
                                      Value="True">
                                 <Setter Property="BorderBrush"
-                                        Value="#F59E0B"/>
+                                        Value="{StaticResource PrimaryColor}"/>
                                 <Setter Property="Background"
-                                        Value="#FFFBEB"/>
+                                        Value="{StaticResource SoftAccent}"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding HasFailed}"
                                      Value="True">
                                 <Setter Property="BorderBrush"
-                                        Value="#EF4444"/>
+                                        Value="{StaticResource WarningColor}"/>
                                 <Setter Property="Background"
                                         Value="#FEF2F2"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding LastResult.IsSuccess}"
                                      Value="True">
                                 <Setter Property="BorderBrush"
-                                        Value="#10B981"/>
+                                        Value="#22C55E"/>
                                 <Setter Property="Background"
-                                        Value="#ECFDF5"/>
+                                        Value="#F0FDF4"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding LastResult.IsSuccess}"
                                      Value="False">
                                 <Setter Property="BorderBrush"
-                                        Value="#EF4444"/>
+                                        Value="{StaticResource WarningColor}"/>
                                 <Setter Property="Background"
                                         Value="#FEF2F2"/>
                         </DataTrigger>
@@ -149,39 +149,43 @@
         <Style x:Key="PanelHeader"
                TargetType="Border">
                 <Setter Property="Background"
-                        Value="White"/>
+                        Value="{StaticResource SoftAccent}"/>
                 <Setter Property="BorderBrush"
-                        Value="#DEE2E6"/>
+                        Value="{StaticResource MutedBorder}"/>
                 <Setter Property="BorderThickness"
-                        Value="0,0,0,1"/>
+                        Value="0,0,0,0"/>
+                <Setter Property="CornerRadius"
+                        Value="10"/>
                 <Setter Property="Padding"
-                        Value="15,15,15,10"/>
+                        Value="14,14,14,10"/>
+                <Setter Property="Margin"
+                        Value="0,0,0,8"/>
         </Style>
 
         <!-- Panel Footer Style -->
         <Style x:Key="PanelFooter"
                TargetType="Border">
                 <Setter Property="Background"
-                        Value="#F8F9FA"/>
+                        Value="{StaticResource SurfaceBackground}"/>
                 <Setter Property="BorderBrush"
-                        Value="#DEE2E6"/>
+                        Value="{StaticResource MutedBorder}"/>
                 <Setter Property="BorderThickness"
                         Value="0,1,0,0"/>
                 <Setter Property="Padding"
-                        Value="20,12"/>
+                        Value="14,10"/>
         </Style>
 
         <!-- Result Card Style -->
         <Style x:Key="ResultCard"
                TargetType="Border">
                 <Setter Property="Background"
-                        Value="#F8F9FA"/>
+                        Value="{StaticResource SurfaceBackground}"/>
                 <Setter Property="BorderBrush"
-                        Value="#E9ECEF"/>
+                        Value="{StaticResource MutedBorder}"/>
                 <Setter Property="BorderThickness"
                         Value="1"/>
                 <Setter Property="CornerRadius"
-                        Value="4"/>
+                        Value="6"/>
                 <Setter Property="Padding"
                         Value="10"/>
                 <Setter Property="Margin"
@@ -192,7 +196,7 @@
         <Style x:Key="StepNumberBadge"
                TargetType="Border">
                 <Setter Property="Background"
-                        Value="#6F5FF5"/>
+                        Value="{StaticResource PrimaryColor}"/>
                 <Setter Property="CornerRadius"
                         Value="10"/>
                 <Setter Property="Width"
@@ -203,11 +207,11 @@
                         Value="0,0,8,0"/>
         </Style>
 
-        <!-- Background Step Number Badge Style (주황색) -->
+        <!-- Background Step Number Badge Style -->
         <Style x:Key="BackgroundStepNumberBadge"
                TargetType="Border">
                 <Setter Property="Background"
-                        Value="#FF8C00"/>
+                        Value="#F59E0B"/>
                 <Setter Property="CornerRadius"
                         Value="10"/>
                 <Setter Property="Width"
@@ -224,9 +228,9 @@
                 <Setter Property="Height"
                         Value="3"/>
                 <Setter Property="Background"
-                        Value="#E9ECEF"/>
+                        Value="{StaticResource MutedBorder}"/>
                 <Setter Property="Foreground"
-                        Value="#007BFF"/>
+                        Value="{StaticResource PrimaryColor}"/>
                 <Setter Property="BorderThickness"
                         Value="0"/>
                 <Setter Property="Template">
@@ -263,9 +267,9 @@
                         <Trigger Property="IsMouseOver"
                                  Value="True">
                                 <Setter Property="BorderBrush"
-                                        Value="#6F5FF5"/>
+                                        Value="{StaticResource PrimaryColor}"/>
                                 <Setter Property="Background"
-                                        Value="#EEF2FF"/>
+                                        Value="{StaticResource SoftAccent}"/>
                         </Trigger>
                 </Style.Triggers>
         </Style>
@@ -299,16 +303,13 @@
                                                          Value="True">
                                                         <Setter TargetName="StepBorder"
                                                                 Property="BorderBrush"
-                                                                Value="#6F5FF5"/>
+                                                                Value="{StaticResource PrimaryColor}"/>
                                                         <Setter TargetName="StepBorder"
                                                                 Property="Background"
-                                                                Value="#EEF2FF"/>
+                                                                Value="{StaticResource SoftAccent}"/>
                                                 </Trigger>
                                                 <Trigger Property="IsPressed"
                                                          Value="True">
-                                                        <Setter TargetName="StepBorder"
-                                                                Property="BorderBrush"
-                                                                Value="#5B4DF5"/>
                                                         <Setter TargetName="StepBorder"
                                                                 Property="Background"
                                                                 Value="#E0E7FF"/>
