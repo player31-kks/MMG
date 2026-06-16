@@ -98,6 +98,8 @@ namespace MMG.Services
             AddColumnIfNotExists(connection, "TestSteps", "IdFilterType", "TEXT DEFAULT 'Byte'");
             AddColumnIfNotExists(connection, "TestSteps", "IdFilterValue", "INTEGER DEFAULT 0");
             AddColumnIfNotExists(connection, "TestSteps", "IsInfiniteRepeat", "INTEGER DEFAULT 0");
+            AddColumnIfNotExists(connection, "TestSteps", "LengthFilterValue", "INTEGER DEFAULT 0");
+            AddColumnIfNotExists(connection, "TestSteps", "FieldFiltersJson", "TEXT DEFAULT ''");
 
             // TestScenarios 새로운 컬럼 추가
             AddColumnIfNotExists(connection, "TestScenarios", "BindPort", "INTEGER DEFAULT 0");
@@ -285,10 +287,17 @@ namespace MMG.Services
                     IdFilterType = reader["IdFilterType"] == DBNull.Value ? "Byte" : reader["IdFilterType"].ToString() ?? "Byte",
                     IdFilterValue = GetIntOrDefault(reader, "IdFilterValue", 0),
                     IsInfiniteRepeat = GetIntOrDefault(reader, "IsInfiniteRepeat", 0) == 1,
+                    LengthFilterValue = GetIntOrDefault(reader, "LengthFilterValue", 0),
                     ExpectedResponse = reader["ExpectedResponse"] == DBNull.Value ? string.Empty : reader["ExpectedResponse"].ToString() ?? string.Empty,
                     IsEnabled = Convert.ToInt32(reader["IsEnabled"]) == 1,
                     Order = Convert.ToInt32(reader["Order"])
                 };
+
+                try
+                {
+                    step.FieldFiltersJson = reader["FieldFiltersJson"] == DBNull.Value ? "" : reader["FieldFiltersJson"].ToString() ?? "";
+                }
+                catch { }
 
                 steps.Add(step);
             }
@@ -315,8 +324,8 @@ namespace MMG.Services
             await connection.OpenAsync();
 
             var query = @"
-                INSERT INTO TestSteps (ScenarioId, Name, StepType, SavedRequestId, DelaySeconds, FrequencyHz, DurationSeconds, PreDelayMs, PostDelayMs, IntervalMs, RepeatCount, IsBackground, StartDelayFromScenarioMs, ListenPort, ReceiveTimeoutMs, ResponseRequestId, UseIdFilter, IdFilterOffset, IdFilterType, IdFilterValue, IsInfiniteRepeat, ExpectedResponse, IsEnabled, [Order])
-                VALUES (@ScenarioId, @Name, @StepType, @SavedRequestId, @DelaySeconds, @FrequencyHz, @DurationSeconds, @PreDelayMs, @PostDelayMs, @IntervalMs, @RepeatCount, @IsBackground, @StartDelayFromScenarioMs, @ListenPort, @ReceiveTimeoutMs, @ResponseRequestId, @UseIdFilter, @IdFilterOffset, @IdFilterType, @IdFilterValue, @IsInfiniteRepeat, @ExpectedResponse, @IsEnabled, @Order);
+                INSERT INTO TestSteps (ScenarioId, Name, StepType, SavedRequestId, DelaySeconds, FrequencyHz, DurationSeconds, PreDelayMs, PostDelayMs, IntervalMs, RepeatCount, IsBackground, StartDelayFromScenarioMs, ListenPort, ReceiveTimeoutMs, ResponseRequestId, UseIdFilter, IdFilterOffset, IdFilterType, IdFilterValue, IsInfiniteRepeat, LengthFilterValue, FieldFiltersJson, ExpectedResponse, IsEnabled, [Order])
+                VALUES (@ScenarioId, @Name, @StepType, @SavedRequestId, @DelaySeconds, @FrequencyHz, @DurationSeconds, @PreDelayMs, @PostDelayMs, @IntervalMs, @RepeatCount, @IsBackground, @StartDelayFromScenarioMs, @ListenPort, @ReceiveTimeoutMs, @ResponseRequestId, @UseIdFilter, @IdFilterOffset, @IdFilterType, @IdFilterValue, @IsInfiniteRepeat, @LengthFilterValue, @FieldFiltersJson, @ExpectedResponse, @IsEnabled, @Order);
                 SELECT last_insert_rowid();";
 
             using var command = new SQLiteCommand(query, connection);
@@ -341,6 +350,8 @@ namespace MMG.Services
             command.Parameters.AddWithValue("@IdFilterType", step.IdFilterType);
             command.Parameters.AddWithValue("@IdFilterValue", step.IdFilterValue);
             command.Parameters.AddWithValue("@IsInfiniteRepeat", step.IsInfiniteRepeat ? 1 : 0);
+            command.Parameters.AddWithValue("@LengthFilterValue", step.LengthFilterValue);
+            command.Parameters.AddWithValue("@FieldFiltersJson", step.FieldFiltersJson);
             command.Parameters.AddWithValue("@ExpectedResponse", step.ExpectedResponse);
             command.Parameters.AddWithValue("@IsEnabled", step.IsEnabled ? 1 : 0);
             command.Parameters.AddWithValue("@Order", step.Order);
@@ -363,6 +374,7 @@ namespace MMG.Services
                     ListenPort = @ListenPort, ReceiveTimeoutMs = @ReceiveTimeoutMs, ResponseRequestId = @ResponseRequestId,
                     UseIdFilter = @UseIdFilter, IdFilterOffset = @IdFilterOffset, IdFilterType = @IdFilterType, IdFilterValue = @IdFilterValue,
                     IsInfiniteRepeat = @IsInfiniteRepeat,
+                    LengthFilterValue = @LengthFilterValue, FieldFiltersJson = @FieldFiltersJson,
                     ExpectedResponse = @ExpectedResponse, IsEnabled = @IsEnabled, [Order] = @Order
                 WHERE Id = @Id";
 
@@ -388,6 +400,8 @@ namespace MMG.Services
             command.Parameters.AddWithValue("@IdFilterType", step.IdFilterType);
             command.Parameters.AddWithValue("@IdFilterValue", step.IdFilterValue);
             command.Parameters.AddWithValue("@IsInfiniteRepeat", step.IsInfiniteRepeat ? 1 : 0);
+            command.Parameters.AddWithValue("@LengthFilterValue", step.LengthFilterValue);
+            command.Parameters.AddWithValue("@FieldFiltersJson", step.FieldFiltersJson);
             command.Parameters.AddWithValue("@ExpectedResponse", step.ExpectedResponse);
             command.Parameters.AddWithValue("@IsEnabled", step.IsEnabled ? 1 : 0);
             command.Parameters.AddWithValue("@Order", step.Order);

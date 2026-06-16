@@ -209,14 +209,23 @@ namespace MMG.ViewModels
         private async Task RefreshResults() => await RefreshResultsInternal();
 
         [RelayCommand]
-        private void SelectStep(TestStep? step)
+        private async Task SelectStep(TestStep? step)
         {
-            if (step != null)
-                SelectedStep = step;
+            if (step == null) return;
+
+            // 다른 스텝으로 전환 시 현재 스텝 자동 저장
+            if (SelectedStep != null && SelectedStep.Id != step.Id)
+            {
+                try { await _testDatabaseService.UpdateStepAsync(SelectedStep); }
+                catch { }
+            }
+
+            SelectedStep = step;
         }
 
         [RelayCommand]
         private void ClearLog() => ClearLogInternal();
+
 
         #endregion
 
@@ -259,6 +268,7 @@ namespace MMG.ViewModels
             {
                 var requests = await _databaseService.GetAllRequestsAsync();
                 SavedRequests.Clear();
+                SavedRequests.Add(new SavedRequest { Id = 0, Name = "없음" });
                 foreach (var request in requests)
                 {
                     SavedRequests.Add(request);
@@ -437,9 +447,10 @@ namespace MMG.ViewModels
         {
             if (SelectedScenario == null) return;
 
+            int? selectedStepId = SelectedStep?.Id;
+
             try
             {
-                // 현재 시나리오의 모든 스텝 저장
                 int savedCount = 0;
                 foreach (var step in SelectedScenario.Steps)
                 {
@@ -449,16 +460,18 @@ namespace MMG.ViewModels
 
                 ModernMessageDialog.ShowSuccess($"{savedCount}개의 스텝이 성공적으로 저장되었습니다.", "저장 완료");
 
-                // 스텝 목록 새로고침으로 UI 업데이트
                 await LoadSteps();
 
-                // 선택된 시나리오의 Steps 컬렉션도 업데이트
                 var latestSteps = await _testDatabaseService.GetStepsForScenarioAsync(SelectedScenario.Id);
                 SelectedScenario.Steps.Clear();
                 foreach (var step in latestSteps)
                 {
                     SelectedScenario.Steps.Add(step);
                 }
+
+                // 저장 전 선택했던 스텝을 다시 선택
+                if (selectedStepId.HasValue)
+                    SelectedStep = CurrentSteps.FirstOrDefault(s => s.Id == selectedStepId.Value);
             }
             catch (System.Exception ex)
             {

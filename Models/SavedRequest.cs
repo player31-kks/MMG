@@ -51,5 +51,7 @@ namespace MMG.Models
             CreatedAt = DateTime.Now;
             LastModified = DateTime.Now;
         }
+
+        public override string ToString() => Name;
     }
 }

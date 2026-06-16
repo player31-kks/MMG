@@ -427,6 +427,14 @@ namespace MMG.Services
         /// </summary>
         private async Task ExecuteImmediateRequest(TestStep step, TestResult result, CancellationToken cancellationToken)
         {
+            if (step.SavedRequestId <= 0)
+            {
+                result.RequestSent = "(요청 없음 - 건너뜀)";
+                result.ResponseReceived = "요청 미선택으로 전송 생략";
+                AddLog(LogLevel.Debug, "요청 미선택 - 전송 생략", step.Name);
+                return;
+            }
+
             var savedRequest = await GetSavedRequestAsync(step.SavedRequestId);
 
             AddLog(LogLevel.Debug, $"요청 전송: {savedRequest.IpAddress}:{savedRequest.Port}", step.Name);
@@ -504,24 +512,18 @@ namespace MMG.Services
         /// </summary>
         private async Task ExecutePreDelayedRequest(TestStep step, TestResult result, CancellationToken cancellationToken)
         {
-            var savedRequest = await GetSavedRequestAsync(step.SavedRequestId);
-
             int delayMs = step.PreDelayMs;
-
-            // 하위 호환성: DelaySeconds가 설정되어 있으면 사용
             if (delayMs <= 0 && step.DelaySeconds > 0)
-            {
                 delayMs = (int)(step.DelaySeconds * 1000);
-            }
 
             if (delayMs > 0)
             {
                 AddLog(LogLevel.Debug, $"사전 지연 대기: {delayMs}ms", step.Name);
-                result.RequestSent = $"{savedRequest.IpAddress}:{savedRequest.Port} (사전 지연: {delayMs}ms)";
+                result.RequestSent = $"사전 지연: {delayMs}ms";
                 await Task.Delay(delayMs, cancellationToken);
             }
 
-            // 지연 후 요청 실행
+            // 지연 후 요청 실행 (요청 없으면 건너뜀)
             await ExecuteImmediateRequest(step, result, cancellationToken);
         }
 
@@ -530,11 +532,10 @@ namespace MMG.Services
         /// </summary>
         private async Task ExecutePostDelayedRequest(TestStep step, TestResult result, CancellationToken cancellationToken)
         {
-            // 먼저 요청 실행
+            // 먼저 요청 실행 (요청 없으면 건너뜀)
             await ExecuteImmediateRequest(step, result, cancellationToken);
 
             int delayMs = step.PostDelayMs;
-
             if (delayMs > 0)
             {
                 AddLog(LogLevel.Debug, $"사후 지연 대기: {delayMs}ms", step.Name);
@@ -548,28 +549,27 @@ namespace MMG.Services
         /// </summary>
         private async Task ExecutePeriodicRequest(TestStep step, TestResult result, CancellationToken cancellationToken)
         {
-            var savedRequest = await GetSavedRequestAsync(step.SavedRequestId);
+            bool hasRequest = step.SavedRequestId > 0;
+            SavedRequest? savedRequest = hasRequest ? await GetSavedRequestAsync(step.SavedRequestId) : null;
 
             int intervalMs = step.IntervalMs;
             int repeatCount = step.RepeatCount;
             int durationMs = step.DurationMs;
 
-            // 하위 호환성: FrequencyHz가 설정되어 있으면 사용
             if (intervalMs <= 0 && step.FrequencyHz > 0)
                 intervalMs = (int)(1000.0 / step.FrequencyHz);
-
-            // 하위 호환성: DurationSeconds가 설정되어 있으면 사용
             if (durationMs <= 0 && step.DurationSeconds > 0)
                 durationMs = (int)(step.DurationSeconds * 1000);
-
             if (intervalMs <= 0)
                 intervalMs = 100;
+
+            string target = hasRequest ? $"{savedRequest!.IpAddress}:{savedRequest.Port}" : "(요청 없음 - 대기만)";
 
             // ── 무한 반복 모드 ──
             if (step.IsInfiniteRepeat)
             {
                 AddLog(LogLevel.Info, $"주기적 실행 시작: 무한 반복, 간격 {intervalMs}ms (중지 버튼으로 종료)", step.Name);
-                result.RequestSent = $"{savedRequest.IpAddress}:{savedRequest.Port} (무한 반복, 간격 {intervalMs}ms)";
+                result.RequestSent = $"{target} (무한 반복, 간격 {intervalMs}ms)";
 
                 int infiniteCount = 0;
                 try
@@ -579,18 +579,21 @@ namespace MMG.Services
                         if (infiniteCount > 0)
                             await Task.Delay(intervalMs, cancellationToken);
 
-                        var udpRequest = CreateUdpRequestFromSaved(savedRequest);
-                        await _udpClientService.SendRequestAsync(udpRequest);
+                        if (hasRequest)
+                        {
+                            var udpRequest = CreateUdpRequestFromSaved(savedRequest!);
+                            await _udpClientService.SendRequestAsync(udpRequest);
+                        }
                         infiniteCount++;
 
                         if (infiniteCount % 10 == 0)
-                            AddLog(LogLevel.Debug, $"주기적 요청 진행: {infiniteCount}회 (무한 반복)", step.Name);
+                            AddLog(LogLevel.Debug, $"주기적 진행: {infiniteCount}회 (무한 반복)", step.Name);
                     }
                 }
                 catch (OperationCanceledException) { }
 
-                result.ResponseReceived = $"무한 반복 {infiniteCount}회 실행 후 중지됨";
-                AddLog(LogLevel.Info, $"주기적 실행 완료 (무한 반복): {infiniteCount}회 실행", step.Name);
+                result.ResponseReceived = $"무한 반복 {infiniteCount}회 후 중지됨";
+                AddLog(LogLevel.Info, $"주기적 실행 완료 (무한 반복): {infiniteCount}회", step.Name);
                 return;
             }
 
@@ -613,23 +616,30 @@ namespace MMG.Services
                 if (i > 0)
                     await Task.Delay(intervalMs, cancellationToken);
 
-                var udpRequest = CreateUdpRequestFromSaved(savedRequest);
-                var response = await _udpClientService.SendRequestAsync(udpRequest);
-                executionCount++;
+                if (hasRequest)
+                {
+                    var udpRequest = CreateUdpRequestFromSaved(savedRequest!);
+                    var response = await _udpClientService.SendRequestAsync(udpRequest);
+                    executionCount++;
 
-                string responseText = response?.RawData != null
-                    ? BitConverter.ToString(response.RawData).Replace("-", " ")
-                    : "응답 없음";
+                    string responseText = response?.RawData != null
+                        ? BitConverter.ToString(response.RawData).Replace("-", " ")
+                        : "응답 없음";
+                    responses.AppendLine($"[{executionCount}/{totalExecutions}] {DateTime.Now:HH:mm:ss.fff}: {responseText}");
 
-                responses.AppendLine($"[{executionCount}/{totalExecutions}] {DateTime.Now:HH:mm:ss.fff}: {responseText}");
-
-                if (executionCount % Math.Max(1, totalExecutions / 10) == 0 || executionCount == totalExecutions)
-                    AddLog(LogLevel.Debug, $"주기적 요청 진행: {executionCount}/{totalExecutions}", step.Name);
+                    if (executionCount % Math.Max(1, totalExecutions / 10) == 0 || executionCount == totalExecutions)
+                        AddLog(LogLevel.Debug, $"주기적 요청 진행: {executionCount}/{totalExecutions}", step.Name);
+                }
+                else
+                {
+                    executionCount++;
+                    AddLog(LogLevel.Debug, $"대기 중: {executionCount}/{totalExecutions}", step.Name);
+                }
             }
 
-            result.RequestSent = $"{savedRequest.IpAddress}:{savedRequest.Port} (주기적 실행 {executionCount}회, 간격 {intervalMs}ms)";
-            result.ResponseReceived = responses.ToString();
-            AddLog(LogLevel.Info, $"주기적 실행 완료: {executionCount}회 실행", step.Name);
+            result.RequestSent = $"{target} (주기적 {executionCount}회, 간격 {intervalMs}ms)";
+            result.ResponseReceived = hasRequest ? responses.ToString() : $"{executionCount}회 대기 완료";
+            AddLog(LogLevel.Info, $"주기적 실행 완료: {executionCount}회", step.Name);
         }
 
         /// <summary>
@@ -641,14 +651,21 @@ namespace MMG.Services
                 throw new Exception("수신 대기를 사용하려면 시나리오에서 포트 바인딩을 설정해야 합니다.");
 
             int timeoutMs = step.ReceiveTimeoutMs;
-            var savedRequest = await GetSavedRequestAsync(step.SavedRequestId);
-            int expectedSize = CalculateExpectedPacketSize(savedRequest);
 
-            string filterDesc = step.UseIdFilter
-                ? $", ID 필터: offset={step.IdFilterOffset} type={step.IdFilterType} value=0x{step.IdFilterValue:X}"
-                : "";
-            AddLog(LogLevel.Info, $"메시지 수신 대기 시작 (포트: {_scenarioBindPort}), 타임아웃: {timeoutMs}ms, 예상 크기: {expectedSize} bytes{filterDesc}", step.Name);
-            result.RequestSent = $"수신 대기 - 포트: {_scenarioBindPort}, 예상 크기: {expectedSize} bytes{filterDesc}";
+            // 엔디안 정보 (ID/추가 필터에 사용)
+            bool isBigEndian = true;
+            if (step.SavedRequestId > 0)
+            {
+                try { isBigEndian = (await GetSavedRequestAsync(step.SavedRequestId)).IsBigEndian; }
+                catch { }
+            }
+
+            string filterDesc = $", 길이 필터: {step.LengthFilterValue} bytes, ID 필터: offset={step.IdFilterOffset} type={step.IdFilterType} value=0x{step.IdFilterValue:X}";
+            if (step.FieldFilters.Count > 0)
+                filterDesc += $", 추가 필터: {step.FieldFilters.Count}개";
+
+            AddLog(LogLevel.Info, $"메시지 수신 대기 시작 (포트: {_scenarioBindPort}), 타임아웃: {timeoutMs}ms{filterDesc}", step.Name);
+            result.RequestSent = $"수신 대기 - 포트: {_scenarioBindPort}{filterDesc}";
 
             var sw = System.Diagnostics.Stopwatch.StartNew();
             while (true)
@@ -674,28 +691,37 @@ namespace MMG.Services
                     Timestamp = DateTime.Now
                 });
 
-                // 패킷 크기 검증
-                if (receivedData.Length != expectedSize)
+                // 길이 필터 (항상 적용, 0이면 건너뜀)
+                if (step.LengthFilterValue > 0 && receivedData.Length != step.LengthFilterValue)
                 {
-                    if (step.UseIdFilter)
-                    {
-                        AddLog(LogLevel.Debug, $"크기 불일치 ({receivedData.Length} bytes, 예상 {expectedSize}) - 스킵", step.Name);
-                        continue;
-                    }
-                    result.ResponseReceived = $"수신됨 from {receiveResult.Value.RemoteEndPoint}: {responseText}";
-                    throw new Exception($"패킷 크기 불일치: 예상 {expectedSize} bytes, 실제 {receivedData.Length} bytes");
+                    AddLog(LogLevel.Debug, $"길이 불일치 ({receivedData.Length} bytes, 예상 {step.LengthFilterValue}) - 스킵", step.Name);
+                    continue;
                 }
 
-                // ID 필터 검증
-                if (step.UseIdFilter)
+                // ID 필터 (항상 적용)
                 {
-                    int actualId = ReadIdFilterValue(receivedData, step.IdFilterOffset, step.IdFilterType, savedRequest.IsBigEndian);
+                    int actualId = ReadIdFilterValue(receivedData, step.IdFilterOffset, step.IdFilterType, isBigEndian);
                     if (actualId != step.IdFilterValue)
                     {
                         AddLog(LogLevel.Debug, $"ID 불일치: 예상 0x{step.IdFilterValue:X4}({step.IdFilterValue}), 실제 0x{actualId:X4}({actualId}) - 스킵", step.Name);
                         continue;
                     }
-                    AddLog(LogLevel.Debug, $"ID 필터 일치: 0x{actualId:X4}({actualId})", step.Name);
+                }
+
+                // 추가 동적 필터
+                if (step.FieldFilters.Count > 0)
+                {
+                    bool allMatch = true;
+                    foreach (var filter in step.FieldFilters)
+                    {
+                        if (!CheckFieldFilter(receivedData, filter.Offset, filter.Type, filter.Value, isBigEndian))
+                        {
+                            AddLog(LogLevel.Debug, $"추가 필터 불일치: offset={filter.Offset} type={filter.Type} expected={filter.Value} - 스킵", step.Name);
+                            allMatch = false;
+                            break;
+                        }
+                    }
+                    if (!allMatch) continue;
                 }
 
                 result.ResponseReceived = $"수신됨 from {receiveResult.Value.RemoteEndPoint} ({receivedData.Length} bytes): {responseText}";
@@ -718,14 +744,14 @@ namespace MMG.Services
             if (responseRequestId <= 0)
                 throw new Exception("응답 요청 ID가 설정되지 않았습니다.");
 
-            var savedRequest = await GetSavedRequestAsync(step.SavedRequestId);
-            int expectedSize = CalculateExpectedPacketSize(savedRequest);
+            string filterDesc = "";
+            if (step.LengthFilterValue > 0)
+                filterDesc += $", 길이 필터: {step.LengthFilterValue} bytes";
+            if (step.UseIdFilter)
+                filterDesc += $", ID 필터: offset={step.IdFilterOffset} type={step.IdFilterType} value=0x{step.IdFilterValue:X}";
 
-            string filterDesc = step.UseIdFilter
-                ? $", ID 필터: offset={step.IdFilterOffset} type={step.IdFilterType} value=0x{step.IdFilterValue:X}"
-                : "";
-            AddLog(LogLevel.Info, $"수신 후 응답 대기 (포트: {_scenarioBindPort}), 타임아웃: {timeoutMs}ms, 예상 크기: {expectedSize} bytes{filterDesc}", step.Name);
-            result.RequestSent = $"수신 대기 (응답 예정) - 포트: {_scenarioBindPort}, 예상 크기: {expectedSize} bytes{filterDesc}";
+            AddLog(LogLevel.Info, $"수신 후 응답 대기 (포트: {_scenarioBindPort}), 타임아웃: {timeoutMs}ms{filterDesc}", step.Name);
+            result.RequestSent = $"수신 대기 (응답 예정) - 포트: {_scenarioBindPort}{filterDesc}";
 
             var sw = System.Diagnostics.Stopwatch.StartNew();
             while (true)
@@ -751,21 +777,17 @@ namespace MMG.Services
                     Timestamp = DateTime.Now
                 });
 
-                // 패킷 크기 검증
-                if (receivedData.Length != expectedSize)
+                // 길이 필터 검증 (값이 0이면 생략)
+                if (step.LengthFilterValue > 0 && receivedData.Length != step.LengthFilterValue)
                 {
-                    if (step.UseIdFilter)
-                    {
-                        AddLog(LogLevel.Debug, $"크기 불일치 ({receivedData.Length} bytes, 예상 {expectedSize}) - 스킵", step.Name);
-                        continue;
-                    }
-                    result.ResponseReceived = $"수신: {receivedText}";
-                    throw new Exception($"패킷 크기 불일치: 예상 {expectedSize} bytes, 실제 {receivedData.Length} bytes");
+                    AddLog(LogLevel.Debug, $"길이 불일치 ({receivedData.Length} bytes, 예상 {step.LengthFilterValue}) - 스킵", step.Name);
+                    continue;
                 }
 
                 // ID 필터 검증
                 if (step.UseIdFilter)
                 {
+                    var savedRequest = await GetSavedRequestAsync(step.SavedRequestId);
                     int actualId = ReadIdFilterValue(receivedData, step.IdFilterOffset, step.IdFilterType, savedRequest.IsBigEndian);
                     if (actualId != step.IdFilterValue)
                     {
@@ -831,6 +853,49 @@ namespace MMG.Services
                 result.ResponseReceived = "빈 응답";
                 AddLog(LogLevel.Warning, "빈 응답 수신", step.Name);
             }
+        }
+
+        /// <summary>
+        /// 동적 필드 필터 검사
+        /// </summary>
+        private bool CheckFieldFilter(byte[] data, int offset, string type, string expectedValue, bool isBigEndian)
+        {
+            try
+            {
+                double actual = ReadFieldValue(data, offset, type, isBigEndian);
+                if (!double.TryParse(expectedValue, System.Globalization.NumberStyles.Any,
+                                     System.Globalization.CultureInfo.InvariantCulture, out double expected))
+                    return false;
+                if (type == "Float")
+                    return Math.Abs(actual - expected) < 1e-4;
+                return actual == expected;
+            }
+            catch { return false; }
+        }
+
+        private double ReadFieldValue(byte[] data, int offset, string type, bool isBigEndian)
+        {
+            byte[] Slice(int len)
+            {
+                if (offset + len > data.Length)
+                    throw new Exception($"오프셋 범위 초과: offset={offset}, size={len}, 패킷={data.Length}");
+                var s = new byte[len];
+                Array.Copy(data, offset, s, 0, len);
+                if ((isBigEndian && BitConverter.IsLittleEndian) || (!isBigEndian && !BitConverter.IsLittleEndian))
+                    Array.Reverse(s);
+                return s;
+            }
+
+            return type switch
+            {
+                "Byte"   => data.Length > offset ? data[offset] : throw new Exception($"오프셋 초과: {offset}"),
+                "UInt16" => BitConverter.ToUInt16(Slice(2), 0),
+                "Int16"  => BitConverter.ToInt16(Slice(2), 0),
+                "Int"    => BitConverter.ToInt32(Slice(4), 0),
+                "UInt"   => BitConverter.ToUInt32(Slice(4), 0),
+                "Float"  => BitConverter.ToSingle(Slice(4), 0),
+                _        => data.Length > offset ? data[offset] : throw new Exception($"알 수 없는 타입: {type}")
+            };
         }
 
         /// <summary>

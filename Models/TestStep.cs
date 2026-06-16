@@ -1,5 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace MMG.Models
 {
@@ -140,6 +145,48 @@ namespace MMG.Models
         /// </summary>
         [ObservableProperty]
         private int responseRequestId = 0;
+
+        // ========== 길이 필터 속성들 ==========
+
+        [ObservableProperty]
+        private int lengthFilterValue = 0;
+
+        // ========== 추가 필드 필터 (동적) ==========
+
+        public ObservableCollection<FieldFilter> FieldFilters { get; } = new();
+
+        public string FieldFiltersJson
+        {
+            get
+            {
+                if (FieldFilters.Count == 0) return "";
+                return JsonSerializer.Serialize(FieldFilters.Select(f => new FieldFilterDto(f.Offset, f.Type, f.Value)).ToList());
+            }
+            set
+            {
+                FieldFilters.Clear();
+                if (string.IsNullOrEmpty(value)) return;
+                try
+                {
+                    var items = JsonSerializer.Deserialize<List<FieldFilterDto>>(value);
+                    if (items != null)
+                        foreach (var item in items)
+                            FieldFilters.Add(new FieldFilter { Offset = item.Offset, Type = item.Type, Value = item.Value });
+                }
+                catch { }
+            }
+        }
+
+        [RelayCommand]
+        private void AddFieldFilter() => FieldFilters.Add(new FieldFilter());
+
+        [RelayCommand]
+        private void RemoveFieldFilter(FieldFilter? filter)
+        {
+            if (filter != null) FieldFilters.Remove(filter);
+        }
+
+        private sealed record FieldFilterDto(int Offset, string Type, string Value);
 
         // ========== ID 필터 속성들 ==========
 
