@@ -61,16 +61,20 @@ namespace MMG.Views.Spec
                 if (_docViewModel == null)
                 {
                     _docViewModel = Ioc.Default.GetService<DocViewerViewModel>();
-                    _docViewModel.PropertyChanged += OnDocViewModelPropertyChanged;
+                    if (_docViewModel != null)
+                    {
+                        _docViewModel.CreateApiRequestRequested += OnDocViewerCreateApiRequestRequested;
+                    }
                 }
+
+                DocViewerHost.DataContext = _docViewModel;
 
                 _viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
                 // 현재 스펙이 있으면 문서 뷰어 업데이트
-                if (_viewModel.CurrentSpec != null)
+                if (_viewModel.CurrentSpec != null && _docViewModel != null)
                 {
                     _docViewModel.LoadSpec(_viewModel.CurrentSpec);
-                    UpdateDocBrowser();
                 }
             }
         }
@@ -80,31 +84,12 @@ namespace MMG.Views.Spec
             if (e.PropertyName == nameof(SpecViewModel.CurrentSpec) && _viewModel?.CurrentSpec != null)
             {
                 _docViewModel?.LoadSpec(_viewModel.CurrentSpec);
-                UpdateDocBrowser();
             }
         }
 
-        private void OnDocViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private void OnDocViewerCreateApiRequestRequested(object? sender, DocMessageActionEventArgs e)
         {
-            if (e.PropertyName == nameof(DocViewerViewModel.HtmlContent))
-            {
-                UpdateDocBrowser();
-            }
-        }
-
-        private void UpdateDocBrowser()
-        {
-            try
-            {
-                if (_docViewModel != null && !string.IsNullOrEmpty(_docViewModel.HtmlContent))
-                {
-                    DocBrowser.NavigateToString(_docViewModel.HtmlContent);
-                }
-            }
-            catch (System.Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"WebBrowser 업데이트 오류: {ex.Message}");
-            }
+            _viewModel?.CreateApiRequestFromMessageKey(e.MessageKey);
         }
     }
 }

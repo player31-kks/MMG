@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:converters="clr-namespace:MMG.Converters"
+             xmlns:specViews="clr-namespace:MMG.Views.Spec"
              mc:Ignorable="d"
              d:DesignHeight="700"
              d:DesignWidth="1200"
@@ -328,7 +329,7 @@
 
             <!-- Document View -->
             <Grid Visibility="{Binding ElementName=DocViewRadio, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <WebBrowser x:Name="DocBrowser"/>
+                <specViews:DocViewerPanel x:Name="DocViewerHost"/>
             </Grid>
         </Grid>
     </Grid>

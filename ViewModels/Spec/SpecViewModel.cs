@@ -310,6 +310,23 @@ namespace MMG.ViewModels.Spec
             StatusMessage = $"API 요청 생성됨: {messageItem.MessageId}";
         }
 
+        public void CreateApiRequestFromMessageKey(string messageKey)
+        {
+            if (CurrentSpec?.Messages == null || !CurrentSpec.Messages.TryGetValue(messageKey, out var definition))
+            {
+                return;
+            }
+
+            CreateApiRequestInternal(new MessageItem
+            {
+                MessageId = messageKey,
+                Description = definition.Description,
+                HeaderCount = definition.Request?.Header?.Count ?? 0,
+                PayloadCount = definition.Request?.Payload?.Count ?? 0,
+                Definition = definition
+            });
+        }
+
         #endregion
 
         #region Helper Methods
