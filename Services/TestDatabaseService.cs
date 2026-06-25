@@ -92,7 +92,6 @@ namespace MMG.Services
             AddColumnIfNotExists(connection, "TestSteps", "StartDelayFromScenarioMs", "INTEGER DEFAULT 0");
             AddColumnIfNotExists(connection, "TestSteps", "ListenPort", "INTEGER DEFAULT 0");
             AddColumnIfNotExists(connection, "TestSteps", "ReceiveTimeoutMs", "INTEGER DEFAULT 5000");
-            AddColumnIfNotExists(connection, "TestSteps", "ResponseRequestId", "INTEGER DEFAULT 0");
             AddColumnIfNotExists(connection, "TestSteps", "UseIdFilter", "INTEGER DEFAULT 0");
             AddColumnIfNotExists(connection, "TestSteps", "IdFilterOffset", "INTEGER DEFAULT 0");
             AddColumnIfNotExists(connection, "TestSteps", "IdFilterType", "TEXT DEFAULT 'Byte'");
@@ -263,13 +262,18 @@ namespace MMG.Services
 
             while (await reader.ReadAsync())
             {
+                var rawStepType = reader["StepType"].ToString() ?? "Immediate";
+                var savedRequestId = reader["SavedRequestId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["SavedRequestId"]);
+                var responseRequestId = GetIntOrDefault(reader, "ResponseRequestId", 0);
+                var (normalizedStepType, normalizedSavedRequestId) = NormalizeLegacyStep(rawStepType, savedRequestId, responseRequestId);
+
                 var step = new TestStep
                 {
                     Id = Convert.ToInt32(reader["Id"]),
                     ScenarioId = Convert.ToInt32(reader["ScenarioId"]),
                     Name = reader["Name"].ToString() ?? string.Empty,
-                    StepType = reader["StepType"].ToString() ?? "Immediate",
-                    SavedRequestId = reader["SavedRequestId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["SavedRequestId"]),
+                    StepType = normalizedStepType,
+                    SavedRequestId = normalizedSavedRequestId,
                     DelaySeconds = Convert.ToDouble(reader["DelaySeconds"]),
                     FrequencyHz = Convert.ToDouble(reader["FrequencyHz"]),
                     DurationSeconds = Convert.ToInt32(reader["DurationSeconds"]),
@@ -281,7 +285,6 @@ namespace MMG.Services
                     StartDelayFromScenarioMs = GetIntOrDefault(reader, "StartDelayFromScenarioMs", 0),
                     ListenPort = GetIntOrDefault(reader, "ListenPort", 0),
                     ReceiveTimeoutMs = GetIntOrDefault(reader, "ReceiveTimeoutMs", 5000),
-                    ResponseRequestId = GetIntOrDefault(reader, "ResponseRequestId", 0),
                     UseIdFilter = GetIntOrDefault(reader, "UseIdFilter", 0) == 1,
                     IdFilterOffset = GetIntOrDefault(reader, "IdFilterOffset", 0),
                     IdFilterType = reader["IdFilterType"] == DBNull.Value ? "Byte" : reader["IdFilterType"].ToString() ?? "Byte",
@@ -324,8 +327,8 @@ namespace MMG.Services
             await connection.OpenAsync();
 
             var query = @"
-                INSERT INTO TestSteps (ScenarioId, Name, StepType, SavedRequestId, DelaySeconds, FrequencyHz, DurationSeconds, PreDelayMs, PostDelayMs, IntervalMs, RepeatCount, IsBackground, StartDelayFromScenarioMs, ListenPort, ReceiveTimeoutMs, ResponseRequestId, UseIdFilter, IdFilterOffset, IdFilterType, IdFilterValue, IsInfiniteRepeat, LengthFilterValue, FieldFiltersJson, ExpectedResponse, IsEnabled, [Order])
-                VALUES (@ScenarioId, @Name, @StepType, @SavedRequestId, @DelaySeconds, @FrequencyHz, @DurationSeconds, @PreDelayMs, @PostDelayMs, @IntervalMs, @RepeatCount, @IsBackground, @StartDelayFromScenarioMs, @ListenPort, @ReceiveTimeoutMs, @ResponseRequestId, @UseIdFilter, @IdFilterOffset, @IdFilterType, @IdFilterValue, @IsInfiniteRepeat, @LengthFilterValue, @FieldFiltersJson, @ExpectedResponse, @IsEnabled, @Order);
+                INSERT INTO TestSteps (ScenarioId, Name, StepType, SavedRequestId, DelaySeconds, FrequencyHz, DurationSeconds, PreDelayMs, PostDelayMs, IntervalMs, RepeatCount, IsBackground, StartDelayFromScenarioMs, ListenPort, ReceiveTimeoutMs, UseIdFilter, IdFilterOffset, IdFilterType, IdFilterValue, IsInfiniteRepeat, LengthFilterValue, FieldFiltersJson, ExpectedResponse, IsEnabled, [Order])
+                VALUES (@ScenarioId, @Name, @StepType, @SavedRequestId, @DelaySeconds, @FrequencyHz, @DurationSeconds, @PreDelayMs, @PostDelayMs, @IntervalMs, @RepeatCount, @IsBackground, @StartDelayFromScenarioMs, @ListenPort, @ReceiveTimeoutMs, @UseIdFilter, @IdFilterOffset, @IdFilterType, @IdFilterValue, @IsInfiniteRepeat, @LengthFilterValue, @FieldFiltersJson, @ExpectedResponse, @IsEnabled, @Order);
                 SELECT last_insert_rowid();";
 
             using var command = new SQLiteCommand(query, connection);
@@ -344,7 +347,6 @@ namespace MMG.Services
             command.Parameters.AddWithValue("@StartDelayFromScenarioMs", step.StartDelayFromScenarioMs);
             command.Parameters.AddWithValue("@ListenPort", step.ListenPort);
             command.Parameters.AddWithValue("@ReceiveTimeoutMs", step.ReceiveTimeoutMs);
-            command.Parameters.AddWithValue("@ResponseRequestId", step.ResponseRequestId);
             command.Parameters.AddWithValue("@UseIdFilter", step.UseIdFilter ? 1 : 0);
             command.Parameters.AddWithValue("@IdFilterOffset", step.IdFilterOffset);
             command.Parameters.AddWithValue("@IdFilterType", step.IdFilterType);
@@ -371,7 +373,7 @@ namespace MMG.Services
                     DelaySeconds = @DelaySeconds, FrequencyHz = @FrequencyHz, DurationSeconds = @DurationSeconds,
                     PreDelayMs = @PreDelayMs, PostDelayMs = @PostDelayMs, IntervalMs = @IntervalMs, RepeatCount = @RepeatCount,
                     IsBackground = @IsBackground, StartDelayFromScenarioMs = @StartDelayFromScenarioMs,
-                    ListenPort = @ListenPort, ReceiveTimeoutMs = @ReceiveTimeoutMs, ResponseRequestId = @ResponseRequestId,
+                    ListenPort = @ListenPort, ReceiveTimeoutMs = @ReceiveTimeoutMs,
                     UseIdFilter = @UseIdFilter, IdFilterOffset = @IdFilterOffset, IdFilterType = @IdFilterType, IdFilterValue = @IdFilterValue,
                     IsInfiniteRepeat = @IsInfiniteRepeat,
                     LengthFilterValue = @LengthFilterValue, FieldFiltersJson = @FieldFiltersJson,
@@ -394,7 +396,6 @@ namespace MMG.Services
             command.Parameters.AddWithValue("@StartDelayFromScenarioMs", step.StartDelayFromScenarioMs);
             command.Parameters.AddWithValue("@ListenPort", step.ListenPort);
             command.Parameters.AddWithValue("@ReceiveTimeoutMs", step.ReceiveTimeoutMs);
-            command.Parameters.AddWithValue("@ResponseRequestId", step.ResponseRequestId);
             command.Parameters.AddWithValue("@UseIdFilter", step.UseIdFilter ? 1 : 0);
             command.Parameters.AddWithValue("@IdFilterOffset", step.IdFilterOffset);
             command.Parameters.AddWithValue("@IdFilterType", step.IdFilterType);
@@ -407,6 +408,17 @@ namespace MMG.Services
             command.Parameters.AddWithValue("@Order", step.Order);
 
             await command.ExecuteNonQueryAsync();
+        }
+
+        private static (string StepType, int SavedRequestId) NormalizeLegacyStep(string stepType, int savedRequestId, int responseRequestId)
+        {
+            if (!string.Equals(stepType, "ReceiveAndReply", StringComparison.Ordinal))
+            {
+                return (stepType, savedRequestId);
+            }
+
+            var normalizedSavedRequestId = responseRequestId > 0 ? responseRequestId : savedRequestId;
+            return ("WaitForMessage", normalizedSavedRequestId);
         }
 
         public async Task DeleteStepAsync(int stepId)

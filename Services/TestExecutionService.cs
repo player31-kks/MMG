@@ -371,10 +371,6 @@ namespace MMG.Services
                         await ExecuteWaitForMessage(step, result, cancellationToken);
                         break;
 
-                    case "ReceiveAndReply":
-                        await ExecuteReceiveAndReply(step, result, cancellationToken);
-                        break;
-
                     // 하위 호환성을 위한 기존 타입 지원
                     case "SingleRequest":
                         await ExecuteImmediateRequest(step, result, cancellationToken);
@@ -643,7 +639,7 @@ namespace MMG.Services
         }
 
         /// <summary>
-        /// 메시지 수신 대기 (서버 모드) - 시나리오 포트 바인딩 필수
+        /// 메시지 수신 대기 (서버 모드) - 필터 통과 시 선택한 요청을 송신자에게 전송할 수 있음
         /// </summary>
         private async Task ExecuteWaitForMessage(TestStep step, TestResult result, CancellationToken cancellationToken)
         {
@@ -651,12 +647,17 @@ namespace MMG.Services
                 throw new Exception("수신 대기를 사용하려면 시나리오에서 포트 바인딩을 설정해야 합니다.");
 
             int timeoutMs = step.ReceiveTimeoutMs;
+            SavedRequest? responseRequest = null;
 
             // 엔디안 정보 (ID/추가 필터에 사용)
             bool isBigEndian = true;
             if (step.SavedRequestId > 0)
             {
-                try { isBigEndian = (await GetSavedRequestAsync(step.SavedRequestId)).IsBigEndian; }
+                try
+                {
+                    responseRequest = await GetSavedRequestAsync(step.SavedRequestId);
+                    isBigEndian = responseRequest.IsBigEndian;
+                }
                 catch { }
             }
 
@@ -664,8 +665,12 @@ namespace MMG.Services
             if (step.FieldFilters.Count > 0)
                 filterDesc += $", 추가 필터: {step.FieldFilters.Count}개";
 
-            AddLog(LogLevel.Info, $"메시지 수신 대기 시작 (포트: {_scenarioBindPort}), 타임아웃: {timeoutMs}ms{filterDesc}", step.Name);
-            result.RequestSent = $"수신 대기 - 포트: {_scenarioBindPort}{filterDesc}";
+            string sendDesc = responseRequest != null
+                ? $", 통과 시 송신 요청: {responseRequest.Name}"
+                : ", 통과 시 송신 없음";
+
+            AddLog(LogLevel.Info, $"메시지 수신 대기 시작 (포트: {_scenarioBindPort}), 타임아웃: {timeoutMs}ms{filterDesc}{sendDesc}", step.Name);
+            result.RequestSent = $"수신 대기 - 포트: {_scenarioBindPort}{filterDesc}{sendDesc}";
 
             var sw = System.Diagnostics.Stopwatch.StartNew();
             while (true)
@@ -724,89 +729,18 @@ namespace MMG.Services
                     if (!allMatch) continue;
                 }
 
-                result.ResponseReceived = $"수신됨 from {receiveResult.Value.RemoteEndPoint} ({receivedData.Length} bytes): {responseText}";
+                var responseDetails = $"수신됨 from {receiveResult.Value.RemoteEndPoint} ({receivedData.Length} bytes): {responseText}";
+
+                if (responseRequest != null)
+                {
+                    var messageBytes = BuildMessageFromSavedRequest(responseRequest);
+                    await _scenarioClient.SendAsync(messageBytes, receiveResult.Value.RemoteEndPoint);
+                    responseDetails += $"\n송신: {responseRequest.Name} -> {receiveResult.Value.RemoteEndPoint}";
+                    AddLog(LogLevel.Debug, $"필터 통과 후 요청 송신: {responseRequest.Name} -> {receiveResult.Value.RemoteEndPoint}", step.Name);
+                }
+
+                result.ResponseReceived = responseDetails;
                 AddLog(LogLevel.Success, $"메시지 수신 완료 ({receivedData.Length} bytes)", step.Name);
-                break;
-            }
-        }
-
-        /// <summary>
-        /// 메시지 수신 후 응답 전송 (서버 모드) - 시나리오 포트 바인딩 필수
-        /// </summary>
-        private async Task ExecuteReceiveAndReply(TestStep step, TestResult result, CancellationToken cancellationToken)
-        {
-            if (_scenarioClient == null)
-                throw new Exception("수신 후 응답을 사용하려면 시나리오에서 포트 바인딩을 설정해야 합니다.");
-
-            int timeoutMs = step.ReceiveTimeoutMs;
-            int responseRequestId = step.ResponseRequestId;
-
-            if (responseRequestId <= 0)
-                throw new Exception("응답 요청 ID가 설정되지 않았습니다.");
-
-            string filterDesc = "";
-            if (step.LengthFilterValue > 0)
-                filterDesc += $", 길이 필터: {step.LengthFilterValue} bytes";
-            if (step.UseIdFilter)
-                filterDesc += $", ID 필터: offset={step.IdFilterOffset} type={step.IdFilterType} value=0x{step.IdFilterValue:X}";
-
-            AddLog(LogLevel.Info, $"수신 후 응답 대기 (포트: {_scenarioBindPort}), 타임아웃: {timeoutMs}ms{filterDesc}", step.Name);
-            result.RequestSent = $"수신 대기 (응답 예정) - 포트: {_scenarioBindPort}{filterDesc}";
-
-            var sw = System.Diagnostics.Stopwatch.StartNew();
-            while (true)
-            {
-                int remaining = timeoutMs - (int)sw.ElapsedMilliseconds;
-                if (remaining <= 0)
-                    throw new TimeoutException($"수신 타임아웃 ({timeoutMs}ms)");
-
-                var receiveResult = await _scenarioClient.WaitForResponseAsync(remaining);
-                if (receiveResult == null)
-                    throw new TimeoutException($"수신 타임아웃 ({timeoutMs}ms)");
-
-                var receivedData = receiveResult.Value.Data;
-                var receivedText = BitConverter.ToString(receivedData).Replace("-", " ");
-
-                AddLog(LogLevel.Debug, $"패킷 수신: {receivedData.Length} bytes from {receiveResult.Value.RemoteEndPoint}", step.Name);
-
-                DataReceived?.Invoke(this, new DataReceivedEventArgs
-                {
-                    IpAddress = receiveResult.Value.RemoteEndPoint.Address.ToString(),
-                    Port = receiveResult.Value.RemoteEndPoint.Port,
-                    Data = receivedData,
-                    Timestamp = DateTime.Now
-                });
-
-                // 길이 필터 검증 (값이 0이면 생략)
-                if (step.LengthFilterValue > 0 && receivedData.Length != step.LengthFilterValue)
-                {
-                    AddLog(LogLevel.Debug, $"길이 불일치 ({receivedData.Length} bytes, 예상 {step.LengthFilterValue}) - 스킵", step.Name);
-                    continue;
-                }
-
-                // ID 필터 검증
-                if (step.UseIdFilter)
-                {
-                    var savedRequest = await GetSavedRequestAsync(step.SavedRequestId);
-                    int actualId = ReadIdFilterValue(receivedData, step.IdFilterOffset, step.IdFilterType, savedRequest.IsBigEndian);
-                    if (actualId != step.IdFilterValue)
-                    {
-                        AddLog(LogLevel.Debug, $"ID 불일치: 예상 0x{step.IdFilterValue:X4}({step.IdFilterValue}), 실제 0x{actualId:X4}({actualId}) - 스킵", step.Name);
-                        continue;
-                    }
-                    AddLog(LogLevel.Debug, $"ID 필터 일치: 0x{actualId:X4}({actualId})", step.Name);
-                }
-
-                // 응답 전송
-                var responseRequest = await GetSavedRequestAsync(responseRequestId);
-                var messageBytes = BuildMessageFromSavedRequest(responseRequest);
-                var replyEndpoint = receiveResult.Value.RemoteEndPoint;
-
-                AddLog(LogLevel.Debug, $"응답 전송: {replyEndpoint}", step.Name);
-                await _scenarioClient.SendAsync(messageBytes, replyEndpoint);
-
-                result.ResponseReceived = $"수신 ({receivedData.Length} bytes): {receivedText}\n응답 전송: {replyEndpoint}";
-                AddLog(LogLevel.Success, $"수신 후 응답 전송 완료 ({receivedData.Length} bytes)", step.Name);
                 break;
             }
         }

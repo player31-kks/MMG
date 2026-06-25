@@ -693,8 +693,7 @@ namespace MMG.ViewModels
                         IsBackground = step.IsBackground,
                         StartDelayFromScenarioMs = step.StartDelayFromScenarioMs,
                         ListenPort = step.ListenPort,
-                        ReceiveTimeoutMs = step.ReceiveTimeoutMs,
-                        ResponseRequestId = step.ResponseRequestId
+                        ReceiveTimeoutMs = step.ReceiveTimeoutMs
                     };
 
                     // DB에 저장하고 ID 받기

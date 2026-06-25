@@ -23,10 +23,8 @@ namespace MMG.Models
         Periodic,
         /// <summary>시나리오 시작 기준 절대 지연</summary>
         AbsoluteDelayed,
-        /// <summary>메시지 수신 대기 (서버 모드)</summary>
-        WaitForMessage,
-        /// <summary>수신 후 응답 (서버 모드)</summary>
-        ReceiveAndReply
+        /// <summary>메시지 수신 대기 (필터 통과 시 선택된 요청 전송 가능)</summary>
+        WaitForMessage
     }
 
     /// <summary>
@@ -140,12 +138,6 @@ namespace MMG.Models
         [ObservableProperty]
         private int receiveTimeoutMs = 5000;
 
-        /// <summary>
-        /// 응답으로 보낼 SavedRequest ID (ReceiveAndReply 모드에서 사용)
-        /// </summary>
-        [ObservableProperty]
-        private int responseRequestId = 0;
-
         // ========== 길이 필터 속성들 ==========
 
         [ObservableProperty]
@@ -228,7 +220,6 @@ namespace MMG.Models
             "Periodic" => "주기적 실행",
             "AbsoluteDelayed" => "절대 지연",
             "WaitForMessage" => "수신 대기",
-            "ReceiveAndReply" => "수신 후 응답",
             _ => StepType
         };
 
