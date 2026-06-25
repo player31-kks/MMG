@@ -34,6 +34,23 @@ namespace MMG.Core.Models.Schema
         /// 타임아웃 (ms)
         /// </summary>
         public int TimeoutMs { get; set; } = 5000;
+
+        /// <summary>
+        /// IDL 메시지 메타데이터
+        /// </summary>
+        public IdlMessageMetadata IdlMetadata { get; set; } = new();
+    }
+
+    /// <summary>
+    /// README 기준 IDL 메시지 메타데이터
+    /// </summary>
+    public class IdlMessageMetadata
+    {
+        public string StructName { get; set; } = string.Empty;
+
+        public int MessageId { get; set; }
+
+        public string MessageIdLiteral { get; set; } = string.Empty;
     }
 
     /// <summary>

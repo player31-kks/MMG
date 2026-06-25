@@ -55,6 +55,8 @@ namespace MMG.Core.Models.Idl
             if (HeaderStruct?.Name == name) return HeaderStruct;
             return UserStructs.FirstOrDefault(s => s.Name == name);
         }
+
+        public string HeaderMessageIdFieldName => HeaderStruct?.Fields.FirstOrDefault(f => f.IsMsgIdField)?.Name ?? string.Empty;
     }
 
     /// <summary>
@@ -167,14 +169,14 @@ namespace MMG.Core.Models.Idl
             var normalizedType = TypeName.ToLowerInvariant().Replace(" ", "");
             return normalizedType switch
             {
-                "unsignedchar" or "uint8" or "byte" => IdlPrimitiveType.UnsignedChar,
-                "char" or "int8" => IdlPrimitiveType.Char,
-                "unsignedshort" or "uint16" or "ushort" => IdlPrimitiveType.UnsignedShort,
-                "short" or "int16" => IdlPrimitiveType.Short,
-                "unsignedint" or "uint32" or "uint" => IdlPrimitiveType.UnsignedInt,
-                "int" or "int32" => IdlPrimitiveType.Int,
-                "unsignedlong" or "ulong" => IdlPrimitiveType.UnsignedLong,
-                "long" or "int64" => IdlPrimitiveType.Long,
+                "unsignedchar" or "uint8" or "uint8_t" or "byte" => IdlPrimitiveType.UnsignedChar,
+                "char" or "int8" or "int8_t" => IdlPrimitiveType.Char,
+                "unsignedshort" or "uint16" or "uint16_t" or "ushort" => IdlPrimitiveType.UnsignedShort,
+                "short" or "int16" or "int16_t" => IdlPrimitiveType.Short,
+                "unsignedint" or "uint32" or "uint32_t" or "uint" => IdlPrimitiveType.UnsignedInt,
+                "int" or "int32" or "int32_t" => IdlPrimitiveType.Int,
+                "uint64" or "uint64_t" => IdlPrimitiveType.UnsignedLong,
+                "int64" or "int64_t" => IdlPrimitiveType.Long,
                 "float" => IdlPrimitiveType.Float,
                 "double" => IdlPrimitiveType.Double,
                 _ => IdlPrimitiveType.Struct

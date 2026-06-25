@@ -29,6 +29,25 @@ namespace MMG.Core.Models.Schema
         /// 공통 컴포넌트 (재사용 가능한 스키마)
         /// </summary>
         public ComponentsDefinition? Components { get; set; }
+
+        /// <summary>
+        /// IDL 원본 규칙 메타데이터
+        /// </summary>
+        public IdlSpecMetadata IdlMetadata { get; set; } = new();
+    }
+
+    /// <summary>
+    /// README 기준 IDL 전역 메타데이터
+    /// </summary>
+    public class IdlSpecMetadata
+    {
+        public int PackSize { get; set; } = 1;
+
+        public bool IsBigEndian { get; set; } = true;
+
+        public string HeaderStructName { get; set; } = "MsgHeader";
+
+        public string HeaderMessageIdFieldName { get; set; } = "MsgID";
     }
 
     /// <summary>

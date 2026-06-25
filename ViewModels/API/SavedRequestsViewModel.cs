@@ -163,7 +163,7 @@ namespace MMG.ViewModels.API
         /// <summary>
         /// Spec에서 새 요청을 생성하고 저장
         /// </summary>
-        public async Task SaveFromSpec(CreateApiRequestEventArgs args)
+        public async Task<bool> SaveFromSpec(CreateApiRequestEventArgs args)
         {
             try
             {
@@ -194,11 +194,15 @@ namespace MMG.ViewModels.API
                     RequestLoaded?.Invoke(this, savedRequest);
 
                     ModernMessageDialog.ShowSuccess($"요청 '{dialog.RequestName}'이 저장되었습니다.", "저장 완료");
+                    return true;
                 }
+
+                return false;
             }
             catch (Exception ex)
             {
                 ModernMessageDialog.ShowError($"Spec에서 저장 중 오류가 발생했습니다: {ex.Message}", "오류");
+                return false;
             }
         }
 

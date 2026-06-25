@@ -15,11 +15,14 @@ namespace MMG.Core.Services
     public class IdlSpecParser : ISpecParser
     {
         // 정규식 패턴들
-        private static readonly Regex DirectivePattern = new(@"//\+(\w+)=(\w+)", RegexOptions.Compiled);
-        private static readonly Regex StructPattern = new(@"struct\s+(\w+)\s*(//\s*\$\(([^)]*)\)\$)?", RegexOptions.Compiled);
-        private static readonly Regex FieldPattern = new(@"^\s*([\w\s]+)\s+(\w+)\s*(?:\[(\d+)\])?\s*(?::\s*(\d+))?\s*;\s*(//\s*\$\(([^)]*)\)\$)?(.*)$", RegexOptions.Compiled);
+        private static readonly Regex DirectivePattern = new(@"^//\+(\w+)=(\w+)\s*$", RegexOptions.Compiled);
+        private static readonly Regex StructPattern = new(@"^struct\s+([A-Za-z_][A-Za-z0-9_]*)\s*(//\s*\$\(([^)]*)\)\$)?\s*$", RegexOptions.Compiled);
+        private static readonly Regex FieldPattern = new(@"^(?<type>[A-Za-z_][A-Za-z0-9_]*(?:\s+[A-Za-z_][A-Za-z0-9_]*)?)\s+(?<name>[A-Za-z_][A-Za-z0-9_]*)(?:\[(?<array>\d+)\])?(?:\s*:\s*(?<bits>\d+))?\s*;\s*(?://(?<comment>.*))?$", RegexOptions.Compiled);
         private static readonly Regex CommentPattern = new(@"//(.*)$", RegexOptions.Compiled);
+        private static readonly Regex BlockCommentPattern = new(@"/\*.*?\*/", RegexOptions.Compiled | RegexOptions.Singleline);
         private static readonly Regex MsgIdMarkerPattern = new(@"//\s*\$\(\)\$", RegexOptions.Compiled);
+        private static readonly Regex StructInheritancePattern = new(@"^struct\s+[A-Za-z_][A-Za-z0-9_]*\s*:", RegexOptions.Compiled);
+        private static readonly Regex IdentifierPattern = new(@"^[A-Za-z_][A-Za-z0-9_]*$", RegexOptions.Compiled);
 
         public IReadOnlyList<string> SupportedExtensions => new[] { ".idl", ".gidl" };
 
@@ -94,6 +97,13 @@ namespace MMG.Core.Services
                         IpAddress = "127.0.0.1",
                         Port = 8080
                     }
+                },
+                IdlMetadata = new IdlSpecMetadata
+                {
+                    PackSize = 1,
+                    IsBigEndian = true,
+                    HeaderStructName = "MsgHeader",
+                    HeaderMessageIdFieldName = "MsgID"
                 }
             };
         }
@@ -105,9 +115,14 @@ namespace MMG.Core.Services
         /// </summary>
         private IdlDocument ParseIdl(string content)
         {
+            content = StripBlockComments(content);
+
             var doc = new IdlDocument();
             var lines = content.Split('\n');
             var currentIndex = 0;
+            var directiveKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var definedStructNames = new HashSet<string>(StringComparer.Ordinal);
+            var messageIds = new HashSet<int>();
 
             // 1. 지시자 파싱 (//+PACK_SIZE=n, //+MOST_BYTE=true)
             while (currentIndex < lines.Length)
@@ -125,10 +140,24 @@ namespace MMG.Core.Services
                         {
                             case "PACK_SIZE":
                                 if (int.TryParse(value, out int packSize))
+                                {
                                     doc.Directives.PackSize = packSize;
+                                    directiveKeys.Add(key);
+                                }
+                                else
+                                {
+                                    throw new FormatException($"PACK_SIZE 값이 올바르지 않습니다: {value}");
+                                }
                                 break;
                             case "MOST_BYTE":
-                                doc.Directives.IsBigEndian = value.ToLowerInvariant() == "true";
+                                if (!value.Equals("true", StringComparison.OrdinalIgnoreCase) &&
+                                    !value.Equals("false", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    throw new FormatException($"MOST_BYTE 값은 true 또는 false 여야 합니다: {value}");
+                                }
+
+                                doc.Directives.IsBigEndian = value.Equals("true", StringComparison.OrdinalIgnoreCase);
+                                directiveKeys.Add(key);
                                 break;
                         }
                     }
@@ -138,6 +167,11 @@ namespace MMG.Core.Services
                 {
                     break;
                 }
+            }
+
+            if (!directiveKeys.Contains("PACK_SIZE") || !directiveKeys.Contains("MOST_BYTE"))
+            {
+                throw new FormatException("IDL 최상단에는 //+PACK_SIZE 와 //+MOST_BYTE 지시자가 모두 필요합니다.");
             }
 
             // 2. 구조체들 파싱
@@ -151,20 +185,38 @@ namespace MMG.Core.Services
                     continue;
                 }
 
+                ValidateTopLevelLine(line);
+
+                var structSignature = StripOpeningBrace(line);
+
+                if (StructInheritancePattern.IsMatch(structSignature))
+                {
+                    throw new FormatException($"Header 상속 문법은 허용되지 않습니다: {line}");
+                }
+
                 // struct 선언 찾기
-                var structMatch = StructPattern.Match(line);
+                var structMatch = StructPattern.Match(structSignature);
                 if (structMatch.Success)
                 {
                     var structName = structMatch.Groups[1].Value;
                     var marker = structMatch.Groups[3].Value;
                     var hasMarker = structMatch.Groups[2].Success;
 
+                    if (!IdentifierPattern.IsMatch(structName) || !definedStructNames.Add(structName))
+                    {
+                        throw new FormatException($"구조체 이름이 올바르지 않거나 중복되었습니다: {structName}");
+                    }
+
                     // 구조체 본문 파싱
-                    currentIndex++;
-                    var fields = ParseStructBody(lines, ref currentIndex);
+                    var fields = ParseStructBody(lines, ref currentIndex, definedStructNames, doc.HeaderStruct?.Name, line.Contains("{"));
 
                     if (hasMarker && string.IsNullOrEmpty(marker))
                     {
+                        if (doc.HeaderStruct != null)
+                        {
+                            throw new FormatException("Header 구조체는 반드시 1개만 존재해야 합니다.");
+                        }
+
                         // Header struct: //$()$
                         var headerStruct = new IdlStruct
                         {
@@ -172,19 +224,20 @@ namespace MMG.Core.Services
                             Fields = fields
                         };
 
-                        // MsgID 필드 마킹
-                        foreach (var field in fields)
+                        if (fields.Count(f => f.IsMsgIdField) != 1)
                         {
-                            if (field.IsMsgIdField)
-                            {
-                                // MsgID 필드 발견
-                            }
+                            throw new FormatException("Header 구조체에는 메시지 ID 필드 마커(// $()$)가 정확히 1개 필요합니다.");
                         }
 
                         doc.HeaderStruct = headerStruct;
                     }
                     else if (hasMarker && !string.IsNullOrEmpty(marker))
                     {
+                        if (doc.HeaderStruct == null)
+                        {
+                            throw new FormatException("메시지 구조체보다 먼저 Header 구조체가 정의되어야 합니다.");
+                        }
+
                         // Message struct: //$(MsgID)$
                         var msgStruct = new IdlMessageStruct
                         {
@@ -195,6 +248,16 @@ namespace MMG.Core.Services
 
                         // 메시지 ID 파싱 (10진수 또는 16진수)
                         msgStruct.MessageId = ParseMessageId(marker);
+
+                        if (!messageIds.Add(msgStruct.MessageId))
+                        {
+                            throw new FormatException($"중복된 메시지 ID는 허용되지 않습니다: {marker}");
+                        }
+
+                        if (fields.Count == 0 || fields[0].TypeName != doc.HeaderStruct.Name)
+                        {
+                            throw new FormatException($"메시지 구조체 '{structName}'의 첫 번째 필드는 반드시 {doc.HeaderStruct.Name} 타입이어야 합니다.");
+                        }
 
                         doc.MessageStructs.Add(msgStruct);
                     }
@@ -211,8 +274,13 @@ namespace MMG.Core.Services
                 }
                 else
                 {
-                    currentIndex++;
+                    throw new FormatException($"지원되지 않는 struct 선언입니다: {line}");
                 }
+            }
+
+            if (doc.HeaderStruct == null)
+            {
+                throw new FormatException("Header 구조체가 필요합니다. struct 선언부에 // $()$ 마커를 지정하세요.");
             }
 
             return doc;
@@ -221,15 +289,35 @@ namespace MMG.Core.Services
         /// <summary>
         /// 구조체 본문 파싱 (필드들)
         /// </summary>
-        private List<IdlField> ParseStructBody(string[] lines, ref int currentIndex)
+        private List<IdlField> ParseStructBody(
+            string[] lines,
+            ref int currentIndex,
+            HashSet<string> definedStructNames,
+            string? headerStructName,
+            bool hasOpeningBraceOnSignatureLine)
         {
             var fields = new List<IdlField>();
 
             // { 찾기
-            while (currentIndex < lines.Length && !lines[currentIndex].Contains("{"))
+            if (!hasOpeningBraceOnSignatureLine)
             {
                 currentIndex++;
+                while (currentIndex < lines.Length && !lines[currentIndex].Contains("{"))
+                {
+                    var braceLine = lines[currentIndex].Trim();
+                    if (!string.IsNullOrEmpty(braceLine) && !braceLine.StartsWith("//"))
+                    {
+                        throw new FormatException($"struct 본문 시작 전에 허용되지 않는 구문이 있습니다: {braceLine}");
+                    }
+                    currentIndex++;
+                }
             }
+
+            if (currentIndex >= lines.Length || !lines[currentIndex].Contains("{"))
+            {
+                throw new FormatException("struct 본문 시작 '{'를 찾을 수 없습니다.");
+            }
+
             currentIndex++; // { 다음 줄로
 
             // } 까지 필드들 파싱
@@ -239,6 +327,11 @@ namespace MMG.Core.Services
 
                 if (line.StartsWith("}"))
                 {
+                    if (!Regex.IsMatch(line, @"^}\s*;\s*$"))
+                    {
+                        throw new FormatException($"struct 종료는 '}};' 형식이어야 합니다: {line}");
+                    }
+
                     currentIndex++;
                     break;
                 }
@@ -249,13 +342,14 @@ namespace MMG.Core.Services
                     continue;
                 }
 
-                var field = ParseField(line);
-                if (field != null)
-                {
-                    fields.Add(field);
-                }
+                fields.Add(ParseField(line, definedStructNames, headerStructName));
 
                 currentIndex++;
+            }
+
+            if (currentIndex > lines.Length)
+            {
+                throw new FormatException("struct 종료 '};'를 찾을 수 없습니다.");
             }
 
             return fields;
@@ -264,59 +358,42 @@ namespace MMG.Core.Services
         /// <summary>
         /// 필드 라인 파싱
         /// </summary>
-        private IdlField? ParseField(string line)
+        private IdlField ParseField(string line, HashSet<string> definedStructNames, string? headerStructName)
         {
-            // 세미콜론이 없으면 필드가 아님
-            if (!line.Contains(";")) return null;
-
             var field = new IdlField();
+            var fieldLine = line;
 
             // //$()$ 마커 체크 (공백 허용: // $()$ 또는 //$()$)
-            if (MsgIdMarkerPattern.IsMatch(line))
+            if (MsgIdMarkerPattern.IsMatch(fieldLine))
             {
                 field.IsMsgIdField = true;
-                line = MsgIdMarkerPattern.Replace(line, "").Trim();
+                fieldLine = MsgIdMarkerPattern.Replace(fieldLine, "").Trim();
             }
 
-            // 주석 분리
-            var commentMatch = CommentPattern.Match(line);
-            if (commentMatch.Success)
+            ValidateFieldLine(fieldLine);
+
+            var match = FieldPattern.Match(fieldLine);
+            if (!match.Success)
             {
-                field.Comment = commentMatch.Groups[1].Value.Trim();
-                line = line.Substring(0, commentMatch.Index).Trim();
+                throw new FormatException($"유효하지 않은 필드 선언입니다: {fieldLine}");
             }
 
-            // 세미콜론 제거
-            line = line.TrimEnd(';').Trim();
+            field.TypeName = match.Groups["type"].Value.Trim();
+            field.Name = match.Groups["name"].Value.Trim();
 
-            // 비트 필드 처리: type name : bits
-            var bitFieldParts = line.Split(':');
-            if (bitFieldParts.Length == 2)
+            if (match.Groups["array"].Success)
             {
-                if (int.TryParse(bitFieldParts[1].Trim(), out int bitSize))
-                {
-                    field.BitFieldSize = bitSize;
-                    line = bitFieldParts[0].Trim();
-                }
+                field.ArraySize = int.Parse(match.Groups["array"].Value);
             }
 
-            // 배열 처리: type name[size]
-            var arrayMatch = Regex.Match(line, @"(.+)\[(\d+)\]$");
-            if (arrayMatch.Success)
+            if (match.Groups["bits"].Success)
             {
-                if (int.TryParse(arrayMatch.Groups[2].Value, out int arraySize))
-                {
-                    field.ArraySize = arraySize;
-                    line = arrayMatch.Groups[1].Value.Trim();
-                }
+                field.BitFieldSize = int.Parse(match.Groups["bits"].Value);
             }
 
-            // 타입과 이름 분리 (마지막 단어가 이름)
-            var parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 2) return null;
+            field.Comment = match.Groups["comment"].Value.Trim();
 
-            field.Name = parts[^1]; // 마지막 요소가 이름
-            field.TypeName = string.Join(" ", parts[..^1]); // 나머지가 타입
+            ValidateFieldTypeReference(field, definedStructNames, headerStructName);
 
             return field;
         }
@@ -331,7 +408,13 @@ namespace MMG.Core.Services
             {
                 return Convert.ToInt32(value, 16);
             }
-            return int.TryParse(value, out int result) ? result : 0;
+
+            if (int.TryParse(value, out int result))
+            {
+                return result;
+            }
+
+            throw new FormatException($"메시지 ID 형식이 올바르지 않습니다: {value}");
         }
 
         #endregion
@@ -353,6 +436,13 @@ namespace MMG.Core.Services
                         : Path.GetFileNameWithoutExtension(filePath),
                     Description = $"IDL에서 변환됨 (Pack Size: {idlDoc.Directives.PackSize}, Endian: {(idlDoc.Directives.IsBigEndian ? "Big" : "Little")})",
                     Version = "1.0.0"
+                },
+                IdlMetadata = new IdlSpecMetadata
+                {
+                    PackSize = idlDoc.Directives.PackSize,
+                    IsBigEndian = idlDoc.Directives.IsBigEndian,
+                    HeaderStructName = idlDoc.HeaderStruct?.Name ?? "MsgHeader",
+                    HeaderMessageIdFieldName = idlDoc.HeaderMessageIdFieldName
                 }
             };
 
@@ -366,6 +456,7 @@ namespace MMG.Core.Services
                 {
                     var headerFields = ConvertFields(idlDoc.HeaderStruct.Fields, idlDoc);
                     spec.Components.Headers["CommonHeader"] = headerFields;
+                    spec.Components.Headers[idlDoc.HeaderStruct.Name] = headerFields;
                 }
 
                 // 사용자 정의 구조체들 등록
@@ -400,13 +491,18 @@ namespace MMG.Core.Services
             {
                 Description = $"Message ID: {msgStruct.MessageIdString} ({msgStruct.Name})",
                 TimeoutMs = 5000,
-                Request = new MessageSchema()
+                Request = new MessageSchema(),
+                IdlMetadata = new IdlMessageMetadata
+                {
+                    StructName = msgStruct.Name,
+                    MessageId = msgStruct.MessageId,
+                    MessageIdLiteral = msgStruct.MessageIdString
+                }
             };
 
             var headerFields = new List<FieldDefinition>();
             var payloadFields = new List<FieldDefinition>();
 
-            bool inHeader = false;
             string? headerTypeName = idlDoc.HeaderStruct?.Name;
 
             foreach (var field in msgStruct.Fields)
@@ -418,13 +514,11 @@ namespace MMG.Core.Services
                     headerFields.AddRange(ConvertFields(idlDoc.HeaderStruct.Fields, idlDoc));
 
                     // MsgID 필드에 메시지 ID 값 설정
-                    var msgIdField = headerFields.FirstOrDefault(f => f.Name == "MsgID" || f.Name == "msgId");
+                    var msgIdField = headerFields.FirstOrDefault(f => f.Name == idlDoc.HeaderMessageIdFieldName);
                     if (msgIdField != null)
                     {
                         msgIdField.Value = msgStruct.MessageIdString;
                     }
-
-                    inHeader = true;
                 }
                 else
                 {
@@ -578,18 +672,24 @@ namespace MMG.Core.Services
         private string ConvertToIdl(UdpApiSpec spec)
         {
             var sb = new StringBuilder();
+            var metadata = spec.IdlMetadata ?? new IdlSpecMetadata();
+            var headerStructName = string.IsNullOrWhiteSpace(metadata.HeaderStructName) ? "MsgHeader" : metadata.HeaderStructName;
+            var headerMsgIdFieldName = string.IsNullOrWhiteSpace(metadata.HeaderMessageIdFieldName) ? "MsgID" : metadata.HeaderMessageIdFieldName;
 
             // 기본 지시자
-            sb.AppendLine("//+PACK_SIZE=1");
-            sb.AppendLine("//+MOST_BYTE=true");
+            sb.AppendLine($"//+PACK_SIZE={metadata.PackSize}");
+            sb.AppendLine($"//+MOST_BYTE={(metadata.IsBigEndian ? "true" : "false")}");
             sb.AppendLine();
 
             // 헤더 구조체 생성
             sb.AppendLine("// Message Header");
-            sb.AppendLine("struct MsgHeader  //$()$");
+            sb.AppendLine($"struct {headerStructName}  //$()$");
             sb.AppendLine("{");
-            sb.AppendLine("    unsigned short MsgID;   //$()$");
-            sb.AppendLine("    unsigned short Length;");
+            var headerFields = GetHeaderFields(spec);
+            foreach (var field in headerFields)
+            {
+                sb.AppendLine($"    {ConvertFieldToIdl(field, field.Name == headerMsgIdFieldName)};");
+            }
             sb.AppendLine("};");
             sb.AppendLine();
 
@@ -611,13 +711,17 @@ namespace MMG.Core.Services
             }
 
             // 메시지들을 메시지 구조체로 변환
-            int msgId = 1;
-            foreach (var (name, message) in spec.Messages)
+            foreach (var (name, message) in spec.Messages.OrderBy(kvp => kvp.Value.IdlMetadata?.MessageId ?? int.MaxValue).ThenBy(kvp => kvp.Key))
             {
+                var structName = string.IsNullOrWhiteSpace(message.IdlMetadata?.StructName)
+                    ? SanitizeStructName(name)
+                    : message.IdlMetadata.StructName;
+                var messageIdLiteral = GetMessageIdLiteral(message);
+
                 sb.AppendLine($"// {message.Description}");
-                sb.AppendLine($"struct {SanitizeStructName(name)}   //$({msgId})$");
+                sb.AppendLine($"struct {structName}   //$({messageIdLiteral})$");
                 sb.AppendLine("{");
-                sb.AppendLine("    MsgHeader header;");
+                sb.AppendLine($"    {headerStructName} header;");
 
                 foreach (var field in message.Request.Payload)
                 {
@@ -626,7 +730,6 @@ namespace MMG.Core.Services
 
                 sb.AppendLine("};");
                 sb.AppendLine();
-                msgId++;
             }
 
             return sb.ToString();
@@ -635,11 +738,23 @@ namespace MMG.Core.Services
         /// <summary>
         /// FieldDefinition을 IDL 필드 선언으로 변환
         /// </summary>
-        private string ConvertFieldToIdl(FieldDefinition field)
+        private string ConvertFieldToIdl(FieldDefinition field, bool isHeaderMessageIdField = false)
         {
             var idlType = ConvertToIdlType(field.Type);
-            var description = string.IsNullOrEmpty(field.Description) ? "" : $"  // {field.Description}";
-            return $"{idlType} {field.Name}{description}";
+            var suffix = string.Empty;
+
+            if (isHeaderMessageIdField)
+            {
+                suffix = string.IsNullOrEmpty(field.Description)
+                    ? "  // $()$"
+                    : $"  // $()$ // {field.Description}";
+            }
+            else if (!string.IsNullOrEmpty(field.Description))
+            {
+                suffix = $"  // {field.Description}";
+            }
+
+            return $"{idlType} {field.Name}{suffix}";
         }
 
         /// <summary>
@@ -655,6 +770,8 @@ namespace MMG.Core.Services
                 "int16" or "short" => "short",
                 "uint32" or "uint" => "unsigned int",
                 "int32" or "int" => "int",
+                "uint64" => "uint64_t",
+                "int64" => "int64_t",
                 "float" or "float32" => "float",
                 "double" or "float64" => "double",
                 _ => "unsigned char"
@@ -667,6 +784,145 @@ namespace MMG.Core.Services
         private string SanitizeStructName(string name)
         {
             return Regex.Replace(name, @"[^a-zA-Z0-9_]", "_");
+        }
+
+        private static void ValidateTopLevelLine(string line)
+        {
+            ValidateNoForbiddenConstructs(line);
+
+            if (!line.StartsWith("struct ", StringComparison.Ordinal))
+            {
+                throw new FormatException($"전역 영역에는 struct 선언만 허용됩니다: {line}");
+            }
+        }
+
+        private static void ValidateFieldLine(string line)
+        {
+            ValidateNoForbiddenConstructs(line);
+
+            if (!line.Contains(';'))
+            {
+                throw new FormatException($"모든 필드는 ';'로 종료되어야 합니다: {line}");
+            }
+
+            if (line.Contains('*'))
+            {
+                throw new FormatException($"포인터 문법은 허용되지 않습니다: {line}");
+            }
+
+            if (line.Contains('='))
+            {
+                throw new FormatException($"초기값 지정은 허용되지 않습니다: {line}");
+            }
+
+            if (line.Contains('(') || line.Contains(')'))
+            {
+                throw new FormatException($"함수 선언 문법은 허용되지 않습니다: {line}");
+            }
+        }
+
+        private static void ValidateNoForbiddenConstructs(string line)
+        {
+            if (Regex.IsMatch(line, @"\b(enum|union|typedef)\b", RegexOptions.IgnoreCase))
+            {
+                throw new FormatException($"금지된 문법이 포함되어 있습니다: {line}");
+            }
+
+            if (Regex.IsMatch(line, @"#?\s*pragma\s+pack", RegexOptions.IgnoreCase))
+            {
+                throw new FormatException($"pragma pack 문법은 허용되지 않습니다: {line}");
+            }
+        }
+
+        private static void ValidateFieldTypeReference(IdlField field, HashSet<string> definedStructNames, string? headerStructName)
+        {
+            if (!IdentifierPattern.IsMatch(field.Name))
+            {
+                throw new FormatException($"필드 식별자가 올바르지 않습니다: {field.Name}");
+            }
+
+            if (!field.IsStructType)
+            {
+                return;
+            }
+
+            if (!IdentifierPattern.IsMatch(field.TypeName))
+            {
+                throw new FormatException($"지원되지 않는 타입 선언입니다: {field.TypeName}");
+            }
+
+            if (field.TypeName == headerStructName || definedStructNames.Contains(field.TypeName))
+            {
+                return;
+            }
+
+            throw new FormatException($"구조체 타입은 사용 전에 정의되어야 합니다: {field.TypeName}");
+        }
+
+        private static string StripOpeningBrace(string line)
+        {
+            var braceIndex = line.IndexOf('{');
+            return braceIndex >= 0 ? line[..braceIndex].TrimEnd() : line;
+        }
+
+        private static string StripBlockComments(string content)
+        {
+            return BlockCommentPattern.Replace(content, match =>
+            {
+                var preservedLineBreaks = new StringBuilder(match.Length);
+                foreach (var ch in match.Value)
+                {
+                    if (ch == '\r' || ch == '\n')
+                    {
+                        preservedLineBreaks.Append(ch);
+                    }
+                }
+
+                return preservedLineBreaks.ToString();
+            });
+        }
+
+        private static List<FieldDefinition> GetHeaderFields(UdpApiSpec spec)
+        {
+            if (spec.Components?.Headers == null || spec.Components.Headers.Count == 0)
+            {
+                return new List<FieldDefinition>
+                {
+                    new() { Name = "MsgID", Type = "uint16" },
+                    new() { Name = "Length", Type = "uint16" }
+                };
+            }
+
+            var metadata = spec.IdlMetadata ?? new IdlSpecMetadata();
+            if (spec.Components.Headers.TryGetValue(metadata.HeaderStructName, out var namedHeader))
+            {
+                return namedHeader;
+            }
+
+            if (spec.Components.Headers.TryGetValue("CommonHeader", out var commonHeader))
+            {
+                return commonHeader;
+            }
+
+            return spec.Components.Headers.Values.First();
+        }
+
+        private static string GetMessageIdLiteral(MessageDefinition message)
+        {
+            if (!string.IsNullOrWhiteSpace(message.IdlMetadata?.MessageIdLiteral))
+            {
+                return message.IdlMetadata.MessageIdLiteral;
+            }
+
+            var match = Regex.Match(message.Description ?? string.Empty, @"(0x[0-9A-Fa-f]+|\d+)");
+            if (match.Success)
+            {
+                return match.Groups[1].Value;
+            }
+
+            return message.IdlMetadata?.MessageId > 0
+                ? message.IdlMetadata.MessageId.ToString()
+                : "1";
         }
 
         #endregion

@@ -87,13 +87,16 @@ namespace MMG.ViewModels
             }
         }
 
-        private void OnCreateApiRequestRequested(object? sender, CreateApiRequestEventArgs args)
+        private async void OnCreateApiRequestRequested(object? sender, CreateApiRequestEventArgs args)
         {
             // SavedRequestsViewModel을 통해 저장 다이얼로그 표시 및 저장
-            _ = _mainViewModel.SavedRequestsViewModel.SaveFromSpec(args);
+            var saved = await _mainViewModel.SavedRequestsViewModel.SaveFromSpec(args);
 
-            // API 탭으로 전환
-            SelectedTab = "API";
+            if (saved)
+            {
+                // 저장이 완료된 경우에만 API 탭으로 전환
+                SelectedTab = "API";
+            }
         }
 
         #endregion
