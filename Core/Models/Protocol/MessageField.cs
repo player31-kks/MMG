@@ -151,10 +151,12 @@ namespace MMG.Core.Models.Protocol
             return legacyType switch
             {
                 MMG.Models.DataType.Byte => FieldType.Byte,
+                MMG.Models.DataType.Int16 => FieldType.Int16,
                 MMG.Models.DataType.UInt16 => FieldType.UInt16,
                 MMG.Models.DataType.Int => FieldType.Int32,
                 MMG.Models.DataType.UInt => FieldType.UInt32,
                 MMG.Models.DataType.Float => FieldType.Float,
+                MMG.Models.DataType.Double => FieldType.Double,
                 MMG.Models.DataType.Padding => FieldType.Padding,
                 _ => FieldType.Byte
             };

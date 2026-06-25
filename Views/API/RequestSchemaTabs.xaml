@@ -18,6 +18,14 @@
                  Style="{StaticResource ModernTabItem}"
                  BorderThickness="0,1,0,1">
             <Grid>
+                <Grid.Resources>
+                    <Style x:Key="SchemaEditableTextBlockStyle" TargetType="TextBlock">
+                        <Setter Property="Padding" Value="8,0"/>
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryColor}"/>
+                        <Setter Property="Cursor" Value="IBeam"/>
+                    </Style>
+                </Grid.Resources>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -54,10 +62,21 @@
 
                 <!-- 테이블 -->
                 <Border Grid.Row="1"
-                        BorderBrush="{StaticResource MutedBorder}"
                         BorderThickness="1"
                         CornerRadius="8"
                         ClipToBounds="True">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="White"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource MutedBorder}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ElementName=HeadersDataGrid, Path=IsKeyboardFocusWithin}" Value="True">
+                                    <Setter Property="Background" Value="#F8FAFC"/>
+                                    <Setter Property="BorderBrush" Value="#E5E7EB"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <DataGrid x:Name="HeadersDataGrid"
                               ItemsSource="{Binding CurrentRequest.Headers}"
                               AutoGenerateColumns="False"
@@ -76,6 +95,7 @@
                               RowStyle="{StaticResource SchemaRowStyle}"
                               CellStyle="{StaticResource SchemaCellStyle}"
                               KeyDown="DataGrid_KeyDown"
+                              PreviewMouseLeftButtonDown="DataGrid_PreviewMouseLeftButtonDown"
                               MouseLeftButtonUp="DataGrid_MouseLeftButtonUp">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Name"
@@ -91,11 +111,7 @@
                                     </Style>
                                 </DataGridTextColumn.EditingElementStyle>
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Padding" Value="8,0"/>
-                                        <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryColor}"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="SchemaEditableTextBlockStyle"/>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
@@ -117,6 +133,7 @@
                                                     <models:DataType>Int</models:DataType>
                                                     <models:DataType>UInt</models:DataType>
                                                     <models:DataType>Float</models:DataType>
+                                                    <models:DataType>Double</models:DataType>
                                                     <models:DataType>Padding</models:DataType>
                                                 </x:Array>
                                             </ComboBox.ItemsSource>
@@ -138,11 +155,7 @@
                                     </Style>
                                 </DataGridTextColumn.EditingElementStyle>
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Padding" Value="8,0"/>
-                                        <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryColor}"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="SchemaEditableTextBlockStyle"/>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
@@ -183,6 +196,14 @@
                  Style="{StaticResource ModernTabItem}"
                  BorderThickness="0,1,0,1">
             <Grid>
+                <Grid.Resources>
+                    <Style x:Key="SchemaEditableTextBlockStyle" TargetType="TextBlock">
+                        <Setter Property="Padding" Value="8,0"/>
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryColor}"/>
+                        <Setter Property="Cursor" Value="IBeam"/>
+                    </Style>
+                </Grid.Resources>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -217,10 +238,21 @@
                 </Grid>
 
                 <Border Grid.Row="1"
-                        BorderBrush="{StaticResource MutedBorder}"
                         BorderThickness="1"
                         CornerRadius="8"
                         ClipToBounds="True">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="White"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource MutedBorder}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ElementName=PayloadDataGrid, Path=IsKeyboardFocusWithin}" Value="True">
+                                    <Setter Property="Background" Value="#F8FAFC"/>
+                                    <Setter Property="BorderBrush" Value="#E5E7EB"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <DataGrid x:Name="PayloadDataGrid"
                               ItemsSource="{Binding CurrentRequest.Payload}"
                               AutoGenerateColumns="False"
@@ -239,6 +271,7 @@
                               RowStyle="{StaticResource SchemaRowStyle}"
                               CellStyle="{StaticResource SchemaCellStyle}"
                               KeyDown="DataGrid_KeyDown"
+                              PreviewMouseLeftButtonDown="DataGrid_PreviewMouseLeftButtonDown"
                               MouseLeftButtonUp="DataGrid_MouseLeftButtonUp">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Name"
@@ -254,11 +287,7 @@
                                     </Style>
                                 </DataGridTextColumn.EditingElementStyle>
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Padding" Value="8,0"/>
-                                        <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryColor}"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="SchemaEditableTextBlockStyle"/>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
@@ -280,6 +309,7 @@
                                                     <models:DataType>Int</models:DataType>
                                                     <models:DataType>UInt</models:DataType>
                                                     <models:DataType>Float</models:DataType>
+                                                    <models:DataType>Double</models:DataType>
                                                     <models:DataType>Padding</models:DataType>
                                                 </x:Array>
                                             </ComboBox.ItemsSource>
@@ -301,11 +331,7 @@
                                     </Style>
                                 </DataGridTextColumn.EditingElementStyle>
                                 <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Padding" Value="8,0"/>
-                                        <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryColor}"/>
-                                    </Style>
+                                    <StaticResource ResourceKey="SchemaEditableTextBlockStyle"/>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 

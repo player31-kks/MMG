@@ -153,6 +153,7 @@ namespace MMG.Services
                 "int" or "int32" or "integer" => DataType.Int,
                 "uint" or "uint32" => DataType.UInt,
                 "float" or "single" => DataType.Float,
+                "double" or "float64" => DataType.Double,
                 "padding" or "pad" => DataType.Padding,
                 _ => throw new InvalidDataException($"지원하지 않는 데이터 타입입니다: {typeValue}")
             };

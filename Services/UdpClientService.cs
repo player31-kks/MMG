@@ -204,6 +204,7 @@ namespace MMG.Services
                     DataType.Int => BitConverter.GetBytes(ParseValue<int>(field.Value)),
                     DataType.UInt => BitConverter.GetBytes(ParseValue<uint>(field.Value)),
                     DataType.Float => BitConverter.GetBytes(ParseValue<float>(field.Value)),
+                    DataType.Double => BitConverter.GetBytes(ParseValue<double>(field.Value)),
                     DataType.Padding => new byte[field.PaddingSize], // Creates array of zeros
                     _ => Array.Empty<byte>()
                 };
@@ -273,6 +274,11 @@ namespace MMG.Services
                     var intValue = Convert.ToUInt32(hexValue, 16);
                     return (T)(object)BitConverter.ToSingle(BitConverter.GetBytes(intValue), 0);
                 }
+                else if (type == typeof(double))
+                {
+                    var longValue = Convert.ToUInt64(hexValue, 16);
+                    return (T)(object)BitConverter.ToDouble(BitConverter.GetBytes(longValue), 0);
+                }
                 else
                     return default(T);
             }
@@ -305,6 +311,11 @@ namespace MMG.Services
                     // For float, parse as uint first then convert to float bytes
                     var intValue = Convert.ToUInt32(binaryValue, 2);
                     return (T)(object)BitConverter.ToSingle(BitConverter.GetBytes(intValue), 0);
+                }
+                else if (type == typeof(double))
+                {
+                    var longValue = Convert.ToUInt64(binaryValue, 2);
+                    return (T)(object)BitConverter.ToDouble(BitConverter.GetBytes(longValue), 0);
                 }
                 else
                     return default(T);
@@ -369,6 +380,7 @@ namespace MMG.Services
                 DataType.Int => 4,
                 DataType.UInt => 4,
                 DataType.Float => 4,
+                DataType.Double => 8,
                 DataType.Padding => field.PaddingSize,
                 _ => 0
             };
@@ -395,6 +407,7 @@ namespace MMG.Services
                 DataType.Int => BitConverter.ToInt32(fieldBytes, 0),
                 DataType.UInt => BitConverter.ToUInt32(fieldBytes, 0),
                 DataType.Float => BitConverter.ToSingle(fieldBytes, 0),
+                DataType.Double => BitConverter.ToDouble(fieldBytes, 0),
                 DataType.Padding => $"Padding({field.PaddingSize} bytes)",
                 _ => 0
             };

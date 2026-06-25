@@ -34,6 +34,7 @@ namespace MMG.Core.Utilities
                 DataType.Int => 4,
                 DataType.UInt => 4,
                 DataType.Float => 4,
+                DataType.Double => 8,
                 DataType.Padding => paddingSize,
                 _ => 0
             };

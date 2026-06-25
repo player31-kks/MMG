@@ -214,6 +214,7 @@ namespace MMG.Core.Services
                 Models.Protocol.FieldType.Int32 => DataType.Int,
                 Models.Protocol.FieldType.UInt32 => DataType.UInt,
                 Models.Protocol.FieldType.Float => DataType.Float,
+                Models.Protocol.FieldType.Double => DataType.Double,
                 Models.Protocol.FieldType.Padding => DataType.Padding,
                 _ => DataType.Byte
             };
@@ -229,6 +230,7 @@ namespace MMG.Core.Services
                 DataType.Int => "int32",
                 DataType.UInt => "uint32",
                 DataType.Float => "float",
+                DataType.Double => "double",
                 DataType.Padding => "padding",
                 _ => "byte"
             };

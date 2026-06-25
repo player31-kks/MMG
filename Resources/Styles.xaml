@@ -1069,10 +1069,10 @@
                 <Setter Property="BorderThickness" Value="0"/>
                 <Style.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource SoftAccent}"/>
+                                <Setter Property="Background" Value="#F8FAFC"/>
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="{StaticResource SoftAccent}"/>
+                                <Setter Property="Background" Value="#F8FAFC"/>
                         </Trigger>
                 </Style.Triggers>
         </Style>
@@ -1080,11 +1080,12 @@
         <Style x:Key="SchemaCellStyle"
                TargetType="DataGridCell">
                 <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                 <Setter Property="Template">
                         <Setter.Value>
                                 <ControlTemplate TargetType="DataGridCell">
-                                        <Border Background="Transparent"
+                                        <Border Background="{TemplateBinding Background}"
                                                 Padding="2,0">
                                                 <ContentPresenter VerticalAlignment="Center"/>
                                         </Border>
@@ -1093,6 +1094,15 @@
                 </Setter>
                 <Style.Triggers>
                         <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#F8FAFC"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryColor}"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter Property="Background" Value="#F8FAFC"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryColor}"/>
+                        </Trigger>
+                        <Trigger Property="IsEditing" Value="True">
+                                <Setter Property="Background" Value="#F8FAFC"/>
                                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryColor}"/>
                         </Trigger>
                 </Style.Triggers>

@@ -323,6 +323,7 @@ namespace MMG.ViewModels.Spec
                 "int32" or "int" => DataType.Int,
                 "uint32" or "uint" => DataType.UInt,
                 "float" or "float32" => DataType.Float,
+                "double" or "float64" => DataType.Double,
                 "padding" => DataType.Padding,
                 _ => DataType.Byte
             };
@@ -347,6 +348,7 @@ namespace MMG.ViewModels.Spec
             return type switch
             {
                 DataType.Float => "0.0",
+                DataType.Double => "0.0",
                 _ => "0"
             };
         }

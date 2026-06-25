@@ -200,6 +200,7 @@ namespace MMG.Services
                     DataType.Int => BitConverter.GetBytes(ParseValue<int>(field.Value)),
                     DataType.UInt => BitConverter.GetBytes(ParseValue<uint>(field.Value)),
                     DataType.Float => BitConverter.GetBytes(ParseValue<float>(field.Value)),
+                    DataType.Double => BitConverter.GetBytes(ParseValue<double>(field.Value)),
                     DataType.Padding => new byte[field.PaddingSize],
                     _ => Array.Empty<byte>()
                 };

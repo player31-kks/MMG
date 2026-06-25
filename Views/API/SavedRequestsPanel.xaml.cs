@@ -291,22 +291,14 @@ namespace MMG.Views.API
 
                 if (sourceItem?.Tag is SavedRequest request && targetItem != null && DataContext is MainViewModel viewModel)
                 {
-                    int? targetFolderId = null;
-
                     if (targetItem.ItemType == TreeViewItemType.Folder && targetItem.Tag is Folder folder)
                     {
-                        targetFolderId = folder.Id;
+                        await viewModel.TreeViewViewModel.MoveRequest(request, folder.Id);
                     }
                     else if (targetItem.ItemType == TreeViewItemType.Request && targetItem.Tag is SavedRequest targetRequest)
                     {
-                        // 요청 위에 드롭하면 같은 폴더로 이동
-                        targetFolderId = targetRequest.FolderId;
-                    }
-
-                    // 같은 폴더면 이동하지 않음
-                    if (request.FolderId != targetFolderId)
-                    {
-                        await viewModel.TreeViewViewModel.MoveRequestToFolder(request, targetFolderId);
+                        var insertAfter = IsDropInLowerHalf(targetTreeViewItem, e);
+                        await viewModel.TreeViewViewModel.MoveRequest(request, targetRequest.FolderId, targetRequest, insertAfter);
                     }
                 }
             }
@@ -322,13 +314,21 @@ namespace MMG.Views.API
 
                 if (sourceItem?.Tag is SavedRequest request && DataContext is MainViewModel viewModel)
                 {
-                    if (request.FolderId != null)
-                    {
-                        await viewModel.TreeViewViewModel.MoveRequestToFolder(request, null);
-                    }
+                    await viewModel.TreeViewViewModel.MoveRequest(request, null);
                 }
             }
             e.Handled = true;
+        }
+
+        private static bool IsDropInLowerHalf(TreeViewItem? item, DragEventArgs e)
+        {
+            if (item == null)
+            {
+                return false;
+            }
+
+            var position = e.GetPosition(item);
+            return position.Y > item.ActualHeight / 2;
         }
 
         #endregion

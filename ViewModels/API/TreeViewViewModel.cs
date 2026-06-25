@@ -369,15 +369,71 @@ namespace MMG.ViewModels.API
         /// </summary>
         public async Task<bool> MoveRequestToFolder(SavedRequest request, int? targetFolderId)
         {
+            return await MoveRequest(request, targetFolderId);
+        }
+
+        public async Task<bool> MoveRequest(SavedRequest request, int? targetFolderId, SavedRequest? targetRequest = null, bool insertAfter = false)
+        {
             try
             {
-                var result = await _databaseService.MoveRequestToFolderAsync(request.Id, targetFolderId);
-                if (result)
+                var allRequests = await _databaseService.GetAllRequestsAsync();
+                var draggedRequest = allRequests.FirstOrDefault(savedRequest => savedRequest.Id == request.Id);
+
+                if (draggedRequest == null)
                 {
-                    request.FolderId = targetFolderId;
-                    await BuildTreeView();
+                    return false;
                 }
-                return result;
+
+                if (targetRequest != null && draggedRequest.Id == targetRequest.Id)
+                {
+                    return false;
+                }
+
+                var sourceFolderId = draggedRequest.FolderId;
+                var sourceRequests = GetOrderedRequestsForFolder(allRequests, sourceFolderId);
+                var targetRequests = sourceFolderId == targetFolderId
+                    ? sourceRequests
+                    : GetOrderedRequestsForFolder(allRequests, targetFolderId);
+
+                sourceRequests.RemoveAll(savedRequest => savedRequest.Id == draggedRequest.Id);
+                if (!ReferenceEquals(sourceRequests, targetRequests))
+                {
+                    targetRequests.RemoveAll(savedRequest => savedRequest.Id == draggedRequest.Id);
+                }
+
+                draggedRequest.FolderId = targetFolderId;
+
+                var insertIndex = targetRequests.Count;
+                if (targetRequest != null)
+                {
+                    var targetIndex = targetRequests.FindIndex(savedRequest => savedRequest.Id == targetRequest.Id);
+                    if (targetIndex >= 0)
+                    {
+                        insertIndex = insertAfter ? targetIndex + 1 : targetIndex;
+                    }
+                }
+
+                insertIndex = Math.Max(0, Math.Min(insertIndex, targetRequests.Count));
+                targetRequests.Insert(insertIndex, draggedRequest);
+
+                var changedRequests = new List<SavedRequest>();
+                ApplyRequestOrder(sourceRequests, sourceFolderId, changedRequests);
+                if (!ReferenceEquals(sourceRequests, targetRequests))
+                {
+                    ApplyRequestOrder(targetRequests, targetFolderId, changedRequests);
+                }
+
+                var requestsToSave = changedRequests
+                    .GroupBy(savedRequest => savedRequest.Id)
+                    .Select(group => group.First())
+                    .ToList();
+
+                await _databaseService.SaveRequestsAsync(requestsToSave);
+
+                request.FolderId = draggedRequest.FolderId;
+                request.SortOrder = draggedRequest.SortOrder;
+                await BuildTreeView(draggedRequest);
+                return true;
             }
             catch (Exception ex)
             {
@@ -389,6 +445,11 @@ namespace MMG.ViewModels.API
         public async Task RefreshTreeView()
         {
             await BuildTreeView();
+        }
+
+        public async Task RefreshTreeView(SavedRequest? requestToSelect)
+        {
+            await BuildTreeView(requestToSelect);
         }
 
         #endregion
@@ -421,6 +482,31 @@ namespace MMG.ViewModels.API
             }
 
             return null;
+        }
+
+        private static List<SavedRequest> GetOrderedRequestsForFolder(IEnumerable<SavedRequest> allRequests, int? folderId)
+        {
+            return allRequests
+                .Where(request => request.FolderId == folderId)
+                .OrderBy(request => request.SortOrder)
+                .ThenBy(request => request.Id)
+                .ToList();
+        }
+
+        private static void ApplyRequestOrder(IReadOnlyList<SavedRequest> requests, int? folderId, ICollection<SavedRequest> changedRequests)
+        {
+            for (var index = 0; index < requests.Count; index++)
+            {
+                var request = requests[index];
+                var nextSortOrder = index + 1;
+
+                if (request.FolderId != folderId || request.SortOrder != nextSortOrder)
+                {
+                    request.FolderId = folderId;
+                    request.SortOrder = nextSortOrder;
+                    changedRequests.Add(request);
+                }
+            }
         }
 
         private void SelectRequest(SavedRequest? request)
@@ -521,10 +607,14 @@ namespace MMG.ViewModels.API
             return $"{baseName} {suffix}";
         }
 
-        private async Task BuildTreeView()
+        private async Task BuildTreeView(SavedRequest? requestToSelect = null)
         {
             try
             {
+            var expandedFolderIds = GetExpandedFolderIds();
+            var selectedRequestId = requestToSelect?.Id ?? GetSelectedRequestId();
+            var selectedFolderId = requestToSelect == null ? GetSelectedFolderIdFromTree() : null;
+
                 var folders = await _databaseService.GetAllFoldersAsync();
                 var allRequests = await _databaseService.GetAllRequestsAsync();
 
@@ -555,10 +645,70 @@ namespace MMG.ViewModels.API
                 }
 
                 TreeItems = treeItems;
+                RestoreExpandedFolders(expandedFolderIds);
+                RestoreSelection(selectedRequestId, selectedFolderId);
             }
             catch (Exception ex)
             {
                 ModernMessageDialog.ShowError($"트리 뷰 구성 중 오류가 발생했습니다: {ex.Message}", "오류");
+            }
+        }
+
+        private HashSet<int> GetExpandedFolderIds()
+        {
+            return GetAllTreeItems()
+                .Where(item => item.ItemType == TreeViewItemType.Folder && item.IsExpanded && item.Tag is Folder)
+                .Select(item => ((Folder)item.Tag!).Id)
+                .ToHashSet();
+        }
+
+        private int? GetSelectedRequestId()
+        {
+            return SelectedTreeItem?.Tag is SavedRequest request ? request.Id : null;
+        }
+
+        private int? GetSelectedFolderIdFromTree()
+        {
+            return SelectedTreeItem?.Tag is Folder folder ? folder.Id : null;
+        }
+
+        private void RestoreExpandedFolders(HashSet<int> expandedFolderIds)
+        {
+            if (expandedFolderIds.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var item in GetAllTreeItems())
+            {
+                if (item.Tag is Folder folder)
+                {
+                    item.IsExpanded = expandedFolderIds.Contains(folder.Id);
+                }
+            }
+        }
+
+        private void RestoreSelection(int? requestId, int? folderId)
+        {
+            TreeViewItemModel? selectedItem = null;
+
+            if (requestId.HasValue)
+            {
+                selectedItem = GetAllTreeItems()
+                    .FirstOrDefault(item => item.ItemType == TreeViewItemType.Request && item.Tag is SavedRequest request && request.Id == requestId.Value);
+            }
+
+            if (selectedItem == null && folderId.HasValue)
+            {
+                selectedItem = GetAllTreeItems()
+                    .FirstOrDefault(item => item.ItemType == TreeViewItemType.Folder && item.Tag is Folder folder && folder.Id == folderId.Value);
+            }
+
+            SelectedTreeItem = selectedItem;
+
+            if (selectedItem != null)
+            {
+                selectedItem.IsSelected = true;
             }
         }
 

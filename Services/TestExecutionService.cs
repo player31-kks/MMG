@@ -970,6 +970,7 @@ namespace MMG.Services
                 DataType.Int => 4,
                 DataType.UInt => 4,
                 DataType.Float => 4,
+                DataType.Double => 8,
                 DataType.Padding => field.PaddingSize,
                 _ => 0
             };

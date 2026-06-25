@@ -316,19 +316,23 @@
                             <Grid>
                                 <!-- 일반 텍스트 표시 -->
                                 <TextBlock Text="{Binding Name}"
-                                           FontSize="13"
+                                       FontSize="12"
                                            VerticalAlignment="Center">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Foreground"
                                                     Value="#555555"/>
+                                        <Setter Property="FontSize"
+                                            Value="12"/>
                                             <Setter Property="Visibility"
                                                     Value="Visible"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding ItemType}"
                                                              Value="Folder">
+                                            <Setter Property="FontSize"
+                                                Value="13"/>
                                                     <Setter Property="FontWeight"
-                                                            Value="Bold"/>
+                                                Value="SemiBold"/>
                                                     <Setter Property="Foreground"
                                                             Value="#333333"/>
                                                 </DataTrigger>
@@ -403,11 +407,11 @@
                         <Setter Property="IsSelected"
                                 Value="{Binding IsSelected, Mode=TwoWay}"/>
                         <Setter Property="FontSize"
-                                Value="13"/>
+                            Value="12"/>
                         <Setter Property="Padding"
-                                Value="6"/>
+                            Value="4"/>
                         <Setter Property="Margin"
-                                Value="0,2"/>
+                            Value="0,1"/>
                         <Setter Property="Background"
                                 Value="Transparent"/>
                         <Setter Property="BorderBrush"
@@ -434,7 +438,7 @@
                                                       Visibility="Visible"
                                                       Width="16"
                                                       Height="16"
-                                                      Margin="0,0,6,0"
+                                                      Margin="0,0,4,0"
                                                       Grid.Row="0"
                                                       Grid.Column="0"
                                                       HorizontalAlignment="Center"
@@ -476,14 +480,14 @@
                                                 BorderThickness="{TemplateBinding BorderThickness}"
                                                 CornerRadius="8">
                                             <ContentPresenter x:Name="PART_Header"
-                                                              Margin="6,4"
+                                                              Margin="4,3"
                                                               ContentSource="Header"/>
                                         </Border>
 
                                         <ItemsPresenter x:Name="ItemsHost"
                                                         Grid.Row="1"
                                                         Grid.Column="1"
-                                                        Margin="18,4,0,0"/>
+                                                        Margin="12,2,0,0"/>
                                     </Grid>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsExpanded"
@@ -497,6 +501,16 @@
                                             <Setter TargetName="Expander"
                                                     Property="Visibility"
                                                     Value="Collapsed"/>
+                                        </Trigger>
+                                        <Trigger SourceName="Header"
+                                                 Property="IsMouseOver"
+                                                 Value="True">
+                                            <Setter TargetName="Header"
+                                                Property="Background"
+                                                Value="#F8FAFC"/>
+                                            <Setter TargetName="Header"
+                                                Property="BorderBrush"
+                                                Value="#E5E7EB"/>
                                         </Trigger>
                                         <Trigger Property="IsSelected"
                                                  Value="True">

@@ -10,6 +10,7 @@ namespace MMG.Models
         Int,
         UInt,
         Float,
+        Double,
         Padding
     }
 

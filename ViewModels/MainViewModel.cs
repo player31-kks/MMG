@@ -91,7 +91,7 @@ namespace MMG.ViewModels
                 {
                     case nameof(SavedRequestsViewModel.SavedRequests):
                         OnPropertyChanged(nameof(SavedRequests));
-                        _ = TreeViewViewModel.RefreshTreeView(); // TreeView 새로고침
+                        _ = TreeViewViewModel.RefreshTreeView(SavedRequestsViewModel.CurrentLoadedRequest); // TreeView 새로고침
                         break;
                     case nameof(SavedRequestsViewModel.SelectedSavedRequest):
                         OnPropertyChanged(nameof(SelectedSavedRequest));
